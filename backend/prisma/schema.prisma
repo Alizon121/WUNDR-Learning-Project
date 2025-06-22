@@ -11,21 +11,21 @@ datasource db {
 // ! Users       =============================================================================
 
 model User {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId
-  profile       Profile
-  address       Address
-  children      Child[]
-  notifications Notification[]
-  timestamps    Timestamps
-  reviews       Review[]
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  profile           Profile
+  address           Address
+  children          Child[]
+  notifications     Notification[]
+  timestamps        Timestamps
+  reviews           Review[]
 }
 
 type Profile {
-  firstName String
-  lastName  String
-  email     String
-  role      Role
-  avatar    String
+  firstName         String
+  lastName          String
+  email             String
+  role              Role
+  avatar            String
 }
 
 enum Role {
@@ -34,9 +34,9 @@ enum Role {
 }
 
 type Address {
-  city        String
-  stateRegion String
-  zipCode     Int
+  city              String
+  stateRegion       String
+  zipCode           Int
 }
 
 type Child {
@@ -44,13 +44,13 @@ type Child {
   lastName          String
   homeschool        Boolean
   age               Int
-  enrolledActivities ActivityEnrollment[]
+  enrolledActivities        ActivityEnrollment[]
 }
 
 type ActivityEnrollment {
-  activityId     String     @db.ObjectId
-  activityName   String
-  enrolledEvents String[]   @db.ObjectId
+  activityId        String     @db.ObjectId
+  activityName      String
+  enrolledEvents    String[]   @db.ObjectId
 }
 
 type Notification {
@@ -63,8 +63,8 @@ type Notification {
 }
 
 type Timestamps {
-  createdAt DateTime
-  updatedAt DateTime
+  createdAt     DateTime
+  updatedAt     DateTime
 }
 
 // ! Activities     =============================================================================

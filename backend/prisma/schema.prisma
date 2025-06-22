@@ -48,9 +48,9 @@ type Child {
 }
 
 type ActivityEnrollment {
-  activityId     String   @db.ObjectId
+  activityId     String     @db.ObjectId
   activityName   String
-  enrolledEvents String[] @db.ObjectId
+  enrolledEvents String[]   @db.ObjectId
 }
 
 type Notification {
@@ -70,7 +70,7 @@ type Timestamps {
 // ! Activities     =============================================================================
 
 model Activity {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   description   String
 
@@ -82,7 +82,7 @@ model Activity {
 // ! Events         =============================================================================
 
 model Event {
-    id          String         @id @default(auto()) @map("_id") @db.ObjectId
+    id          String      @id @default(auto()) @map("_id") @db.ObjectId
 
     activity    Activity    @relation(fields: [activityId], references: [id])
     activityId  String      @db.ObjectId
@@ -93,7 +93,7 @@ model Event {
 // ! reviews        =============================================================================
 
 model Review {
-    id          String         @id @default(auto()) @map("_id") @db.ObjectId
+    id          String      @id @default(auto()) @map("_id") @db.ObjectId
     rating      Int
 
     event       Event       @relation(fields: [eventId], references: [id])

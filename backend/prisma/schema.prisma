@@ -1,0 +1,23 @@
+generator client {
+    provider = "prisma-client-py"
+}
+
+datasource db {
+    provider = "mongodb"
+    url = env("DATABASE_URL")
+}
+
+enum Role {
+    moderator
+    parent
+}
+
+model User {
+    id          String @id @default(auto()) @map("_id") @db.ObjectId
+    firstName   String
+    lastName    String
+    email       String @unique
+    phoneNum    String?
+    isAdmin     Boolean @default(false)
+    roles       Role[] // can be either 'moderator' or 'parent'
+}

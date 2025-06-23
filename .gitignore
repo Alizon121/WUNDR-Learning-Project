@@ -1,0 +1,56 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+*.env
+
+# VS Code settings
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Python-specific cache and logs
+*.log
+*.pot
+*.mo
+*.sqlite3
+*.db
+instance/
+*.egg-info/
+.eggs/
+
+# Pytest and test output
+htmlcov/
+.tox/
+.nox/
+.coverage
+.cache/
+.pytest_cache/
+coverage.xml
+*.cover
+*.py,cover
+
+# Jupyter/IPython
+.ipynb_checkpoints/
+
+# mypy
+.mypy_cache/
+
+# Pydantic / Prisma-generated files (optional)
+prisma/generated/
+
+# Local environment variables (if you're using dotenv)
+.env
+.env.*
+
+# __init__.py backup files
+*~ 

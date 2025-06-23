@@ -70,7 +70,7 @@ type Timestamps {
 // ! Activities     =============================================================================
 
 model Activity {
-  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+id            String      @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   description   String
 

@@ -53,4 +53,4 @@ prisma/generated/
 .env.*
 
 # __init__.py backup files
-*~ 
+*~

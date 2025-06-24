@@ -23,7 +23,7 @@ model User {
 
   // m-to-n
   childIDs String[]   @db.ObjectId
-  children  Child[] @relation(fields: [childIDs], references: [id])
+  children  Child[]   @relation(fields: [childIDs], references: [id])
 }
 
 type Profile {

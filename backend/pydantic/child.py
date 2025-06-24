@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from activity import Activity
+from typing import List
 
 class Child(BaseModel):
   id: str
@@ -7,4 +8,4 @@ class Child(BaseModel):
   lastName: str
   homeschool: bool
   age: int
-  enrolledActivities: Activity
+  enrolledActivities: List[Activity]

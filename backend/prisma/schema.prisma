@@ -14,10 +14,16 @@ model User {
   id                String         @id @default(auto()) @map("_id") @db.ObjectId
   profile           Profile
   address           Address
-  children          Child[]
-  notifications     Notification[]
-  timestamps        Timestamps
+  createdAt         DateTime
+  updatedAt         DateTime
   reviews           Review[]
+
+  // One-to-m
+  notifications     Notification[]
+
+  // m-to-n
+  childIDs String[]   @db.ObjectId
+  children  Child[] @relation(fields: [childIDs], references: [id])
 }
 
 type Profile {
@@ -39,44 +45,40 @@ type Address {
   zipCode           Int
 }
 
-type Child {
-  firstName         String
-  lastName          String
-  homeschool        Boolean
-  age               Int
-  enrolledActivities        ActivityEnrollment[]
+model Notification{
+  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
+  description           String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
 }
 
-type ActivityEnrollment {
-  activityId        String     @db.ObjectId
-  activityName      String
-  enrolledEvents    String[]   @db.ObjectId
-}
 
-type Notification {
-  type           String
-  title          String
-  message        String
-  deliveryMethod String
-  scheduledAt    DateTime
-  sentAt         DateTime
-}
+model Child {
+  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
+  firstName             String
+  lastName              String
+  homeschool            Boolean
+  age                   Int
 
-type Timestamps {
-  createdAt     DateTime
-  updatedAt     DateTime
+  parentIDs String[] @db.ObjectId
+  parents   User[]   @relation(fields: [parentIDs], references: [id])
+
+  activityIDs String[]   @db.ObjectId
+  activities  Activity[] @relation(fields: [activityIDs], references: [id])
 }
 
 // ! Activities     =============================================================================
 
 model Activity {
-id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   description   String
 
   events        Event[]
-
   reviews       Review[]
+
+  childIDs String[] @db.ObjectId
+  child   Child[]   @relation(fields: [childIDs], references: [id])
 }
 
 // ! Events         =============================================================================

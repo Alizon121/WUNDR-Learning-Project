@@ -1,33 +1,18 @@
-from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from child import Child
-from pydantic_extra_types.pendulum_dt import DateTime
 from notification import Notification
 from review import Review
+from address import Address
+from profile import Profile
 from typing import List
-
-class Role(str, Enum):
-  PARENT = "PARENT"
-  MODERATOR = "MODERATOR"
-
-class Profile(BaseModel):
-  firstName: str
-  lastName: str
-  email: str
-  role: Role
-  avatar: str
-
-class Address(BaseModel):
-  city: str
-  stateRegion: str
-  zipCode: int
+from datetime import datetime
 
 class User(BaseModel):
-    id: str
+    id: str = Field(..., min_length=1, description="User identifier")
     profile: Profile
     address: Address
-    children: List[Child]
-    createdAt: DateTime
-    updatedAt: DateTime
-    notifications: List[Notification]
-    reviews: List[Review]
+    children: List[Child] = Field(default_factory=list)  # Default to empty list
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    notifications: List[Notification] = Field(default_factory=list)
+    reviews: List[Review] = Field(default_factory=list)

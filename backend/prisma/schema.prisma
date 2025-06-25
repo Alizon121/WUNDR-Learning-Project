@@ -12,8 +12,17 @@ datasource db {
 
 model User {
   id                String         @id @default(auto()) @map("_id") @db.ObjectId
-  profile           Profile
-  address           Address
+
+  firstName         String
+  lastName          String
+  email             String
+  role              Role
+  avatar            String
+
+  city              String
+  state             String
+  zipCode           Int
+
   createdAt         DateTime
   updatedAt         DateTime
   reviews           Review[]
@@ -26,23 +35,9 @@ model User {
   children  Child[]   @relation(fields: [childIDs], references: [id])
 }
 
-type Profile {
-  firstName         String
-  lastName          String
-  email             String
-  role              Role
-  avatar            String
-}
-
 enum Role {
   parent
   moderator
-}
-
-type Address {
-  city              String
-  stateRegion       String
-  zipCode           Int
 }
 
 model Notification{

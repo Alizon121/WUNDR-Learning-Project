@@ -6,6 +6,17 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        wondergreen: '#2f5d3e',
+        wonderleaf: '#90b35c',
+        wonderorange: '#f5a940',
+        wondersun: '#fbd78d',
+        wonderbg: '#fdf6e9', 
+      },
+      fontFamily: {
+        sans: ['Geist', 'sans-serif'],
+        mono: ['Geist Mono', 'monospace'],
+      },
       screens: {
         xs: "320px",     
         sm: "425px",     

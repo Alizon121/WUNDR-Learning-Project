@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
-from activity import Activity
-from review import Review
+from models.activity import Activity
+from models.review import Review
 from typing import List
 
 class Event(BaseModel):

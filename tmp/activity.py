@@ -1,7 +1,4 @@
 from pydantic import BaseModel, Field
-from event import Event
-from review import Review
-from child import Child
 from typing import List
 
 class Activity(BaseModel):

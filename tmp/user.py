@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
-from child import Child
-from notification import Notification
-from review import Review
-from address import Address
-from profile import Profile
+from models.child import Child
+from models.notification import Notification
+from models.review import Review
+from models.address import Address
+from models.profile import Profile
 from typing import List
 from datetime import datetime
 

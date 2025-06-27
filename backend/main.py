@@ -1,12 +1,24 @@
-from typing import Union
 from fastapi import FastAPI
+from prisma import Prisma
+from routers import auth
+from db.prisma_client import db
 
+# instantiate FastAPI app and Prisma db client
 app = FastAPI()
 
+# When we start the app, connect to the db. When we shut down the app, disconnect
+@app.on_event("startup")
+async def startup():
+    await db.connect()
+
+@app.on_event("shutdown")
+async def shutdown():
+    await db.disconnect()
+
+# Main routes
 @app.get('/')
 def read_root():
     return {"Hello": "World"}
 
-# @app.get('/items/{item_id}')
-# def read_item(item_id: int, q: Union[str, None] = None ):
-#     return {"item_id": item_id, "q": q}
+# Routers
+app.include_router(auth.router, prefix="/auth")

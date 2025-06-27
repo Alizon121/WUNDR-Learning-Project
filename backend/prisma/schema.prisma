@@ -10,14 +10,15 @@ datasource db {
 
 // ! Users       =============================================================================
 
-model User {
+model Users {
   id                String         @id @default(auto()) @map("_id") @db.ObjectId
 
   firstName         String
   lastName          String
-  email             String
-  role              Role
-  avatar            String
+  email             String          @unique
+  role              Roles
+  avatar            String?
+  password          String
 
   city              String
   state             String
@@ -25,30 +26,30 @@ model User {
 
   createdAt         DateTime
   updatedAt         DateTime
-  reviews           Review[]
+  reviews           Reviews[]
 
   // One-to-m
-  notifications     Notification[]
+  notifications     Notifications[]
 
   // m-to-n
   childIDs String[]   @db.ObjectId
-  children  Child[]   @relation(fields: [childIDs], references: [id])
+  children  Children[]   @relation(fields: [childIDs], references: [id])
 }
 
-enum Role {
+enum Roles {
   parent
   moderator
 }
 
-model Notification{
+model Notifications {
   id                    String  @id @default(auto()) @map("_id") @db.ObjectId
   description           String
-  user   User   @relation(fields: [userId], references: [id])
+  user   Users   @relation(fields: [userId], references: [id])
   userId String @db.ObjectId
 }
 
 
-model Child {
+model Children {
   id                    String  @id @default(auto()) @map("_id") @db.ObjectId
   firstName             String
   lastName              String
@@ -56,49 +57,49 @@ model Child {
   age                   Int
 
   parentIDs String[] @db.ObjectId
-  parents   User[]   @relation(fields: [parentIDs], references: [id])
+  parents   Users[]   @relation(fields: [parentIDs], references: [id])
 
   activityIDs String[]   @db.ObjectId
-  activities  Activity[] @relation(fields: [activityIDs], references: [id])
+  activities  Activities [] @relation(fields: [activityIDs], references: [id])
 }
 
 // ! Activities     =============================================================================
 
-model Activity {
+model Activities {
   id            String      @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   description   String
 
-  events        Event[]
-  reviews       Review[]
+  events        Events[]
+  reviews       Reviews[]
 
   childIDs String[] @db.ObjectId
-  child   Child[]   @relation(fields: [childIDs], references: [id])
+  child   Children[]   @relation(fields: [childIDs], references: [id])
 }
 
 // ! Events         =============================================================================
 
-model Event {
+model Events {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
 
-    activity    Activity    @relation(fields: [activityId], references: [id])
+    activity    Activities   @relation(fields: [activityId], references: [id])
     activityId  String      @db.ObjectId
 
-    reviews     Review[]
+    reviews     Reviews[]
 }
 
 // ! reviews        =============================================================================
 
-model Review {
+model Reviews {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
     rating      Int
 
-    event       Event       @relation(fields: [eventId], references: [id])
+    event       Events       @relation(fields: [eventId], references: [id])
     eventId     String      @db.ObjectId
 
-    activity    Activity    @relation(fields: [activityId], references: [id])
+    activity    Activities    @relation(fields: [activityId], references: [id])
     activityId  String      @db.ObjectId
 
-    parent      User        @relation(fields: [parentId], references: [id])
+    parent      Users        @relation(fields: [parentId], references: [id])
     parentId    String      @db.ObjectId
 }

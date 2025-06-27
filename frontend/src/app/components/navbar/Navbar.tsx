@@ -20,11 +20,12 @@ export default function Navbar() {
         </Link>
 
         <ul className="flex space-x-6 text-lg text-wondergreen font-medium gap-12">
-          <li><a href="#about" className="hover:underline">About US</a></li>
+          <li><a href="#about" className="hover:underline">About Us</a></li>
           <li><a href="#activities" className="hover:underline">Support Us</a></li>
           <li><a href="#events" className="hover:underline">Events</a></li>
           <li><a href="#events" className="hover:underline">Contact Us</a></li>
-          <li><a href="#contact" className="hover:underline">Login / Join</a></li>
+          <li><a href="#contact" className="hover:underline">Login / logout</a></li>
+          <li><a href="#contact" className="hover:underline">Profile</a></li>
         </ul>
       </div>
     </nav>

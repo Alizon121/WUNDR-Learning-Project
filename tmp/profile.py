@@ -9,7 +9,7 @@ class Profile(BaseModel):
     id: str = Field(..., min_length=1, description="Profile identifier")
     firstName: str = Field(min_length=1, max_length=50)
     lastName: str = Field(min_length=1, max_length=50)
-    email: str = Field(regex=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    email: str = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     role: Role
     avatar: HttpUrl
 

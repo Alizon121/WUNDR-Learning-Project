@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
-from event import Event
-from activity import Activity
-from user import User
+from models.event import Event
+from models.activity import Activity
+from models.user import User
 
 class Review(BaseModel):
     id: str = Field(..., min_length=1, description="Review identifier")

@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+
+// ! Users       =============================================================================
+
+model User {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+
+  firstName         String
+  lastName          String
+  email             String
+  role              Role
+  avatar            String
+
+  city              String
+  state             String
+  zipCode           Int
+
+  createdAt         DateTime
+  updatedAt         DateTime
+  reviews           Review[]
+
+  // One-to-m
+  notifications     Notification[]
+
+  // m-to-n
+  childIDs String[]   @db.ObjectId
+  children  Child[]   @relation(fields: [childIDs], references: [id])
+}
+
+enum Role {
+  parent
+  moderator
+}
+
+model Notification{
+  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
+  description           String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+}
+
+
+model Child {
+  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
+  firstName             String
+  lastName              String
+  homeschool            Boolean
+  age                   Int
+
+  parentIDs String[] @db.ObjectId
+  parents   User[]   @relation(fields: [parentIDs], references: [id])
+
+  activityIDs String[]   @db.ObjectId
+  activities  Activity[] @relation(fields: [activityIDs], references: [id])
+}
+
+// ! Activities     =============================================================================
+
+model Activity {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  description   String
+
+  events        Event[]
+  reviews       Review[]
+
+  childIDs String[] @db.ObjectId
+  child   Child[]   @relation(fields: [childIDs], references: [id])
+}
+
+// ! Events         =============================================================================
+
+model Event {
+    id          String      @id @default(auto()) @map("_id") @db.ObjectId
+
+    activity    Activity    @relation(fields: [activityId], references: [id])
+    activityId  String      @db.ObjectId
+
+    reviews     Review[]
+}
+
+// ! reviews        =============================================================================
+
+model Review {
+    id          String      @id @default(auto()) @map("_id") @db.ObjectId
+    rating      Int
+
+    event       Event       @relation(fields: [eventId], references: [id])
+    eventId     String      @db.ObjectId
+
+    activity    Activity    @relation(fields: [activityId], references: [id])
+    activityId  String      @db.ObjectId
+
+    parent      User        @relation(fields: [parentId], references: [id])
+    parentId    String      @db.ObjectId
+}

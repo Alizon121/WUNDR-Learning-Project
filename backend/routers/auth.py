@@ -1,5 +1,5 @@
-from fastapi import APIRouter, status, HTTPException, FastAPI
-from pydantic import BaseModel, Field, HttpUrl, EmailStr
+from fastapi import APIRouter, status, HTTPException
+from pydantic import BaseModel, Field, HttpUrl
 from typing import List
 from passlib.context import CryptContext
 from models.user_models import ChildCreate, Role
@@ -32,13 +32,14 @@ class UserSignup(BaseModel):
     zipCode: int
 
     # Children
-    children: List[ChildCreate] = Field(default_factor=list)
+    children: List[ChildCreate] = Field(default_factory=list)
 
 # Signup Route
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(user: UserSignup):
 
-    existing_user = await mongo.user.find_unique(
+    # Check if the user already exists
+    existing_user = await mongo.get_collection("User").user.find_unique(
         where={"profile": {"email": user.email}}
     )
 
@@ -48,17 +49,32 @@ async def signup(user: UserSignup):
             detail="Email already exists"
         )
 
-    # if user.email in users_db:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Email already exists"
-    #     )
+    # Hash the password
+    hashed_password = hash_password(user.password)
 
-    # hashed_password = hash_password(user.password)
+    created_user = await mongo.user.create(
+        data={
+            "profile": {
+                "create": {
+                    "firstName": user.firstName,
+                    "lastName": user.lastName,
+                    "email": user.email,
+                    "role": user.role,
+                    "avatar": str(user.avatar),
+                    "password": hashed_password,
+                }
+            },
+            "address": {
+                "create": {
+                    "city": user.city,
+                    "state": user.state,
+                    "zipCode": user.zipCode,
+                }
+            },
+            "children": {
+                "create": [child.dict() for child in user.children]
+            },
+        }
+    )
 
-    # users_db[user.email] = {
-    #     "email": user.email,
-    #     "hashed_password": hashed_password
-    # }
-
-    # return {"message": "User successfully created"}
+    return {"user": created_user, "message": "User successfully created"}

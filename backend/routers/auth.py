@@ -6,9 +6,6 @@ from models.user_models import ChildCreate, Role
 from db.prisma_client import db
 from datetime import datetime
 
-# Database
-users_db = {}
-
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def hash_password(password: str) -> str:

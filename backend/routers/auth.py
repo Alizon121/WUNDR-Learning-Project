@@ -3,7 +3,8 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import List
 from passlib.context import CryptContext
 from models.user_models import ChildCreate, Role
-from db import mongo
+from db.prisma_client import db
+from datetime import datetime
 
 # Database
 users_db = {}
@@ -38,9 +39,8 @@ class UserSignup(BaseModel):
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(user: UserSignup):
 
-    # Check if the user already exists
-    existing_user = await mongo.get_collection("User").user.find_unique(
-        where={"profile": {"email": user.email}}
+    existing_user = await db.users.find_unique(
+        where={"email": user.email}
     )
 
     if existing_user:
@@ -52,25 +52,19 @@ async def signup(user: UserSignup):
     # Hash the password
     hashed_password = hash_password(user.password)
 
-    created_user = await mongo.user.create(
+    created_user = await db.users.create(
         data={
-            "profile": {
-                "create": {
-                    "firstName": user.firstName,
-                    "lastName": user.lastName,
-                    "email": user.email,
-                    "role": user.role,
-                    "avatar": str(user.avatar),
-                    "password": hashed_password,
-                }
-            },
-            "address": {
-                "create": {
-                    "city": user.city,
-                    "state": user.state,
-                    "zipCode": user.zipCode,
-                }
-            },
+            "firstName": user.firstName,
+            "lastName": user.lastName,
+            "email": user.email,
+            "role": user.role.lower(),
+            "avatar": str(user.avatar),
+            "password": hashed_password,
+            "city": user.city,
+            "state": user.state,
+            "zipCode": user.zipCode,
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow(),
             "children": {
                 "create": [child.dict() for child in user.children]
             },

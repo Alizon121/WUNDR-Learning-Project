@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from prisma import Prisma
 from routers import auth
+from db.prisma_client import db
 
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
-db = Prisma()
 
 # When we start the app, connect to the db. When we shut down the app, disconnect
 @app.on_event("startup")

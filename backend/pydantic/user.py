@@ -19,7 +19,7 @@ class Profile(BaseModel):
 
 class Address(BaseModel):
   city: str
-  stateRegion: str
+  state: str
   zipCode: int
 
 class User(BaseModel):

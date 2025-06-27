@@ -1,25 +1,34 @@
 from fastapi import APIRouter, status, HTTPException, FastAPI
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from passlib.context import CryptContext
+from pydantic.user import Role
 
 users_db = {}
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-# router = APIRouter()
-app = FastAPI()
+
+# app = FastAPI() # Since the app is already instaniated in main.py, all we need to do here is set up the router (below)
+router = APIRouter()
 
 class UserSignup(BaseModel):
-    # firstName: str
-    # lastName: str
+    # Profile Fields
+    firstName: str = Field(min_length=1)
+    lastName: str = Field(min_length=1)
     email: EmailStr
-    password: str
-    # address: str
+    password: str = Field(min_length=6)
+    role: Role
+    avatar: str
+
+    # Address Fields
+    city: str = Field(min_length=1)
+    state: str = Field(min_length=2, max_length=50)
+    zipCode: int
     # city: str
     # state: str
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
-@app.post("/signup", status_code=status.HTTP_201_CREATED)
+@router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(user: UserSignup):
     if user.email in users_db:
         raise HTTPException(

@@ -20,7 +20,7 @@ export default function Navbar() {
         </Link>
 
         <ul className="flex space-x-16 text-[20px] font-bold text-wondergreen">
-          <li><a href="#about" className="hover:underline">About</a></li>
+          <li><a href="#about" className="hover:underline">About WHP</a></li>
           <li><a href="#activities" className="hover:underline">Support</a></li>
           <li><a href="#events" className="hover:underline">Events</a></li>
           <li><a href="#contact" className="hover:underline">Contact</a></li>

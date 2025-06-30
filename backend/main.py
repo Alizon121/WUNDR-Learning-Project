@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from prisma import Prisma
 from routers import auth
 from db.prisma_client import db
 

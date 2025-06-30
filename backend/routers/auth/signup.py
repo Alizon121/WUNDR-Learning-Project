@@ -1,15 +1,10 @@
 from fastapi import APIRouter, status, HTTPException
 from pydantic import BaseModel, Field, HttpUrl
 from typing import List
-from passlib.context import CryptContext
 from models.user_models import ChildCreate, Role
 from db.prisma_client import db
 from datetime import datetime
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+from .utils import hash_password
 
 # Router
 router = APIRouter()

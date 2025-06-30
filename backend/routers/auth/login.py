@@ -3,15 +3,13 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2Pas
 from typing import Annotated
 import jwt
 from jwt.exceptions import InvalidTokenError
-from passlib.context import CryptContext
-from pydantic import BaseModel, Field, HttpUrl
-from typing import List, Annotated
-from passlib.context import CryptContext
-from models.user_models import ChildCreate, Role, User
+from typing import Annotated
+from models.user_models import User
 from db.prisma_client import db
 from datetime import datetime, timedelta, timezone
 import os
 from dotenv import load_dotenv
+from .utils import verify_password
 
 load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -19,79 +17,10 @@ ALGORITHM = os.getenv('ALGORITHM')
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES'))
 
 
-# Password hashingA
 oauth2_scheme = HTTPBearer()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
 
 # Router
 router = APIRouter()
-
-# UserSignup Pydantic Model
-class UserSignup(BaseModel):
-    # Profile Fields
-    firstName: str = Field(min_length=1, max_length=50)
-    lastName: str = Field(min_length=1, max_length=50)
-    email: str = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-    password: str = Field(min_length=6)
-    role: Role
-    avatar: HttpUrl
-
-    # Address Fields
-    city: str = Field(min_length=2, max_length=50)
-    state: str = Field(min_length=2, max_length=50)
-    zipCode: int
-
-    # Children
-    children: List[ChildCreate] = Field(default_factory=list)
-
-# Signup Route
-@router.post("/signup", status_code=status.HTTP_201_CREATED)
-async def signup(user: UserSignup):
-
-    existing_user = await db.users.find_unique(
-        where={"email": user.email}
-    )
-
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already exists"
-        )
-
-    # Hash the password
-    hashed_password = hash_password(user.password)
-
-    created_user = await db.users.create(
-        data={
-            "firstName": user.firstName,
-            "lastName": user.lastName,
-            "email": user.email,
-            "role": user.role.lower(),
-            "avatar": str(user.avatar),
-            "password": hashed_password,
-            "city": user.city,
-            "state": user.state,
-            "zipCode": user.zipCode,
-            "createdAt": datetime.utcnow(),
-            "updatedAt": datetime.utcnow(),
-            "children": {
-                "create": [child.dict() for child in user.children]
-            },
-        }
-    )
-
-    return {"user": created_user, "message": "User successfully created"}
-
-
 
 
 async def authenticate_user(db, username: str, password: str):
@@ -138,8 +67,6 @@ async def get_current_user(token: Annotated[HTTPAuthorizationCredentials, Depend
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    # if current_user.disabled:
-    #     raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 

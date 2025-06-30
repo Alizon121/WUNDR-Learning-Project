@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 # from fastapi.security import OAuth2PasswordBearer
 # from prisma import Prisma
-from routers import auth
+from routers.auth.routes import router as auth_router
 # from typing import Annotated
 from db.prisma_client import db
 # from models.user_models import User
@@ -25,7 +25,7 @@ def read_root():
     return {"Hello": "World"}
 
 # Routers
-app.include_router(auth.router, prefix="/auth")
+app.include_router(auth_router, prefix="/auth")
 
 # @app.get("/items/")
 # async def read_items(token: Annotated[str,Depends(oauth2_scheme)]):

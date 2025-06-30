@@ -1,15 +1,36 @@
-from fastapi import APIRouter, status, HTTPException
-from pydantic import BaseModel, Field, HttpUrl
-from typing import List
+from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import Annotated
+import jwt
+from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
-from models.user_models import ChildCreate, Role
+from pydantic import BaseModel, Field, HttpUrl
+from typing import List, Annotated
+from passlib.context import CryptContext
+from models.user_models import ChildCreate, Role, User
 from db.prisma_client import db
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+SECRET_KEY = os.getenv('SECRET_KEY')
+ALGORITHM = os.getenv('ALGORITHM')
+ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')
+
 
 # Password hashing
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
 
 # Router
 router = APIRouter()
@@ -69,3 +90,112 @@ async def signup(user: UserSignup):
     )
 
     return {"user": created_user, "message": "User successfully created"}
+
+
+# @router.get("/items/")
+# async def read_items(token: Annotated[str,Depends(oauth2_scheme)]):
+#     return {"token": token}
+
+# def fake_decode_token(token):
+#     return User(
+#         username=token + "fakedecoded", email="john@example.com", full_name="John Doe"
+#     )
+
+# async def get_user(token: Annotated[str, Depends(oauth2_scheme)]):
+#     user = fake_decode_token(token)
+#     return user
+
+# async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+#     user = fake_decode_token(token)
+#     if not user:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Invalid authentication credentials",
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
+#     return user
+
+# async def get_current_active_user(
+#     current_user: Annotated[User, Depends(get_current_user)],
+# ):
+#     if current_user.disabled:
+#         raise HTTPException(status_code=400, detail="Inactive user")
+#     return current_user
+
+async def authenticate_user(db, username: str, password: str):
+    user = await db.users.find_unique(
+        where={"email": user.email}
+    )
+
+    if not user:
+        return False
+    if not verify_password(password, user.password):
+        return False
+    return user
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        # token_data = TokenData(username=username)
+    except InvalidTokenError:
+        raise credentials_exception
+    user = await db.users.find_unique(
+        where={"email": user.email}
+    )
+    if user is None:
+        raise credentials_exception
+    return user
+
+async def get_current_active_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    if current_user.disabled:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+
+@router.post("/token")
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    email = form_data.username
+    password = form_data.password
+    if not password == user.password:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    user = authenticate_user(db, email, password)
+
+    # user_dict = db.users.get(form_data.username)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/users/me")
+async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
+    return current_user

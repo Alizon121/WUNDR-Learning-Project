@@ -1,15 +1,16 @@
 import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 
 export default function Story_Mission(){
 
     return (
-        <section className='w-full px-6 py-16 bg-white text-wondergreen'>
-            <div className='max-w-7xl mx-auto grid md:grid-cols-2 gap-8 content-center min-h-[400px]'>
+        <section className='w-full px-6 py-16 text-wondergreen'>
+            <div className='max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center min-h-[400px]'>
                 {/* Left: Text Content */}
                 <div className='flex flex-col justify-center h-full'>
-                    <h2 className='text-5xl font-bold text-wondergreen mb-6'>
+                    <h2 className='text-5xl font-bold text-wondergreen mb-8'>
                         Our Story & Mission
                     </h2>
                     <p className='text-lg mb-4'>
@@ -25,12 +26,13 @@ export default function Story_Mission(){
 
                 {/* Right: Photo Carousel */}
                 <div className="flex items-center h-full mb-6">
-                    <div className="w-full h-[300px] md:h-[400px] rounded-3xl overflow-hidden shadow-md">
+                    <div className="w-full h-[300px] md:h-[340px] rounded-3xl overflow-hidden shadow-md flex items-center mt-12">
                         <Swiper
                             spaceBetween={10}
                             slidesPerView={1}
                             loop={true}
                             autoplay={{ delay: 5000, disableOnInteraction: false }}
+                            modules={[Autoplay]} 
                         >
                             <SwiperSlide>
                             <img

@@ -6,7 +6,7 @@ import 'swiper/css';
 export default function Story_Mission(){
 
     return (
-        <section className='w-full py-16 text-wondergreen'>
+        <section className='w-full text-wondergreen'>
             <div className='max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center min-h-[400px]'>
                 {/* Left: Text Content */}
                 <div className='flex flex-col justify-center h-full'>
@@ -25,7 +25,7 @@ export default function Story_Mission(){
                 </div>
 
                 {/* Right: Photo Carousel */}
-                <div className="flex items-center h-full mb-6">
+                <div className="flex items-center h-full mt-10">
                     <div className="w-full h-[300px] md:h-[340px] rounded-3xl overflow-hidden shadow-md flex items-center mt-12">
                         <Swiper
                             spaceBetween={10}

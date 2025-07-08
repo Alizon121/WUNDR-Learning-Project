@@ -12,6 +12,7 @@ const config: Config = {
         wonderorange: '#f5a940',
         wondersun: '#fbd78d',
         wonderbg: '#fdf6e9', 
+        // wonderbg: '#FAF7ED', 
       },
       fontFamily: {
         sans: ['Geist', 'sans-serif'],

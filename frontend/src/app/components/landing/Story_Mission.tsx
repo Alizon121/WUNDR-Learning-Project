@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -6,7 +6,7 @@ import 'swiper/css';
 export default function Story_Mission(){
 
     return (
-        <section className='w-full px-6 py-16 text-wondergreen'>
+        <section className='w-full py-16 text-wondergreen'>
             <div className='max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center min-h-[400px]'>
                 {/* Left: Text Content */}
                 <div className='flex flex-col justify-center h-full'>

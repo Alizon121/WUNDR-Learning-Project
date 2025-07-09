@@ -7,7 +7,7 @@ export default function Story_Mission(){
 
     return (
         <section className='w-full text-wondergreen'>
-            <div className='max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center min-h-[400px]'>
+            <div className='max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center min-h-[400px] px-8'>
                 {/* Left: Text Content */}
                 <div className='flex flex-col justify-center h-full'>
                     <h2 className='text-5xl font-bold text-wondergreen mb-8'>
@@ -25,14 +25,15 @@ export default function Story_Mission(){
                 </div>
 
                 {/* Right: Photo Carousel */}
-                <div className="flex items-center h-full mt-10">
-                    <div className="w-full h-[300px] md:h-[340px] rounded-3xl overflow-hidden shadow-md flex items-center mt-12">
-                        <Swiper
+                <div className="flex items-center h-full ml-14">
+                    <div className="w-[500px] h-[250px] md:h-[300px] rounded-2xl overflow-hidden shadow-md flex items-center mt-4">
+                        <Swiper 
                             spaceBetween={10}
                             slidesPerView={1}
                             loop={true}
                             autoplay={{ delay: 5000, disableOnInteraction: false }}
                             modules={[Autoplay]} 
+                            className="w-full h-full"
                         >
                             <SwiperSlide>
                             <img

@@ -102,7 +102,7 @@ const stats = [
 
 export default function ImpactStats() {
   return (
-    <section className="w-full py-16 text-wondergreen bg-[#FAF7ED]">
+    <section className="w-full py-10 text-wondergreen bg-[#FAF7ED]">
       <div className="max-w-7xl mx-auto flex flex-col items-center">
         <h2 className="text-5xl font-bold mb-4 text-center">
           Empowering Families Through Connection

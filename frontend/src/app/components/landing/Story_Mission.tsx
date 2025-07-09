@@ -7,7 +7,7 @@ export default function Story_Mission(){
 
     return (
         <section className='w-full text-wondergreen'>
-            <div className='max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center min-h-[400px] px-8'>
+            <div className='max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center min-h-[400px] px-8'>
                 {/* Left: Text Content */}
                 <div className='flex flex-col justify-center h-full'>
                     <h2 className='text-5xl font-bold text-wondergreen mb-8'>

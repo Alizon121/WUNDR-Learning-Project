@@ -35,19 +35,18 @@ export default function OurPrograms() {
 
     return (
         <section className="w-full py-16 text-wondergreen bg-[#FAF7ED]">
-            <div className="max-w-7xl mx-auto flex flex-col items-center px-4">
-                <h2 className="text-5xl font-bold mb-4 text-center">
+            <div className="max-w-7xl mx-auto flex flex-col items-start  px-4">
+                <h2 className="text-5xl font-bold mb-4 ml-4">
                     Our Programs
                 </h2>
-                <div className="mx-auto my-4 h-1 w-1/4 rounded-full bg-gradient-to-r from-wonderleaf to-wondergreen shadow-md mt-2" />
-                <p className="text-[20px] text-gray-600 max-w-3xl text-center mb-10 mt-2">
+                <p className="text-[20px] text-gray-600 max-w-3xl text-center mb-10 mt-2 ml-4">
                     Hands-on experiences that bring homeschool families together.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                     {programs.map((prog, inx)=> (
                         <div
                             key={prog.title}
-                            className="bg-white rounded-3xl shadow-lg p-8 flex flex-col items-start min-h-[250px] relative overflow-hidden"
+                            className="bg-[#f9faf7] rounded-3xl shadow-lg p-8 flex flex-col items-start min-h-[250px] relative overflow-hidden"
                         >
                             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-wondergreen to-wondersun" />
                             <div className="flex items-center gap-4 mb-4 mt-2 z-10">

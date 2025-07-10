@@ -16,7 +16,7 @@ export default function ImpactStats() {
         <h2 className="text-5xl font-bold mb-4 text-center">
           Empowering Families Through Connection
         </h2>
-        <div className="mx-auto my-4 h-1 w-2/6 rounded-full bg-gradient-to-r from-wonderleaf to-wondergreen shadow-md" />
+        <div className="mx-auto my-4 h-1 w-3/4 rounded-full bg-gradient-to-r from-wonderleaf to-wondergreen shadow-md" />
 
         <div className="flex justify-center w-full mt-4">
           <p className="text-xl mb-8 text-gray-600 max-w-5xl text-center">
@@ -25,8 +25,8 @@ export default function ImpactStats() {
             WonderHood connects homeschoolers through real experiences, new friendships, and joyful discovery.
           </p>
         </div>
-"
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 max-w-7xl mx-auto mt-4 divide-x divide-green-300 items-stretch">
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 max-w-7xl mx-auto mt-6 divide-x divide-green-300 items-stretch">
           {stats.map((stat, idx) => (
             
             <div

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <nav className="bg-wonderbg shadow-md px-32 py-3">
+    <nav className="bg-wonderbg shadow-md px-32 py-4">
       <div className="max-w-full mx-auto flex justify-between items-center">
         {/* Logo + name */}
         <Link href="/" className="flex items-center space-x-3 shrink-0">
@@ -19,12 +19,15 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <ul className="flex space-x-16 text-[20px] font-bold text-wondergreen">
-          <li><a href="#about" className="hover:underline">About WHP</a></li>
-          <li><a href="#activities" className="hover:underline">Support</a></li>
+        <ul className="flex space-x-16 text-[22px] font-bold text-wondergreen">
+          <li><a href="#about" className="hover:underline">About</a></li>
+          {/* <li><a href="#activities" className="hover:underline">Support</a></li> */}
           <li><a href="#events" className="hover:underline">Events</a></li>
-          <li><a href="#contact" className="hover:underline">Contact</a></li>
+          <li><a href="#events" className="hover:underline">Support Us</a></li>
+          {/* <li><a href="#contact" className="hover:underline">Contact</a></li> */}
           <li><a href="#login" className="hover:underline">Join Us</a></li>
+          <li><a href="#login" className="hover:underline">Login</a></li>
+          <li><a href="#login" className="hover:underline">Signup</a></li>
           <li><a href="#profile" className="hover:underline">Profile</a></li>
         </ul>
       </div>

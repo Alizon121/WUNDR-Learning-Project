@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 from models.interaction_models import Review, Notification, Activity
-from typing import List
+from typing import List, Optional
 from enum import Enum
 from datetime import datetime
 
@@ -48,3 +48,7 @@ class ChildCreate(BaseModel):
   lastName: str = Field(min_length=1, max_length=50)
   homeschool: bool = False
   age: int = Field(ge=10)
+
+class ChildUpdate(BaseModel):
+  firstName: Optional[str] = Field(min_length=1, max_length=50)
+  homeschool: Optional[bool]

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from db.prisma_client import db
 from typing import Annotated
-from models.user_models import User, Child, ChildCreate
+from models.user_models import User, ChildCreate
 from .auth.login import get_current_user
 
 router = APIRouter()
@@ -9,7 +9,7 @@ router = APIRouter()
 # ! Create Child
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_child(
-    child_data: ChildCreate,
+    child_data: ChildCreate, # apply Pydantic model for data validation
     current_user: Annotated[User, Depends(get_current_user)]
 
 ):
@@ -28,15 +28,30 @@ async def create_child(
             }
         )
 
+        # Once we create the child, update the current user to include the new child
+        updated_user = await db.users.update(
+            where={"id": current_user.id},
+            data={
+                "childIDs": {
+                    "push": created_child.id
+                }
+            },
+            include={
+                "children": True
+            }
+        )
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create child: {str(e)}"
         )
 
-    return {"child": created_child, "message": "Child added successfully"}
+    return {"child": created_child, "parent": updated_user, "message": "Child added successfully"}
 
-@router.get("/childrenOfCurrentUser", status_code=status.HTTP_200_OK)
+
+# ! Get Children of the Current User
+@router.get("/current", status_code=status.HTTP_200_OK)
 async def get_children(
     current_user: Annotated[User, Depends(get_current_user)]
 ):

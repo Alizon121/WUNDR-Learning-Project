@@ -88,7 +88,7 @@ async def get_child_by_id(
     if not child:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Child with ID {child_id} not found."
+            detail=f"Child not found."
         )
 
     # If the current user is not a parent of the child, throw a 403
@@ -117,7 +117,7 @@ async def update_child(
     if not child:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Child with ID {child_id} not found."
+            detail=f"Child not found."
         )
 
     # Make sure the current user is a parent of the child
@@ -141,4 +141,49 @@ async def update_child(
     return {
         "child": updated_child,
         "message": "Child updated successfully"
+    }
+
+# ! Delete Child
+@router.delete("/{child_id}", status_code=status.HTTP_200_OK)
+async def delete_child(
+    child_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    # Fetch the child
+    child = await db.children.find_unique(
+        where={"id": child_id}
+    )
+
+    if not child:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Child not found."
+        )
+
+    # Make sure the current usr is a parent of the child
+    if current_user.id not in child.parentIDs:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: You are not a parent of this child."
+        )
+
+    # Delete the child
+    await db.children.delete(
+        where={"id": child_id}
+    )
+
+    # Remove the child ID from the parent document
+    parent = await db.users.find_unique(where={"id": current_user.id})
+    # Remove the current child's ID from the parent's 'childIDs' array
+    updated_childIDs = [cid for cid in parent.childIDs if cid != child_id]
+
+    updated_user = await db.users.update(
+        where={"id": current_user.id},
+        data={"childIDs": updated_childIDs},
+        include={"children": True}
+    )
+
+    return {
+        "message": "Child deleted successfully.",
+        "parent": updated_user
     }

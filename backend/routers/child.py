@@ -63,3 +63,35 @@ async def get_children(
         }
     )
     return children
+
+# ! Get Child by ID
+@router.get("/{child_id}", status_code=status.HTTP_200_OK)
+async def get_child_by_id(
+    child_id: str,
+    # Get the current user for security
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+
+    child = await db.children.find_unique(
+        where={"id": child_id},
+        include={
+            # Include the child's parents and their activities
+            "parents": True,
+            "activities": True
+        }
+    )
+
+    if not child:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Child with ID {child_id} not found."
+        )
+
+    # If the current user is not a parent of the child, throw a 403
+    if current_user.id not in child.parentIDs:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: You are not a parent of this child."
+        )
+
+    return child

@@ -143,6 +143,7 @@ async def update_child(
         "message": "Child updated successfully"
     }
 
+
 # ! Delete Child
 @router.delete("/{child_id}", status_code=status.HTTP_200_OK)
 async def delete_child(

@@ -1,12 +1,10 @@
 from fastapi import FastAPI, Depends
-# from fastapi.security import OAuth2PasswordBearer
-# from prisma import Prisma
 from routers.auth.routes import router as auth_router
 from routers.user import router as user_router
 from routers.child import router as child_router
-# from typing import Annotated
 from db.prisma_client import db
-# from models.user_models import User
+
+# ! uvicorn main:app --reload
 
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()

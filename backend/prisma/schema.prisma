@@ -32,8 +32,8 @@ model Users {
   notifications     Notifications[]
 
   // m-to-n
-  childIDs String[]   @db.ObjectId
-  children  Children[]   @relation(fields: [childIDs], references: [id])
+  childId String[]   @db.ObjectId
+  children  Children[]   @relation(fields: [childId], references: [id])
 }
 
 enum Roles {
@@ -56,11 +56,11 @@ model Children {
   homeschool            Boolean
   age                   Int
 
-  parentIDs String[] @db.ObjectId
-  parents   Users[]   @relation(fields: [parentIDs], references: [id])
+  parentId String[] @db.ObjectId
+  parents   Users[]   @relation(fields: [parentId], references: [id])
 
-  activityIDs String[]   @db.ObjectId
-  activities  Activities [] @relation(fields: [activityIDs], references: [id])
+  activityId String[]   @db.ObjectId
+  activities  Activities [] @relation(fields: [activityId], references: [id])
 }
 
 // ! Activities     =============================================================================
@@ -71,10 +71,9 @@ model Activities {
   description   String
 
   events        Events[]
-  reviews       Reviews[]
 
-  childIDs String[] @db.ObjectId
-  child   Children[]   @relation(fields: [childIDs], references: [id])
+  childId String[] @db.ObjectId
+  child   Children[]   @relation(fields: [childId], references: [id])
 }
 
 // ! Events         =============================================================================
@@ -96,9 +95,6 @@ model Reviews {
 
     event       Events       @relation(fields: [eventId], references: [id])
     eventId     String      @db.ObjectId
-
-    activity    Activities    @relation(fields: [activityId], references: [id])
-    activityId  String      @db.ObjectId
 
     parent      Users        @relation(fields: [parentId], references: [id])
     parentId    String      @db.ObjectId

@@ -10,8 +10,6 @@ from .auth.utils import hash_password
 router = APIRouter()
 
 
-# Make a route for updating user's children
-
 class UserUpdateRequest(BaseModel):
     """Request model for updating user data - all fields optional"""
     firstName: Optional[str] = Field(None, min_length=1, max_length=50)
@@ -110,3 +108,4 @@ async def update_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred while updating user: {str(e)}"
         )
+#  Delete a user endpoint

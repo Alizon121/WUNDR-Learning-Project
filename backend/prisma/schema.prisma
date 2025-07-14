@@ -93,7 +93,7 @@ model Events {
     userIDs String[] @db.ObjectId
     parents Users[] @relation(fields: [userIDs], references: [id])
 
-    activity    Activities   @relation(fields: [activityId], references: [id])
+    activity    Activities   @relation(fields: activityId, references: [id])
     activityId  String      @db.ObjectId
 
     reviews     Reviews[]
@@ -105,7 +105,7 @@ model Reviews {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
     rating      Int
 
-    event       Events       @relation(fields: [eventId], references: [id])
+    event       Events       @relation(fields: eventId, references: [id])
     eventId     String      @db.ObjectId
 
     parent      Users        @relation(fields: [parentId], references: [id])

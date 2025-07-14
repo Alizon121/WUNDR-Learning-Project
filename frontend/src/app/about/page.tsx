@@ -6,9 +6,9 @@ export default function AboutPage() {
       </h1>
       <p className="text-lg text-center text-gray-600 mb-10">
         Creating joyful connections and real-life adventures for homeschool families in Colorado.
-        <p>
-          WonderHood began with a small group of Colorado families who wanted more than just lessons at home — we wanted real friendships, hands-on adventures, and a supportive community for our kids! Now, we organize clubs, outdoor meetups, and creative projects for homeschoolers of all backgrounds.
-        </p>
+      </p>
+      <p>
+        WonderHood began with a small group of Colorado families who wanted more than just lessons at home — we wanted real friendships, hands-on adventures, and a supportive community for our kids! Now, we organize clubs, outdoor meetups, and creative projects for homeschoolers of all backgrounds.
       </p>
 
       {/* Why We Do */}

@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, HTTPException, Depends
 from pydantic import BaseModel, Field, HttpUrl
 from db.prisma_client import db
 from typing import Annotated, Optional
-from models.user_models import User, Role
+from models.user_models import User, Child
 from datetime import datetime
 from .auth.login import get_current_active_user
 from .auth.utils import hash_password
@@ -27,6 +27,11 @@ class UserUpdateResponse(BaseModel):
     """Response model for successful user update"""
     message: str
     user: User
+
+User.model_rebuild()
+
+# Rebuild models to ensure all references are resolved
+UserUpdateResponse.model_rebuild()
 
 @router.put("/", response_model=UserUpdateResponse)
 async def update_user(
@@ -109,3 +114,26 @@ async def update_user(
             detail=f"An error occurred while updating user: {str(e)}"
         )
 #  Delete a user endpoint
+@router.delete("/")
+async def delete_user(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    try:
+        deleted_user = await db.users.delete(
+                where={"id": current_user.id}
+            )
+        if deleted_user:
+            return "User profile deleted successfully"
+                
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+    except HTTPException:
+        raise
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete user profile"
+        )

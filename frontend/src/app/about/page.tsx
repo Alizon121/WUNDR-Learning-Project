@@ -11,14 +11,6 @@ export default function AboutPage() {
         </p>
       </p>
 
-      {/* {/* Our Story
-      <div className="mb-10">
-        {/* <h2 className="text-2xl font-bold mb-2">Our Story</h2> 
-        <p>
-          WonderHood began with a small group of Colorado families who wanted more than just lessons at home — we wanted real friendships, hands-on adventures, and a supportive community for our kids! Now, we organize clubs, outdoor meetups, and creative projects for homeschoolers of all backgrounds.
-        </p> 
-      </div> */}
-
       {/* Why We Do */}
       <div className="mb-10">
           <h2 className="text-2xl font-bold mb-2">Why We Do It ?</h2>

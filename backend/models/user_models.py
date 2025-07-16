@@ -1,13 +1,16 @@
 from pydantic import BaseModel, Field, HttpUrl, field_validator
-from models.interaction_models import Review, Notification, Activity
-from typing import List, Optional
+# from models.interaction_models import Review, Notification, Activity, Event
+from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
 from datetime import datetime
 
+if TYPE_CHECKING:
+   from models.interaction_models import Notification, Activity, Event, Review
+
 class Role(str, Enum):
-  PARENT = "PARENT"
-  ADMIN = "ADMIN"
-  INSTRUCTOR = "INSTRUCTOR"
+  PARENT = "parent"
+  ADMIN = "admin"
+  INSTRUCTOR = "instructor"
 
 class User(BaseModel):
     id: str = Field(..., min_length=1, description="User identifier")
@@ -24,10 +27,12 @@ class User(BaseModel):
     zipCode: int
 
     children: List["Child"] = Field(default_factory=list)  # Default to empty list
+    enrolledEvents: List["Event"] = Field(default_factory=list)
+
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    notifications: List[Notification] = Field(default_factory=list)
-    reviews: List[Review] = Field(default_factory=list)
+    notifications: List["Notification"] = Field(default_factory=list)
+    reviews: List["Review"] = Field(default_factory=list)
 
     @field_validator("avatar")
     def validate_avatar_extension(cls, v):
@@ -35,14 +40,18 @@ class User(BaseModel):
             raise ValueError("Avatar URL must end in a valid image extension")
         return v
 
-
 class Child(BaseModel):
-  id: str = Field(..., min_length=1, description="User identifier")
+  id: str = Field(..., min_length=1, description="Child identifier")
   firstName: str = Field(min_length=1, max_length=50)
   lastName: str = Field(min_length=1, max_length=50)
   homeschool: bool = Field(default_factory=False)
   age: int = Field(ge=10)
-  enrolledActivities: List[Activity] = Field(default_factory=list)
+
+  parents: List["User"] = Field(default_factory=list)
+  enrolledEvents: List["Event"] = Field(default_factory=list)
+
+  created_at: datetime = Field(default_factory=datetime.utcnow)
+  updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class ChildCreate(BaseModel):
   firstName: str = Field(min_length=1, max_length=50)

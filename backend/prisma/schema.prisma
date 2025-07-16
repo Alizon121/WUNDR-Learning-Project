@@ -24,24 +24,27 @@ model Users {
   state             String
   zipCode           Int
 
-  createdAt         DateTime
-  updatedAt         DateTime
-  reviews           Reviews[]
-
-  // One-to-m
-  notifications     Notifications[]
-
   // m-to-n
   childIDs String[]   @db.ObjectId
   children  Children[]   @relation(fields: [childIDs], references: [id])
 
   eventIDs String[] @db.ObjectId
   events Events[] @relation(fields: [eventIDs], references: [id])
+
+  createdAt         DateTime
+  updatedAt         DateTime
+
+  // One-to-m
+  notifications     Notifications[]
+  reviews           Reviews[]
+
+
 }
 
 enum Roles {
   parent
-  moderator
+  admin
+  instructor
 }
 
 model Notifications {
@@ -65,6 +68,9 @@ model Children {
 
   eventIDs String[] @db.ObjectId
   events Events[] @relation(fields: [eventIDs], references: [id])
+
+  createdAt         DateTime
+  updatedAt         DateTime
 }
 
 // ! Activities     =============================================================================
@@ -92,6 +98,9 @@ model Events {
     activityId  String      @db.ObjectId
 
     reviews     Reviews[]
+
+    createdAt         DateTime
+    updatedAt         DateTime
 }
 
 // ! reviews        =============================================================================

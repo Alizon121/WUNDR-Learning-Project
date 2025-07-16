@@ -6,7 +6,8 @@ from datetime import datetime
 
 class Role(str, Enum):
   PARENT = "PARENT"
-  MODERATOR = "MODERATOR"
+  ADMIN = "ADMIN"
+  INSTRUCTOR = "INSTRUCTOR"
 
 class User(BaseModel):
     id: str = Field(..., min_length=1, description="User identifier")

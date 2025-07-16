@@ -70,6 +70,47 @@ async def get_all_users():
             detail="Failed to obtain user profiles"
         )
 
+# get select user
+@router.get("/me", response_model=UserResponse)
+async def get_current_user(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    """
+    Get the current authenticated user's information.
+    
+    Returns:
+        UserResponse: Current user's profile information
+    """
+    try:
+        user = await db.users.find_unique(
+            where={
+                "id": current_user.id
+            },
+            include={
+                "children": True  # Fixed: removed = in dictionary syntax
+            }
+        )
+        
+        # Handle case where user is not found (shouldn't happen with valid auth)
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+            
+        return user
+        
+    except HTTPException:
+            # Re-raise HTTP exceptions as-is
+            raise
+    except Exception as e:
+            print(f'Error fetching user: {e}')
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to obtain user profile"
+            )
+
+
 @router.put("/", response_model=UserUpdateResponse)
 async def update_user(
     update_data: UserUpdateRequest,

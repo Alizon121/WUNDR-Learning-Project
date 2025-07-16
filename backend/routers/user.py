@@ -1,14 +1,28 @@
 from fastapi import APIRouter, status, HTTPException, Depends
 from pydantic import BaseModel, Field, HttpUrl
 from db.prisma_client import db
-from typing import Annotated, Optional
-from models.user_models import User, Role
+from typing import Annotated, Optional, List
+from models.user_models import User, Child, Role
 from datetime import datetime
 from .auth.login import get_current_active_user
 from .auth.utils import hash_password
 
 router = APIRouter()
 
+class UserResponse(BaseModel):
+    id: str 
+    firstName: str
+    lastName: str
+    email: str
+    role: Role
+    avatar: Optional[HttpUrl] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zipCode: Optional[int] = None
+    children: List["Child"] = []
+
+    class Config:
+        from_attributes = True
 
 class UserUpdateRequest(BaseModel):
     """Request model for updating user data - all fields optional"""
@@ -27,6 +41,34 @@ class UserUpdateResponse(BaseModel):
     """Response model for successful user update"""
     message: str
     user: User
+
+User.model_rebuild()
+
+# Rebuild models to ensure all references are resolved
+UserUpdateResponse.model_rebuild()
+
+@router.get("/", response_model=List[UserResponse])
+async def get_all_users():
+    # MAY NEED TO ADD PAGINATION
+    """
+    Get all users from the database.
+    
+    Returns:
+        List[UserResponse]: List of all users
+    """
+    try:
+        all_users = await db.users.find_many(
+            include={
+                "children": True
+            }
+        )
+        return all_users
+    except HTTPException as e:
+        print(f"Error fetching users: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to obtain user profiles"
+        )
 
 @router.put("/", response_model=UserUpdateResponse)
 async def update_user(
@@ -109,3 +151,26 @@ async def update_user(
             detail=f"An error occurred while updating user: {str(e)}"
         )
 #  Delete a user endpoint
+@router.delete("/")
+async def delete_user(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    try:
+        deleted_user = await db.users.delete(
+                where={"id": current_user.id}
+            )
+        if deleted_user:
+            return "User profile deleted successfully"
+                
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+    except HTTPException:
+        raise
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete user profile"
+        )

@@ -1,3 +1,5 @@
+'use client'
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -20,12 +22,10 @@ export default function Navbar() {
         </Link>
 
         <ul className="flex space-x-16 text-[22px] font-bold text-wondergreen">
-          <li><a href="#about" className="hover:underline">About</a></li>
-          {/* <li><a href="#activities" className="hover:underline">Support</a></li> */}
+          <li><Link href="/about" className="hover:underline">About</Link></li>
           <li><a href="#events" className="hover:underline">Events</a></li>
           <li><a href="#events" className="hover:underline">Support Us</a></li>
-          {/* <li><a href="#contact" className="hover:underline">Contact</a></li> */}
-          <li><a href="#login" className="hover:underline">Join Us</a></li>
+          <li><a href="#login" className="hover:underline">Enroll</a></li>
           <li><a href="#login" className="hover:underline">Login</a></li>
           <li><a href="#login" className="hover:underline">Signup</a></li>
           <li><a href="#profile" className="hover:underline">Profile</a></li>

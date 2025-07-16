@@ -10,7 +10,7 @@ from .auth.utils import hash_password
 router = APIRouter()
 
 class UserResponse(BaseModel):
-    id: str 
+    id: str
     firstName: str
     lastName: str
     email: str
@@ -24,8 +24,6 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
-User.model_rebuild()
-
 UserResponse.model_rebuild()
 
 class UserUpdateRequest(BaseModel):
@@ -36,7 +34,7 @@ class UserUpdateRequest(BaseModel):
     # role: Optional[Role] = None
     avatar: Optional[HttpUrl] = None
     password: Optional[str] = None
-    
+
     city: Optional[str] = Field(None, min_length=2, max_length=50)
     state: Optional[str] = Field(None, min_length=2, max_length=50)
     zipCode: Optional[int] = None
@@ -56,7 +54,7 @@ async def get_all_users():
     # MAY NEED TO ADD PAGINATION
     """
     Get all users from the database.
-    
+
     Returns:
         List[UserResponse]: List of all users
     """
@@ -122,7 +120,7 @@ async def update_user(
 ):
     """
     Update the current user's profile information.
-    
+
     - **firstName**: Update first name (1-50 characters)
     - **lastName**: Update last name (1-50 characters)
     - **email**: Update email address (must be valid email format)
@@ -133,29 +131,29 @@ async def update_user(
     - **state**: Update state (2-50 characters)
     - **zipCode**: Update zip code
     """
-    
+
     try:
         # Create a dictionary of fields to update (exclude None values)
         update_fields = {
-            field: value 
-            for field, value in update_data.dict(exclude_unset=True).items() 
+            field: value
+            for field, value in update_data.dict(exclude_unset=True).items()
             if value is not None
         }
-        
+
         # If no fields to update, return early
         if not update_fields:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No fields provided for update"
             )
-        
+
         # Special handling for password - should be hashed
         if 'password' in update_fields:
             update_fields['password'] = hash_password(update_fields['password'])
-        
+
         # Add updated timestamp to database update
         update_fields['updated_at'] = datetime.utcnow()
-        
+
         # Check if email is being updated and if it's already taken
         if 'email' in update_fields and update_fields['email'] != current_user.email:
             existing_user = await db.user.find_unique(
@@ -166,13 +164,13 @@ async def update_user(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Email address is already registered"
                 )
-        
+
         # Update user in database using Prisma syntax
         updated_user = await db.user.update(
             where={"id": current_user.id},
             data=update_fields
         )
-        
+
         # Convert the updated user to your User model if needed
         # This depends on how your Prisma models map to Pydantic models
         if updated_user:
@@ -185,7 +183,7 @@ async def update_user(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
@@ -206,7 +204,7 @@ async def delete_user(
             )
         if deleted_user:
             return "User profile deleted successfully"
-                
+
         else:
             raise HTTPException(
                 status_code=404,

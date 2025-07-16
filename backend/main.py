@@ -2,9 +2,11 @@ from fastapi import FastAPI, Depends
 from routers.auth.routes import router as auth_router
 from routers.user import router as user_router
 from routers.child import router as child_router
+from routers.activities import router as activity_router
 from db.prisma_client import db
 
 # ! uvicorn main:app --reload
+# ! prisma generate
 
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
@@ -30,6 +32,8 @@ app.include_router(auth_router, prefix="/auth")
 app.include_router(user_router, prefix="/user")
 
 app.include_router(child_router, prefix="/child")
+
+app.include_router(activity_router, prefix="/activity")
 
 # @app.get("/items/")
 # async def read_items(token: Annotated[str,Depends(oauth2_scheme)]):

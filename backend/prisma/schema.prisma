@@ -34,6 +34,9 @@ model Users {
   // m-to-n
   childIDs String[]   @db.ObjectId
   children  Children[]   @relation(fields: [childIDs], references: [id])
+
+  eventIDs String[] @db.ObjectId
+  events Events[] @relation(fields: [eventIDs], references: [id])
 }
 
 enum Roles {
@@ -44,6 +47,7 @@ enum Roles {
 model Notifications {
   id                    String  @id @default(auto()) @map("_id") @db.ObjectId
   description           String
+
   user   Users   @relation(fields: [userId], references: [id])
   userId String @db.ObjectId
 }
@@ -59,8 +63,8 @@ model Children {
   parentIDs String[] @db.ObjectId
   parents   Users[]   @relation(fields: [parentIDs], references: [id])
 
-  activityIDs String[]   @db.ObjectId
-  activities  Activities [] @relation(fields: [activityIDs], references: [id])
+  eventIDs String[] @db.ObjectId
+  events Events[] @relation(fields: [eventIDs], references: [id])
 }
 
 // ! Activities     =============================================================================
@@ -71,10 +75,6 @@ model Activities {
   description   String
 
   events        Events[]
-  reviews       Reviews[]
-
-  childIDs String[] @db.ObjectId
-  child   Children[]   @relation(fields: [childIDs], references: [id])
 }
 
 // ! Events         =============================================================================
@@ -82,7 +82,13 @@ model Activities {
 model Events {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
 
-    activity    Activities   @relation(fields: [activityId], references: [id])
+    childIDs String[] @db.ObjectId
+    children Children[] @relation(fields: [childIDs], references: [id])
+
+    userIDs String[] @db.ObjectId
+    parents Users[] @relation(fields: [userIDs], references: [id])
+
+    activity    Activities   @relation(fields: activityId, references: [id])
     activityId  String      @db.ObjectId
 
     reviews     Reviews[]
@@ -94,11 +100,8 @@ model Reviews {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
     rating      Int
 
-    event       Events       @relation(fields: [eventId], references: [id])
+    event       Events       @relation(fields: eventId, references: [id])
     eventId     String      @db.ObjectId
-
-    activity    Activities    @relation(fields: [activityId], references: [id])
-    activityId  String      @db.ObjectId
 
     parent      Users        @relation(fields: [parentId], references: [id])
     parentId    String      @db.ObjectId

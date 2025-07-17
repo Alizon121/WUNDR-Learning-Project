@@ -41,3 +41,12 @@ class Review(BaseModel):
     )
     event: "Event"
     parent: "User"
+
+
+class ActivityCreate(BaseModel):
+    name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+
+class ActivityUpdate(BaseModel):
+    name: str = Field(min_length=1)
+    description: str = Field(min_length=1)

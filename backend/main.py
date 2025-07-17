@@ -7,6 +7,8 @@ from db.prisma_client import db
 
 # ! uvicorn main:app --reload
 # ! prisma generate
+# ! jt.DomW1zOmMio9dA5ybrymnr@kQnoe9ChGw0avJa27VzH4.NsckKAguFtHjy
+
 
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()

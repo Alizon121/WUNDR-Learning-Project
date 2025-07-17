@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, Security
 from db.prisma_client import db
 from typing import Annotated
 from models.interaction_models import ActivityCreate, ActivityUpdate
@@ -158,7 +158,7 @@ async def update_activity(
 @router.delete("/{activity_id}", status_code=status.HTTP_200_OK)
 async def delete_activity(
     activity_id: str,
-    current_user = Annotated[User, Depends(get_current_user)]
+    current_user = Annotated[User, Security(get_current_user)]
 ):
     """
     Delete Activity

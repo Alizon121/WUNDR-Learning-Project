@@ -81,3 +81,75 @@ async def create_event(
         )
 
     return {"event": new_event, "message": "Event created successfully"}
+
+
+@router.get("", status_code=status.HTTP_200_OK)
+async def get_all_events(
+    skip: int = 0,
+    limit: int = 10
+):
+
+    """
+    Get All Events
+
+    Returns every event in the system
+    Applies pagination
+    """
+
+    try:
+        events = await db.events.find_many(
+            skip=skip,
+            take=limit,
+            order={"createdAt": "desc"}
+        )
+        return {"events": events}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch events: {str(e)}"
+        )
+
+
+@router.get("/{event_id}", status_code=status.HTTP_200_OK)
+async def get_event_by_id(event_id: str):
+
+    """
+    Get Event by ID
+
+    Fetches an event by its ID
+    Hydrates the event with its user/children/activity data
+    """
+
+    try:
+        # Fetch the event
+        event = await db.events.find_unique(where={"id": event_id})
+
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Event not found"
+            )
+
+        # Query for related data
+        users = await db.users.find_many(where={"id": {"in": event.userIDs}})
+        children = await db.children.find_many(where={"id": {"in": event.childIDs}})
+        activity = await db.activities.find_unique(where={"id": event.activityId})
+        reviews = await db.reviews.find_many(where={"eventId": event.id})
+
+        # Add the data to the event
+        hydrated_event = {
+            **event.dict(),
+            "users": users,
+            "children": children,
+            "activity": activity,
+            "reviews": reviews
+        }
+
+        return hydrated_event
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch event: {str(e)}"
+        )

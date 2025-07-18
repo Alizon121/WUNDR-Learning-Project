@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Optional
 from datetime import datetime
 
 
@@ -53,6 +53,10 @@ class EventCreate(BaseModel):
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
+class EventUpdate(BaseModel):
+    activityId: Optional[str] = Field(min_length=1)
+    userIds: Optional[List[str]] = Field(default=None)
+    childIds: Optional[List[str]] = Field(default=None)
 
 # ! Reviews
 class Review(BaseModel):

@@ -34,13 +34,8 @@ async def create_activity(
             detail=f"Unauthorized. You must be authenticated to create an activity."
         )
 
+    # Verify admin status
     enforce_admin(current_user, "create an activity")
-
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be an admin to create an activity."
-        )
 
     # Check to see if an activity with this name already exists
     existing_activity = await db.activities.find_unique(

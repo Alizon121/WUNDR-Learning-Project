@@ -88,11 +88,11 @@ model Activities {
 model Events {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
 
-    childIDs String[] @db.ObjectId
-    children Children[] @relation(fields: [childIDs], references: [id])
+    childIDs  String[] @db.ObjectId
+    children  Children[] @relation(fields: [childIDs], references: [id])
 
-    userIDs String[] @db.ObjectId
-    parents Users[] @relation(fields: [userIDs], references: [id])
+    userIDs   String[] @db.ObjectId
+    users     Users[] @relation(fields: [userIDs], references: [id])
 
     activity    Activities   @relation(fields: activityId, references: [id])
     activityId  String      @db.ObjectId

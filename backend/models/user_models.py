@@ -58,6 +58,9 @@ class ChildCreate(BaseModel):
   lastName: str = Field(min_length=1, max_length=50)
   homeschool: bool = False
   age: int = Field(ge=10)
+  createdAt: datetime = Field(default_factory=datetime.utcnow)
+  updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
 
 class ChildUpdate(BaseModel):
   firstName: Optional[str] = Field(min_length=1, max_length=50)

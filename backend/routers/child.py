@@ -16,6 +16,15 @@ async def create_child(
     current_user: Annotated[User, Depends(get_current_user)]
 
 ):
+
+    # Make sure the user is authenticated
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to add a child."
+        )
+
+    # Add the child
     try:
         created_child = await db.children.create(
             data={
@@ -109,6 +118,14 @@ async def update_child(
     update_data: ChildUpdate,
     current_user: Annotated[User, Depends(get_current_user)]
 ):
+
+    # Make sure the user is authenticated
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to update a child's information."
+        )
+
     # Fetch the child
     child = await db.children.find_unique(
         where={"id": child_id}
@@ -150,6 +167,14 @@ async def delete_child(
     child_id: str,
     current_user: Annotated[User, Depends(get_current_user)]
 ):
+
+    # Make sure the user is authenticated
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to remove a child."
+        )
+
     # Fetch the child
     child = await db.children.find_unique(
         where={"id": child_id}

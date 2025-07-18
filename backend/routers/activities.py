@@ -4,6 +4,7 @@ from typing import Annotated
 from models.interaction_models import ActivityCreate, ActivityUpdate
 from models.user_models import User
 from .auth.login import get_current_user
+from .auth.utils import enforce_admin
 
 
 router = APIRouter()
@@ -18,6 +19,7 @@ async def create_activity(
     Create Activity
 
     Get the current user to verify authentication
+    Verify admin status
     Check to see if an activity already exists with this name
     Create the activity:
     - **name**: The name of the activity
@@ -30,6 +32,14 @@ async def create_activity(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Unauthorized. You must be authenticated to create an activity."
+        )
+
+    enforce_admin(current_user, "create an activity")
+
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be an admin to create an activity."
         )
 
     # Check to see if an activity with this name already exists
@@ -116,6 +126,7 @@ async def update_activity(
     Update Activity
 
     Get the current user to verify authentication
+    Verify admin status
     Check if an activity with the provided name already exists
     Update fields if provided:
     - **name**: The new name of the activity
@@ -129,6 +140,9 @@ async def update_activity(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Unauthorized. You must be authenticated to update an activity."
         )
+
+    # Verify admin status
+    enforce_admin(current_user, "update an activity")
 
     # Check to make sure an activity with this name does not already exist
     if activity_data.name:
@@ -168,12 +182,17 @@ async def delete_activity(
     returns: success message
     """
 
+    # Verify authentication
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Unauthorized. You must be authenticated to delete an activity."
         )
 
+    # Verify admin status
+    enforce_admin(current_user, "delete an activity")
+
+    # Delete the activity
     try:
         await db.activities.delete(
             where={"id": activity_id}

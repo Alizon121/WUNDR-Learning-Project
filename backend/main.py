@@ -3,9 +3,11 @@ from routers.auth.routes import router as auth_router
 from routers.user import router as user_router
 from routers.child import router as child_router
 from routers.activities import router as activity_router
+from routers.events import router as event_rouer
 from db.prisma_client import db
 
 # ! uvicorn main:app --reload
+# ! prisma db push
 # ! prisma generate
 # ! jt.DomW1zOmMio9dA5ybrymnr@kQnoe9ChGw0avJa27VzH4.NsckKAguFtHjy
 
@@ -36,6 +38,8 @@ app.include_router(user_router, prefix="/user")
 app.include_router(child_router, prefix="/child")
 
 app.include_router(activity_router, prefix="/activity")
+
+app.include_router(event_rouer, prefix="/event")
 
 # @app.get("/items/")
 # async def read_items(token: Annotated[str,Depends(oauth2_scheme)]):

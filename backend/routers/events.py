@@ -242,3 +242,42 @@ async def update_event(
     )
 
     return {"event": updated_event, "message": "Event updated successfully"}
+
+
+@router.delete("/{event_id}", status_code=status.HTTP_200_OK)
+async def delete_event_by_id(
+    event_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+
+    """
+    Delete Event
+
+    Verify authentication
+    Verify admin status
+    Verify that the event exists
+    Delete the event
+    """
+
+    # Make sure the user is authenticated
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to delete an event."
+        )
+
+    # Verify admin status
+    enforce_admin(current_user, "delete an event")
+
+    # Verify that the event exists
+    event = await db.events.find_unique(where={"id": event_id})
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detal="Event not found"
+        )
+
+    # Delete the event
+    await db.events.delete(where={"id": event_id})
+
+    return {"message": "Event deleted successfully"}

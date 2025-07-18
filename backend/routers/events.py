@@ -4,6 +4,7 @@ from typing import Annotated
 from models.user_models import User
 from models.interaction_models import EventCreate
 from .auth.login import get_current_user
+from .auth.utils import enforce_admin
 
 
 router = APIRouter()
@@ -29,6 +30,8 @@ async def create_event(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Unauthorized. You must be authenticated to create an event."
         )
+
+    enforce_admin(current_user, "create an event")
 
     # Verify that the activity ID is valid
     activity = await db.activities.find_unique(where={

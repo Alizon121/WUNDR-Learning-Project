@@ -79,7 +79,7 @@ async def get_current_user(
 ):
     """
     Get the current authenticated user's information.
-    
+
     Returns:
         UserResponse: Current user's profile information
     """
@@ -92,16 +92,16 @@ async def get_current_user(
                 "children": True  # Fixed: removed = in dictionary syntax
             }
         )
-        
+
         # Handle case where user is not found (shouldn't happen with valid auth)
         if not user:
             raise HTTPException(
                 status_code=404,
                 detail="User not found"
             )
-            
+
         return user
-        
+
     except HTTPException:
             # Re-raise HTTP exceptions as-is
             raise
@@ -166,7 +166,7 @@ async def update_user(
                 )
 
         # Update user in database using Prisma syntax
-        updated_user = await db.user.update(
+        updated_user = await db.users.update(
             where={"id": current_user.id},
             data=update_fields
         )

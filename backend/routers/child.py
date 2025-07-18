@@ -33,11 +33,10 @@ async def create_child(
                 "homeschool": child_data.homeschool,
                 "age": child_data.age,
                 "parentIDs": [current_user.id], # Add the urrent user's ID to parentIDs
-                "activityIDs": [] # Create activityIDs array so we can easily add to it later
+                "activityIDs": [], # Create activityIDs array so we can easily add to it later
+                "createdAt": child_data.createdAt,
+                "updatedAt": child_data.updatedAt
             },
-            include={
-                "parents": True, # Include the current user in the child's 'parents' array
-            }
         )
 
         # Once we create the child, update the current user to include the new child

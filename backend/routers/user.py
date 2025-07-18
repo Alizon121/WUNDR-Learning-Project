@@ -24,6 +24,10 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+User.model_rebuild()
+
+UserResponse.model_rebuild()
+
 class UserUpdateRequest(BaseModel):
     """Request model for updating user data - all fields optional"""
     firstName: Optional[str] = Field(None, min_length=1, max_length=50)

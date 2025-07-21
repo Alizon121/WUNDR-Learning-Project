@@ -70,6 +70,8 @@ async def create_event(
     try:
         new_event = await db.events.create(
             data={
+                "name": event_data.name,
+                "description": event_data.description,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIds,
                 "childIDs": event_data.childIds,
@@ -223,6 +225,12 @@ async def update_event(
     # Prepare the update data and update the event
     update_payload = {}
 
+    if event_data.name is not None:
+        update_payload["name"] = event_data.name
+
+    if event_data.description is not None:
+        update_payload["description"] = event_data.description
+
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId
 
@@ -281,3 +289,232 @@ async def delete_event_by_id(
     await db.events.delete(where={"id": event_id})
 
     return {"message": "Event deleted successfully"}
+
+
+@router.post("/{event_id}/join", status_code=status.HTTP_200_OK)
+async def add_user_to_event(
+    event_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+
+    """
+    Add the current user to an existing event
+
+    Verify authentication
+    Fetch the event
+    Check if user is already enrolled
+    If not, add user to event
+    Return success message
+    """
+
+    # Make sure the current user is authenticated
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to delete an event."
+        )
+
+    # Fetch the event
+    event = await db.events.find_unique(where={"id": event_id})
+
+    if not event:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found")
+
+    # Check if user is already enrolled
+    if current_user.id in event.userIDs:
+        raise HTTPException(
+            status_code=400,
+            detail="User is already enrolled"
+        )
+
+    # Add the user to the event
+    updated_event = await db.events.update(
+        where={"id": event_id},
+        data={"userIDs": event.userIDs + [current_user.id]}
+    )
+
+    return {"event": updated_event, "message": "User added to event"}
+
+@router.post("/{event_id}/enroll", status_code=status.HTTP_200_OK)
+async def add_child_to_event(
+    event_id: str,
+    child_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+
+    """
+    Add a child to an event
+
+    Validate authentication
+    Fetch the event
+    Verify that current user is a parent of the child
+    Check to see if child is already enrolled
+    Add child to event
+    Return success message
+    """
+
+    # Make sure the current user is authenticated
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to delete an event."
+        )
+
+    # Fetch the event
+    event = await db.events.find_unique(where={"id": event_id})
+
+    if not event:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found")
+
+    # Fetch child and verify parenthood
+    child = await db.children.find_unique(
+        where={"id": child_id}
+    )
+
+    if not child:
+        raise HTTPException(
+            status_code=404,
+            detail="Child not found"
+        )
+
+    if current_user.id not in child.parentIDs:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not the parent of this child."
+        )
+
+    # Check if child is already enrolled
+    if child.id in event.childIDs:
+        raise HTTPException(
+            status_code=400,
+            detail="Child is already enrolled"
+        )
+
+    # Add child to event
+    updated_event = await db.events.update(
+        where={"id": event_id},
+        data={"childIDs": event.childIDs + [child.id]}
+    )
+
+    return {"event": updated_event, "message": "Child added to event"}
+
+
+@router.delete("/{event_id}/leave", status_code=status.HTTP_200_OK)
+async def remove_user_from_event(
+    event_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+
+    """
+    Remove the current user from an event
+
+    Verify authentication
+    Fetch the event
+    Check that user is enrolled
+    Remove the user from the event
+    Return success message
+    """
+
+    # Make sure the current user is authenticated
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to delete an event."
+        )
+
+    # Fetch the event
+    event = await db.events.find_unique(where={"id": event_id})
+
+    if not event:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found")
+
+    # Check if user is enrolled
+    if current_user.id not in event.userIDs:
+        raise HTTPException(
+            status_code=400,
+            detail="User is not enrolled"
+        )
+
+    # Remove the user from the event
+    updated_user_list = [uid for uid in event.userIDs if uid != current_user.id]
+
+    updated_event = await db.events.update(
+        where={"id": event_id},
+        data={"userIDs": updated_user_list}
+    )
+
+    return {"event": updated_event, "message": "User removed from event"}
+
+
+@router.delete("/{event_id}/unenroll", status_code=status.HTTP_200_OK)
+async def remove_child_from_event(
+    event_id: str,
+    child_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+
+    """
+    Remove a child from an event
+
+    Validate authentication
+    Fetch the event
+    Verify that current user is a parent of the child
+    Confirm that the child is enrolled
+    Remove child from event
+    Return success message
+    """
+
+    # Make sure the current user is authenticated
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to delete an event."
+        )
+
+    # Fetch the event
+    event = await db.events.find_unique(where={"id": event_id})
+
+    if not event:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found")
+
+    # Fetch child and verify parenthood
+    child = await db.children.find_unique(
+        where={"id": child_id}
+    )
+
+    if not child:
+        raise HTTPException(
+            status_code=404,
+            detail="Child not found"
+        )
+
+    if current_user.id not in child.parentIDs:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not the parent of this child."
+        )
+
+    # Check if child is enrolled
+    if child.id not in event.childIDs:
+        raise HTTPException(
+            status_code=400,
+            detail="Child is not enrolled"
+        )
+
+    # Remove child from event
+    updated_child_list = [id for id in event.childIDs if id != child.id]
+
+    updated_event = await db.events.update(
+        where={"id": event_id},
+        data={"childIDs": updated_child_list}
+    )
+
+    return {"event": updated_event, "message": "Child removed from event"}

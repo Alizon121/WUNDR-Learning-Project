@@ -47,7 +47,7 @@ class Child(BaseModel):
   homeschool: bool = Field(default_factory=False)
   age: int = Field(ge=10)
 
-  parents: Optional[List["User"] = Field(default_factory=list)
+  parents: Optional[List["User"]] = Field(default_factory=list)
   enrolledEvents: List["Event"] = Field(default_factory=list)
 
   created_at: datetime = Field(default_factory=datetime.utcnow)

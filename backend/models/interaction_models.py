@@ -38,6 +38,10 @@ class ActivityUpdate(BaseModel):
 class Event(BaseModel):
    id: str = Field(..., min_length=1, description="Event identifier")
    activity: "Activity"
+
+   name: str = Field(min_length=1)
+   description: str = Field(min_length=1)
+
    users: List["User"] = Field(default_factory=list)
    children: List["Child"] = Field(default_factory=list)
    reviews: List["Review"] = Field(default_factory=list)
@@ -47,6 +51,10 @@ class Event(BaseModel):
 
 class EventCreate(BaseModel):
     activityId: str = Field(min_length=1)
+
+    name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+
     userIds: List[str] = Field(default_factory=list)
     childIds: List[str] = Field(default_factory=list)
 
@@ -55,6 +63,10 @@ class EventCreate(BaseModel):
 
 class EventUpdate(BaseModel):
     activityId: Optional[str] = Field(min_length=1)
+
+    name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+
     userIds: Optional[List[str]] = Field(default=None)
     childIds: Optional[List[str]] = Field(default=None)
 

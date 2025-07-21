@@ -167,7 +167,7 @@ async def update_activity(
 @router.delete("/{activity_id}", status_code=status.HTTP_200_OK)
 async def delete_activity(
     activity_id: str,
-    current_user = Annotated[User, Security(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Delete Activity
@@ -176,6 +176,8 @@ async def delete_activity(
     Delete the activity from the database
     returns: success message
     """
+
+    print("DELETE ROUTE CURRENT USER", current_user)
 
     # Verify authentication
     if not current_user:

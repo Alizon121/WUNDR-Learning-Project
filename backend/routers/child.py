@@ -24,6 +24,8 @@ async def create_child(
             detail=f"Unauthorized. You must be authenticated to add a child."
         )
 
+    print("THIS IS THE PARENTID:", current_user.id)
+
     # Add the child
     try:
         created_child = await db.children.create(
@@ -32,8 +34,8 @@ async def create_child(
                 "lastName": child_data.lastName,
                 "homeschool": child_data.homeschool,
                 "age": child_data.age,
-                "parentIDs": [current_user.id], # Add the urrent user's ID to parentIDs
-                "activityIDs": [], # Create activityIDs array so we can easily add to it later
+                "parentIDs": [current_user.id], # Add the current user's ID to parentIDs
+                "eventIDs": [], # Create activityIDs array so we can easily add to it later
                 "createdAt": child_data.createdAt,
                 "updatedAt": child_data.updatedAt
             },
@@ -87,9 +89,9 @@ async def get_child_by_id(
     child = await db.children.find_unique(
         where={"id": child_id},
         include={
-            # Include the child's parents and their activities
+            # Include the child's parents and their events
             "parents": True,
-            "activities": True
+            "events": True
         }
     )
 
@@ -150,7 +152,7 @@ async def update_child(
         data=update_data.model_dump(exclude_unset=True),
         include={
             "parents": True,
-            "activities": True
+            "events": True
         }
     )
 

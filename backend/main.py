@@ -6,10 +6,14 @@ from routers.activities import router as activity_router
 from routers.events import router as event_rouer
 from db.prisma_client import db
 
-# ! uvicorn main:app --reload
+# ! Start Application: uvicorn main:app --reload
+
 # ! prisma db push
 # ! prisma generate
-# ! jt.DomW1zOmMio9dA5ybrymnr@kQnoe9ChGw0avJa27VzH4.NsckKAguFtHjy
+
+# ! DEMO email: jt.DomW1zOmMio9dA5ybrymnr@kQnoe9ChGw0avJa27VzH4.NsckKAguFtHjy
+
+# ! Clear PyCache: find . -name "*.pyc" -delete
 
 
 # instantiate FastAPI app and Prisma db client

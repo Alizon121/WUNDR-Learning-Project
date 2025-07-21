@@ -31,8 +31,8 @@ class User(BaseModel):
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    notifications: List["Notification"] = Field(default_factory=list)
-    reviews: List["Review"] = Field(default_factory=list)
+    notifications: Optional[List["Notification"]] = Field(default_factory=list)
+    reviews: Optional[List["Review"]] = Field(default_factory=list)
 
     @field_validator("avatar")
     def validate_avatar_extension(cls, v):
@@ -47,7 +47,7 @@ class Child(BaseModel):
   homeschool: bool = Field(default_factory=False)
   age: int = Field(ge=10)
 
-  parents: List["User"] = Field(default_factory=list)
+  parents: Optional[List["User"] = Field(default_factory=list)
   enrolledEvents: List["Event"] = Field(default_factory=list)
 
   created_at: datetime = Field(default_factory=datetime.utcnow)

@@ -32,7 +32,7 @@ class UserUpdateRequest(BaseModel):
     lastName: Optional[str] = Field(None, min_length=1, max_length=50)
     email: Optional[str] = Field(None, pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     # role: Optional[Role] = None
-    avatar: Optional[HttpUrl] = None
+    avatar: Optional[str] = Field(None, description="Avatar URL as string")
     password: Optional[str] = None
 
     city: Optional[str] = Field(None, min_length=2, max_length=50)
@@ -152,11 +152,11 @@ async def update_user(
             update_fields['password'] = hash_password(update_fields['password'])
 
         # Add updated timestamp to database update
-        update_fields['updated_at'] = datetime.utcnow()
+        update_fields['updatedAt'] = datetime.utcnow()
 
         # Check if email is being updated and if it's already taken
         if 'email' in update_fields and update_fields['email'] != current_user.email:
-            existing_user = await db.user.find_unique(
+            existing_user = await db.users.find_unique(
                 where={"email": update_fields['email']}
             )
             if existing_user:

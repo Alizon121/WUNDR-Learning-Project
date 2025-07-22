@@ -1,11 +1,10 @@
-from fastapi import FastAPI, Depends, status, HTTPException, APIRouter
+from fastapi import Depends, status, HTTPException, APIRouter
 from db.prisma_client import db
 from typing import Annotated
-from ..models.interaction_models import Review
-from ..models.user_models import User
+# from ..models.interaction_models import Review
+from models.user_models import User
 from .auth.login import get_current_user
-from .auth.utils import enforce_admin
-
+# from .auth.utils import enforce_admin
 
 router = APIRouter()
 

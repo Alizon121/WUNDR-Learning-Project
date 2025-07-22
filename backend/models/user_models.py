@@ -19,7 +19,7 @@ class User(BaseModel):
     lastName: str = Field(min_length=1, max_length=50)
     email: str = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     role: Role
-    avatar: HttpUrl
+    avatar: str
     password: str
 
     city: str = Field(min_length=2, max_length=50)

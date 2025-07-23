@@ -15,7 +15,6 @@ from db.prisma_client import db
 
 # ! Clear PyCache: find . -name "*.pyc" -delete
 
-
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

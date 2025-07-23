@@ -108,6 +108,7 @@ model Events {
 model Reviews {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
     rating      Int
+    description String
 
     event       Events       @relation(fields: eventId, references: [id])
     eventId     String      @db.ObjectId

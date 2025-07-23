@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from db.prisma_client import db
 from models.user_models import PasswordResetRequest, PasswordResetPayload
-from auth.utils import hash_password
+from routers.auth.utils import hash_password
 from utils.email import send_email
 from datetime import datetime, timedelta
 from jose import jwt, ExpiredSignatureError, JWTError
@@ -21,7 +21,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 async def forgot_password(request: PasswordResetRequest):
 
     """
-    Initiatest password reset process
+    Initiates password reset process
 
     Generates JWT reset token
     Sends token to user email via SendGrid
@@ -99,3 +99,5 @@ async def reset_password(payload: PasswordResetPayload):
         where={"email": email},
         data={"password": hashed_pw}
     )
+
+    return {"message": "Your password has been successfully reset"}

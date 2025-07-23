@@ -4,6 +4,7 @@ from routers.user import router as user_router
 from routers.child import router as child_router
 from routers.activities import router as activity_router
 from routers.events import router as event_rouer
+from routers.password_reset import router as password_reset_router
 from db.prisma_client import db
 
 # ! Start Application: uvicorn main:app --reload
@@ -43,6 +44,8 @@ app.include_router(child_router, prefix="/child")
 app.include_router(activity_router, prefix="/activity")
 
 app.include_router(event_rouer, prefix="/event")
+
+app.include_router(password_reset_router, prefix="/auth")
 
 # @app.get("/items/")
 # async def read_items(token: Annotated[str,Depends(oauth2_scheme)]):

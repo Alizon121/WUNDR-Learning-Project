@@ -1,7 +1,7 @@
 export default function AboutPage() {
   return (
-    <section className="max-w-4xl mx-auto px-4 py-16 text-wondergreen">
-      <h1 className="text-4xl font-bold text-center mb-4">
+    <section className="max-w-4xl mx-auto px-4 py-14 text-wondergreen">
+      <h1 className="text-4xl font-bold text-center mb-6">
         WonderHood: More Than Just Homeschooling
       </h1>
       <p className="text-lg text-center text-gray-600 mb-6">

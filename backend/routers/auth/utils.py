@@ -12,7 +12,7 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def enforce_admin(current_user: User, action: str = "perform this actoin"):
+def enforce_admin(current_user: User, action: str = "perform this action"):
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

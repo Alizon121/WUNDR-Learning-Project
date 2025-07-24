@@ -77,5 +77,15 @@ class Review(BaseModel):
         ge = 1,
         le = 5
     )
+    description: str = Field(min_length=20, max_length=400)
     event: "Event"
     parent: "User"
+
+class ReviewCreate(BaseModel):
+    eventId: str = Field(min_length=1)
+    parentId: str = Field(min_length=1)
+    rating: int = Field(
+        ge=1,
+        le=5
+    )
+    description: str = Field(min_length=20, max_length=400)

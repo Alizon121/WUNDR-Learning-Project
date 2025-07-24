@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from routers.auth.routes import router as auth_router
 from routers.user import router as user_router
 from routers.child import router as child_router

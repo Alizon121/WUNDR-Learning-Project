@@ -36,9 +36,11 @@ class User(BaseModel):
 
     @field_validator("avatar")
     def validate_avatar_extension(cls, v):
-        if not v.path.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif")):
-            raise ValueError("Avatar URL must end in a valid image extension")
-        return v
+      if not isinstance(v, str):
+          raise TypeError("Avatar must be a string URL")
+      if not v.lower().endswith((".com", ".png", ".jpg", ".jpeg", ".webp", ".gif")):
+          raise ValueError("Avatar URL must end in a valid image extension")
+      return v
 
 class Child(BaseModel):
   id: str = Field(..., min_length=1, description="Child identifier")

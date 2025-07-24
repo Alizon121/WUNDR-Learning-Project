@@ -10,6 +10,9 @@ from datetime import datetime, timedelta, timezone
 import os
 from dotenv import load_dotenv
 from .utils import verify_password
+import logging
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -18,6 +21,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES'))
 
 
 oauth2_scheme = HTTPBearer()
+
+# For authentication of user by id
+security = HTTPBearer()
 
 # Router
 router = APIRouter()
@@ -69,6 +75,68 @@ async def get_current_active_user(
 ):
     return current_user
 
+
+async def get_current_user_by_email(credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]):
+    """
+    Extract and validate JWT token, return current user
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        # Extract token from credentials
+        token = credentials.credentials
+        logger.debug(f'Decoding token: {token[:20]}...')
+
+        # Decode JWT token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        logger.debug(f'Token Payload: {payload}')
+
+
+        # Get user identifier from token
+        user_identifier = payload.get("sub")
+        if user_identifier is None:
+            logger.error("No 'sub' field in token payload")
+            raise credentials_exception
+        
+        
+        # Clean whitespace and normalize
+        user_identifier = user_identifier.strip()
+        
+        logger.debug(f'Looking up user with identifier: {user_identifier}')
+
+    except InvalidTokenError as e:
+        logger.error(f'Token validation failed: {str(e)}')
+        raise credentials_exception
+    
+    except Exception as e:
+        logger.error(f'Unexpected error decoding token: {str(e)}')
+        raise credentials_exception
+    
+    try:
+        # OPTION A: If JWT 'sub' contains user ID
+        user = await db.users.find_unique(
+            where={"email":user_identifier}
+        )
+
+        if user is None:
+            logger.error(f"User not found with identifier: {user_identifier}")
+            raise credentials_exception
+    
+        logger.debug(f"Successfully found user: {user.email}")
+        return user
+    
+    except Exception as e:
+        logger.debug(f'Database error looking up user: {str(e)}')
+        raise credentials_exception
+    
+async def get_current_active_user_by_email(
+        current_user: Annotated[User, Depends(get_current_user_by_email)]
+):
+    return current_user
 
 @router.post("/token")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, EmailStr, field_validator
 # from models.interaction_models import Review, Notification, Activity, Event
 from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
@@ -41,6 +41,13 @@ class User(BaseModel):
       if not v.lower().endswith((".com", ".png", ".jpg", ".jpeg", ".webp", ".gif")):
           raise ValueError("Avatar URL must end in a valid image extension")
       return v
+
+class PasswordResetRequest(BaseModel):
+   email: EmailStr
+
+class PasswordResetPayload(BaseModel):
+   token: str = Field(description="Password reset token")
+   new_password: str = Field(min_length=8, description="New Account Password")
 
 class Child(BaseModel):
   id: str = Field(..., min_length=1, description="Child identifier")

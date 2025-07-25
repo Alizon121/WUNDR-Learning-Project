@@ -5,6 +5,7 @@ from routers.child import router as child_router
 from routers.activities import router as activity_router
 from routers.events import router as event_router
 from routers.reviews import router as review_router
+from routers.password_reset import router as password_reset_router
 from db.prisma_client import db
 
 # ! Start Application: uvicorn main:app --reload
@@ -15,7 +16,6 @@ from db.prisma_client import db
 # ! DEMO email: jt.DomW1zOmMio9dA5ybrymnr@kQnoe9ChGw0avJa27VzH4.NsckKAguFtHjy
 
 # ! Clear PyCache: find . -name "*.pyc" -delete
-
 
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
@@ -45,6 +45,8 @@ app.include_router(child_router, prefix="/child")
 app.include_router(activity_router, prefix="/activity")
 
 app.include_router(event_router, prefix="/event")
+
+app.include_router(password_reset_router, prefix="/password_reset")
 
 app.include_router(review_router, prefix="/review")
 # @app.get("/items/")

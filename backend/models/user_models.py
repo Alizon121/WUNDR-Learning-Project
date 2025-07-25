@@ -48,6 +48,7 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetPayload(BaseModel):
    token: str = Field(description="Password reset token")
    new_password: str = Field(min_length=8, description="New Account Password")
+
 class Child(BaseModel):
   id: str = Field(..., min_length=1, description="Child identifier")
   firstName: str = Field(min_length=1, max_length=50)

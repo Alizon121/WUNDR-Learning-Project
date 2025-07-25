@@ -8,4 +8,4 @@ pyjwt==2.10.1
 python-dotenv==1.1.0
 python-jose==3.5.0
 pymongo==4.13.2
-sendgrid==6.12.4
+yagmail==0.15.293

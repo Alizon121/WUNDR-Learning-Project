@@ -45,7 +45,7 @@ app.include_router(activity_router, prefix="/activity")
 
 app.include_router(event_rouer, prefix="/event")
 
-app.include_router(password_reset_router, prefix="/auth")
+app.include_router(password_reset_router, prefix="/password_reset")
 
 # @app.get("/items/")
 # async def read_items(token: Annotated[str,Depends(oauth2_scheme)]):

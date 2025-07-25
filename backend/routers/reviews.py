@@ -2,10 +2,10 @@ from fastapi import Depends, status, HTTPException, APIRouter, logger
 from db.prisma_client import db
 from typing import Annotated
 # from ..models.interaction_models import Review
-from models.interaction_models import ReviewCreate
+from models.interaction_models import ReviewCreate, ReviewUpdate
 from models.user_models import User
-from .auth.login import get_current_user
-# from .auth.utils import enforce_admin
+from .auth.login import get_current_user, get_current_active_user_by_email
+from datetime import datetime
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ async def get_all_reviews(
         """
         Get All Reviews
 
-        If admin, get all reviews for an event
+        If admin, get all reviews by an rating, event, or user (e.g. parent)
         verify admin status
         return "reviews": {reviews}
         """
@@ -55,7 +55,7 @@ async def get_all_reviews(
                 detail="Failed to obtain review"
             )
         
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_review(
      review_data: ReviewCreate,
      current_user: Annotated[User, Depends(get_current_user)]
@@ -96,3 +96,61 @@ async def create_review(
           "review": review, 
           "message": "Review successfully made"
           }
+
+@router.patch("/{reviewId}", status_code=status.HTTP_200_OK)
+async def update_review(
+    review_id: str,
+    review_data: ReviewUpdate,
+    current_user = Depends(get_current_active_user_by_email)
+):
+     """ 
+     Update the current user's review
+     
+     - **rating: Update rating (1-5 stars)
+     - ** description: Update description (20-400 length)
+     """
+
+    # Authenticate user
+     if not current_user:
+          raise HTTPException(
+               status_code=status.HTTP_401_UNAUTHORIZED,
+               detail=(f"Unauthorized. You must be authenticated to update a review")
+          )
+     
+    # Find the review
+     review = await db.reviews.find_unique(
+         where={"id": review_id}
+     )
+
+    # Validate the event
+     event = await db.reviews.find_unique(
+        where={"eventID": review_data.eventId}    
+     )
+     if not event:
+          raise HTTPException(
+               status_code=status.HTTP_404_NOT_FOUND,
+               detail=(f'Event not found')
+          )
+     
+    
+    # Update payload:
+     payload = {}
+
+     if review_data.rating is not None:
+          payload["rating"] = review_data.rating
+     if review_data.description is not None:
+          payload["description"] = review_data.description
+
+     payload["updatedAt"] = datetime.utcnow()
+
+
+     updated_review = await db.reviews.update(
+          where={"id": review_id},
+          data=payload
+     )
+
+     return {
+          "event": updated_review,
+          "message": "Review updated successfully"
+     }
+

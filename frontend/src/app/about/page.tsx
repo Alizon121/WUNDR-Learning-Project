@@ -1,10 +1,11 @@
 export default function AboutPage() {
+  //test
   return (
-    <section className="max-w-4xl mx-auto px-4 py-16 text-wondergreen">
-      <h1 className="text-4xl font-bold text-center mb-4">
+    <section className="max-w-4xl mx-auto px-4 py-14 text-wondergreen">
+      <h1 className="text-4xl font-bold text-center mb-6">
         WonderHood: More Than Just Homeschooling
       </h1>
-      <p className="text-lg text-center text-gray-600 mb-10">
+      <p className="text-lg text-center text-gray-600 mb-6">
         Creating joyful connections and real-life adventures for homeschool families in Colorado.
       </p>
       <p>
@@ -13,7 +14,7 @@ export default function AboutPage() {
 
       {/* Why We Do */}
       <div className="mb-10">
-          <h2 className="text-2xl font-bold mb-2">Why We Do It ?</h2>
+          <h2 className="text-2xl font-bold mb-2 mt-8">Why We Do It ?</h2>
           <p>
             At Wonderhood, we believe every child deserves the chance to discover their unique talents, develop life skills, and connect with others in a supportive, inspiring environment.
           </p>
@@ -70,5 +71,5 @@ export default function AboutPage() {
         Questions? Email us at <a href="mailto:wonderhood.project@gmail.com" className="underline">wonderhood.project@gmail.com</a> or follow us on social media!
       </div>
     </section>
-  );
+  );  
 }

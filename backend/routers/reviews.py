@@ -97,7 +97,7 @@ async def create_review(
           "message": "Review successfully made"
           }
 
-@router.patch("/{reviewId}", status_code=status.HTTP_200_OK)
+@router.patch("/{review_id}", status_code=status.HTTP_200_OK)
 async def update_review(
     review_id: str,
     review_data: ReviewUpdate,
@@ -154,3 +154,46 @@ async def update_review(
           "message": "Review updated successfully"
      }
 
+@router.delete("/{review_id}", status_code=status.HTTP_200_OK)
+async def delete_review(
+     review_id: str,
+     current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+    Delete a review
+
+    An authenticated user is allowed to delete their review
+    """
+    try:
+        # Authenticate user
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=(f'Unauthorized. You must be authenticared to delete a review')
+            )
+        
+        # Query review
+        review = await db.reviews.find_unique(
+            where={"id": review_id}
+        )
+
+        if not review:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Review not found"
+            )
+        
+        deleted_review = await db.reviews.delete(
+            where={"id": review_id}
+        )
+
+        if deleted_review:
+            return "Review deleted successfully"
+    
+    except HTTPException:
+         raise
+    except HTTPException as e:
+              raise HTTPException(
+              status_code=500,
+              detail="Failed to delete the review"
+              )

@@ -1,30 +1,15 @@
 from fastapi import APIRouter, status, HTTPException, Depends
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from db.prisma_client import db
 from typing import Annotated, Optional, List
 from models.user_models import User, Child, Role
+from models.interaction_models import Event, Review, Notification
 from datetime import datetime
-from .auth.login import get_current_active_user
+from .auth.login import get_current_active_user, get_current_active_user_by_email
 from .auth.utils import hash_password
 
 router = APIRouter()
 
-class UserResponse(BaseModel):
-    id: str
-    firstName: str
-    lastName: str
-    email: str
-    role: Role
-    avatar: Optional[HttpUrl] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    zipCode: Optional[int] = None
-    children: List["Child"] = []
-
-    class Config:
-        from_attributes = True
-
-UserResponse.model_rebuild()
 
 class UserUpdateRequest(BaseModel):
     """Request model for updating user data - all fields optional"""
@@ -32,17 +17,46 @@ class UserUpdateRequest(BaseModel):
     lastName: Optional[str] = Field(None, min_length=1, max_length=50)
     email: Optional[str] = Field(None, pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     # role: Optional[Role] = None
-    avatar: Optional[HttpUrl] = None
+    avatar: Optional[str] = Field(None, description="Avatar URL as string")
     password: Optional[str] = None
 
     city: Optional[str] = Field(None, min_length=2, max_length=50)
     state: Optional[str] = Field(None, min_length=2, max_length=50)
     zipCode: Optional[int] = None
 
+
+class UserResponse(BaseModel):
+    id: str
+    firstName: str
+    lastName: str
+    email: str
+    role: Role
+    avatar: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zipCode: Optional[int] = None
+    children: List[Child] = Field(default_factory=list)
+    enrolledEvents: List[Event] = Field(default_factory=list)
+    reviews:List[Review] = Field(default_factory=list)
+    notifications: List[Notification] = Field(default_factory=list)
+    createdAt: datetime
+    updatedAt: datetime
+
+
+    @field_validator("children", "enrolledEvents", "notifications", "reviews", mode="before")
+    @classmethod
+    def _none_to_list(cls, v):
+        # if DB/ORM gave us None, make it an empty list
+        return [] if v is None else v
+
+    model_config = ConfigDict(from_attributes=True)
+
+UserResponse.model_rebuild()
+
 class UserUpdateResponse(BaseModel):
     """Response model for successful user update"""
     message: str
-    user: User
+    user: UserResponse
 
 User.model_rebuild()
 
@@ -116,7 +130,7 @@ async def get_current_user(
 @router.put("/", response_model=UserUpdateResponse)
 async def update_user(
     update_data: UserUpdateRequest,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user = Depends(get_current_active_user_by_email)
 ):
     """
     Update the current user's profile information.
@@ -136,8 +150,7 @@ async def update_user(
         # Create a dictionary of fields to update (exclude None values)
         update_fields = {
             field: value
-            for field, value in update_data.dict(exclude_unset=True).items()
-            if value is not None
+            for field, value in update_data.model_dump(exclude_unset=True).items() if value is not None
         }
 
         # If no fields to update, return early
@@ -152,11 +165,11 @@ async def update_user(
             update_fields['password'] = hash_password(update_fields['password'])
 
         # Add updated timestamp to database update
-        update_fields['updated_at'] = datetime.utcnow()
+        update_fields['updatedAt'] = datetime.utcnow()
 
         # Check if email is being updated and if it's already taken
         if 'email' in update_fields and update_fields['email'] != current_user.email:
-            existing_user = await db.user.find_unique(
+            existing_user = await db.users.find_unique(
                 where={"email": update_fields['email']}
             )
             if existing_user:
@@ -171,18 +184,20 @@ async def update_user(
             data=update_fields
         )
 
-        # Convert the updated user to your User model if needed
-        # This depends on how your Prisma models map to Pydantic models
-        if updated_user:
-            return UserUpdateResponse(
-                message="User profile updated successfully",
-                user=User(**updated_user.dict()) if hasattr(updated_user, 'dict') else updated_user
-            )
-        else:
+        if not updated_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
+        
+        # **Convert ORM → Pydantic here:**
+        user_resp = UserResponse.from_orm(updated_user)
+
+        return UserUpdateResponse(
+            message="User profile updated successfully",
+            # user=user_instance
+            user = user_resp
+        )
 
     except HTTPException:
         # Re-raise HTTP exceptions
@@ -193,6 +208,11 @@ async def update_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred while updating user: {str(e)}"
         )
+    
+# Rebuild models to ensure all references are resolved
+UserUpdateResponse.model_rebuild()
+
+
 #  Delete a user endpoint
 @router.delete("/")
 async def delete_user(

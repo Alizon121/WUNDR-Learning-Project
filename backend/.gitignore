@@ -1,20 +1,3 @@
-# Node.js (frontend)
-node_modules/
-dist/
-npm-debug.log
-yarn-error.log
-
-# Next.js
-.next/
-
-# Build output (если билдили фронт)
-build/
-out/
-
-# Log files
-*.log
-
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

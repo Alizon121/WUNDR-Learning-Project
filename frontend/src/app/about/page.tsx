@@ -1,4 +1,5 @@
 export default function AboutPage() {
+  //test
   return (
     <section className="max-w-4xl mx-auto px-4 py-14 text-wondergreen">
       <h1 className="text-4xl font-bold text-center mb-6">
@@ -70,5 +71,5 @@ export default function AboutPage() {
         Questions? Email us at <a href="mailto:wonderhood.project@gmail.com" className="underline">wonderhood.project@gmail.com</a> or follow us on social media!
       </div>
     </section>
-  );
+  );  
 }

@@ -4,7 +4,7 @@ from typing import Annotated
 from models.interaction_models import ReviewCreate, ReviewUpdate
 from models.user_models import User
 from .auth.login import get_current_user, get_current_active_user_by_email
-from auth.utils import enforce_admin
+from .auth.utils import enforce_admin
 from datetime import datetime
 
 router = APIRouter()

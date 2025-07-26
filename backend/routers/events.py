@@ -522,7 +522,39 @@ async def remove_child_from_event(
 
 ########### * Review endpoint(s) ###############
 
-@router.get("{event_id}/review/{review_id}", status_code=status.HTTP_200_OK)
+@router.get("/{event_id}/reviews", status_code=status.HTTP_200_OK)
+async def get_all_reviews_by_event(
+    event_id: str,
+    skip: int = 0,
+    limit: int = 10
+):
+    
+    """
+    GET all paginated reviews for an event
+    """
+
+    try:
+        reviews = await db.reviews.find_many(
+            where={ "eventId": event_id},
+                skip=skip,
+                limit=limit
+        )
+
+        if not reviews:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Reviews not found"
+            )
+        
+        return {"reviews": reviews}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to obtain reviews"
+        )
+
+@router.get("/{event_id}/review/{review_id}", status_code=status.HTTP_200_OK)
 async def get_review_by_id(
      event_id: str,
      review_id: str,
@@ -531,21 +563,13 @@ async def get_review_by_id(
 
     """
      Get review by id
-
-     Authenticated user should be able to get a specific review
     """
-
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Unauthorized. You must be authenticated to get a review'
-            )
     
     try:
         # Get a review 
         review = await db.reviews.find_unique(
             where={
-                event_id: event_id,
+                "id": review_id,
             }
         )
 
@@ -562,3 +586,4 @@ async def get_review_by_id(
             status_code=500,
             detail="Failed to obtain review"
         )
+    

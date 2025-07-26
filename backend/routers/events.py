@@ -518,3 +518,47 @@ async def remove_child_from_event(
     )
 
     return {"event": updated_event, "message": "Child removed from event"}
+
+
+########### * Review endpoint(s) ###############
+
+@router.get("{event_id}/review/{review_id}", status_code=status.HTTP_200_OK)
+async def get_review_by_id(
+     event_id: str,
+     review_id: str,
+     current_user: Annotated[User, Depends(get_current_user)]
+    ):
+
+    """
+     Get review by id
+
+     Authenticated user should be able to get a specific review
+    """
+
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Unauthorized. You must be authenticated to get a review'
+            )
+    
+    try:
+        # Get a review 
+        review = await db.reviews.find_unique(
+            where={
+                event_id: event_id,
+            }
+        )
+
+        if not review or review.eventId != event_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Review not found for this event"
+            )
+        
+        return {"review": review}
+        
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to obtain review"
+        )

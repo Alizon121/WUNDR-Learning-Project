@@ -1,10 +1,10 @@
 from fastapi import Depends, status, HTTPException, APIRouter, logger
 from db.prisma_client import db
 from typing import Annotated
-# from ..models.interaction_models import Review
 from models.interaction_models import ReviewCreate, ReviewUpdate
 from models.user_models import User
 from .auth.login import get_current_user, get_current_active_user_by_email
+from auth.utils import enforce_admin
 from datetime import datetime
 
 router = APIRouter()
@@ -20,6 +20,7 @@ async def get_all_reviews(
         Get All Reviews
 
         If admin, get all reviews by an rating, event, or user (e.g. parent)
+        If no filters are provided, endpoint fetches ALL reviews
         verify admin status
         return "reviews": {reviews}
         """
@@ -30,6 +31,9 @@ async def get_all_reviews(
                         detail=f'You must be authorized to view all reviews'
                 )
         
+        enforce_admin(current_user, "get all reviews or filtered reviews")
+
+        # ! Add pagination??
         try:
             filters = {}
             if rating is not None:

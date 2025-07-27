@@ -1,7 +1,7 @@
-from fastapi import Depends, status, HTTPException, APIRouter, logger
+from fastapi import Depends, status, HTTPException, APIRouter
 from db.prisma_client import db
 from typing import Annotated
-from models.interaction_models import ReviewCreate, ReviewUpdate
+from models.interaction_models import ReviewUpdate
 from models.user_models import User
 from .auth.login import get_current_user, get_current_active_user_by_email
 from .auth.utils import enforce_admin
@@ -15,11 +15,13 @@ async def get_all_reviews(
         rating: int | None = None,
         event_id: str | None = None,
         parent_id: str | None = None,
+        skip: int = 0,
+        limit: int = 10
     ):
         """
         Get All Reviews
 
-        If admin, get all reviews by an rating, event, or user (e.g. parent)
+        If admin, get all reviews by a rating, event, or user (e.g. parent)
         If no filters are provided, endpoint fetches ALL reviews
         verify admin status
         return "reviews": {reviews}
@@ -32,23 +34,23 @@ async def get_all_reviews(
                 )
         
         enforce_admin(current_user, "get all reviews or filtered reviews")
-
-        # ! Add pagination??
         try:
             filters = {}
             if rating is not None:
                 filters["rating"] = rating
             if event_id is not None:
-                filters["event_id"] = event_id
+                filters["eventId"] = event_id
             if parent_id is not None:
-                filters["parent_id"] = parent_id
+                filters["parentId"] = parent_id
 
             reviews = await db.reviews.find_many(
                 where=filters,
                 include={
                         "event": True,
                         "parent": True
-                }
+                },
+                skip=skip,
+                take=limit
             )
 
             return {"reviews": reviews}
@@ -59,47 +61,6 @@ async def get_all_reviews(
                 detail="Failed to obtain review"
             )
         
-@router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_review(
-     review_data: ReviewCreate,
-     current_user: Annotated[User, Depends(get_current_user)]
-):
-     """
-        Create Review
-
-        Get the current user for authentication and create review
-     """
-     event = await db.events.find_unique(
-            where={"id": review_data.eventId}
-        )
-        
-     if not event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Event not found"
-        )
-     
-
-    # ! Do we need to add logic for preventing one user making many reviews?
-     try:
-          review = await db.reviews.create(
-               data={
-                    "eventID": review_data.eventId,
-                    "parentId": current_user.id,
-                    "rating": review_data.rating,
-                    "description": review_data.description
-               }
-          )
-     except Exception as e:
-          raise HTTPException(
-               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-               detail=f'Failed to create review: {e}'
-          )
-     
-     return {
-          "review": review, 
-          "message": "Review successfully made"
-          }
 
 @router.patch("/{review_id}", status_code=status.HTTP_200_OK)
 async def update_review(
@@ -126,16 +87,11 @@ async def update_review(
          where={"id": review_id}
      )
 
-    # Validate the event
-     event = await db.reviews.find_unique(
-        where={"eventID": review_data.eventId}    
-     )
-     if not event:
+     if not review or current_user.id != review.parentId:
           raise HTTPException(
-               status_code=status.HTTP_404_NOT_FOUND,
-               detail=(f'Event not found')
+               status_code=status.HTTP_403_FORBIDDEN,
+               detail="You do not have permission to make edit."
           )
-     
     
     # Update payload:
      payload = {}

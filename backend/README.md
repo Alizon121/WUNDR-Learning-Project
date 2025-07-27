@@ -1,0 +1,24 @@
+# WUNDR backend Instructions
+
+## Getting Started with development environment
+
+1. Change directory to "backend" and install dependencies:
+
+pip install -r requirements.txt
+
+2. Run Prisma commands:
+
+prisma generate
+prisma db push
+
+3. Run the development server using:
+
+uvicorn main:app --reload
+
+After starting the server, navigate to http://127.0.0.1:8000/ on your local device to being viewing endpoint responses.
+
+Navigate to http://127.0.0.1:8000/docs for interactive API docs.
+
+# Deploy on ...
+
+ADD INSTRUCTIONS FOR HOW WE ARE DELPOYING HERE

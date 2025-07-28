@@ -37,7 +37,7 @@ export default function Navbar() {
           <li><a href="#events" className="hover:underline">Support Us</a></li>
           <li><a href="#login" className="hover:underline">Enroll</a></li>
           <li><a href="#login" className="hover:underline">Login</a></li>
-          <li><a href="#login" className="hover:underline" onClick={handleSignup}>Signup</a></li>
+          <li><a href="/signup" className="hover:underline" onClick={handleSignup}>Signup</a></li>
           <li><a href="#profile" className="hover:underline">Profile</a></li>
         </ul>
       </div>

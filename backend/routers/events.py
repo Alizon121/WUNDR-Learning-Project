@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from db.prisma_client import db
 from typing import Annotated
 from models.user_models import User
-from models.interaction_models import EventCreate, EventUpdate
+from models.interaction_models import EventCreate, EventUpdate, ReviewCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin
 from datetime import datetime
@@ -518,3 +518,129 @@ async def remove_child_from_event(
     )
 
     return {"event": updated_event, "message": "Child removed from event"}
+
+
+########### * Review endpoint(s) ###############
+
+@router.get("/{event_id}/reviews", status_code=status.HTTP_200_OK)
+async def get_all_reviews_by_event(
+    event_id: str,
+    skip: int = 0,
+    limit: int = 10
+):
+    
+    """
+    GET all paginated reviews for an event
+    """
+
+    try:
+        reviews = await db.reviews.find_many(
+            where={ "eventId": event_id},
+             # TODO Ensure pagination is working
+                skip=skip,
+                take=limit
+        )
+
+        if not reviews:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Reviews not found"
+            )
+        
+        return {"reviews": reviews}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to obtain reviews"
+        )
+
+@router.get('/{event_id}/review/{review_id}', status_code=status.HTTP_200_OK)
+async def get_review_by_id(
+     event_id: str,
+     review_id: str,
+    #  current_user: Annotated[User, Depends(get_current_user)]
+    ):
+
+    """
+     Get review by id
+    """
+    
+    try:
+        # Get a review 
+        review = await db.reviews.find_unique(
+            where={
+                "id": review_id,
+            }
+        )
+
+        if not review or review.eventId != event_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Review not found for this event"
+            )
+        
+        return {"review": review}
+        
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to obtain review"
+        )
+    
+@router.post("/{event_id}/reviews", status_code=status.HTTP_201_CREATED)
+async def create_review(
+     event_id: str,
+     review_data: ReviewCreate,
+     current_user: Annotated[User, Depends(get_current_user)]
+):
+     """
+        Create Review
+
+        Get the current user for authentication and create review
+     """
+     event = await db.events.find_unique(
+            where={"id": event_id}
+        )
+        
+     if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+     
+
+    # ! Do we need to add logic for preventing one user making many reviews?
+     existing_review = await db.reviews.find_first(
+         where={
+             "eventId": event_id,
+             "parentId": current_user.id
+            }
+     )
+
+     if existing_review:
+         raise HTTPException(
+             status_code=status.HTTP_400_BAD_REQUEST,
+             detail="User cannot make more than one review for an event."
+         )
+     
+     try:
+          review = await db.reviews.create(
+               data={
+                    "eventId": review_data.eventId,
+                    "parentId": current_user.id,
+                    "rating": review_data.rating,
+                    "description": review_data.description,
+                    "createdAt": datetime.utcnow()
+               }
+          )
+          return {
+            "review": review, 
+            "message": "Review successfully made"
+            }
+     
+     except Exception as e:
+          raise HTTPException(
+               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+               detail=f'Failed to create review: {e}'
+          )

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, EmailStr, field_validator
 # from models.interaction_models import Review, Notification, Activity, Event
 from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
@@ -19,7 +19,7 @@ class User(BaseModel):
     lastName: str = Field(min_length=1, max_length=50)
     email: str = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     role: Role
-    avatar: HttpUrl
+    avatar: str
     password: str
 
     city: str = Field(min_length=2, max_length=50)
@@ -36,9 +36,18 @@ class User(BaseModel):
 
     @field_validator("avatar")
     def validate_avatar_extension(cls, v):
-        if not v.path.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif")):
-            raise ValueError("Avatar URL must end in a valid image extension")
-        return v
+      if not isinstance(v, str):
+          raise TypeError("Avatar must be a string URL")
+      if not v.lower().endswith((".com", ".png", ".jpg", ".jpeg", ".webp", ".gif")):
+          raise ValueError("Avatar URL must end in a valid image extension")
+      return v
+
+class PasswordResetRequest(BaseModel):
+   email: EmailStr
+
+class PasswordResetPayload(BaseModel):
+   token: str = Field(description="Password reset token")
+   new_password: str = Field(min_length=8, description="New Account Password")
 
 class Child(BaseModel):
   id: str = Field(..., min_length=1, description="Child identifier")

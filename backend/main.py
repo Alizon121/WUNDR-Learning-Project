@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from routers.auth.routes import router as auth_router
 from routers.user import router as user_router
 from routers.child import router as child_router
@@ -19,6 +20,14 @@ from db.prisma_client import db
 
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # When we start the app, connect to the db. When we shut down the app, disconnect

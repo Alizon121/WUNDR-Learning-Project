@@ -37,8 +37,6 @@ model Users {
   // One-to-m
   notifications     Notifications[]
   reviews           Reviews[]
-
-
 }
 
 enum Roles {
@@ -61,7 +59,7 @@ model Children {
   firstName             String
   lastName              String
   homeschool            Boolean
-  age                   Int
+  birthday              DateTime
 
   parentIDs String[] @db.ObjectId
   parents   Users[]   @relation(fields: [parentIDs], references: [id])

@@ -2,8 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useModal } from "@/app/context/modal";
+import SignupModal from "../signup/SignupModal"
+import React from "react";
 
 export default function Navbar() {
+  const {setModalContent} = useModal()
+
+  const handleSignup: React.MouseEventHandler<HTMLAnchorElement> = (e) => {
+    e.preventDefault()
+    setModalContent(<SignupModal/>)
+  }
+
   return (
     <nav className="bg-wonderbg shadow-md px-32 py-4">
       <div className="max-w-full mx-auto flex justify-between items-center">
@@ -27,7 +37,7 @@ export default function Navbar() {
           <li><a href="#events" className="hover:underline">Support Us</a></li>
           <li><a href="#login" className="hover:underline">Enroll</a></li>
           <li><a href="#login" className="hover:underline">Login</a></li>
-          <li><a href="#login" className="hover:underline">Signup</a></li>
+          <li><a href="#login" className="hover:underline" onClick={handleSignup}>Signup</a></li>
           <li><a href="#profile" className="hover:underline">Profile</a></li>
         </ul>
       </div>

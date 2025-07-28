@@ -9,7 +9,8 @@ from routers.reviews import router as review_router
 from routers.password_reset import router as password_reset_router
 from db.prisma_client import db
 
-# ! Start Application: uvicorn main:app --reload
+# ! Start Backend: uvicorn main:app --reload
+# ! Start Frontend: npm run dev
 
 # ! prisma db push
 # ! prisma generate
@@ -23,14 +24,16 @@ from db.prisma_client import db
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
 
+
+# CORS Policy
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], 
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 
 # When we start the app, connect to the db. When we shut down the app, disconnect
 @app.on_event("startup")
@@ -45,6 +48,7 @@ async def shutdown():
 @app.get('/')
 def read_root():
     return {"Hello": "World"}
+
 
 # Routers
 app.include_router(auth_router, prefix="/auth")

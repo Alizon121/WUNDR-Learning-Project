@@ -8,6 +8,7 @@ from datetime import datetime
 from .auth.login import get_current_active_user, get_current_active_user_by_email
 from .auth.utils import hash_password
 
+
 router = APIRouter()
 
 
@@ -189,7 +190,7 @@ async def update_user(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        
+
         # **Convert ORM → Pydantic here:**
         user_resp = UserResponse.from_orm(updated_user)
 
@@ -208,7 +209,7 @@ async def update_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred while updating user: {str(e)}"
         )
-    
+
 # Rebuild models to ensure all references are resolved
 UserUpdateResponse.model_rebuild()
 

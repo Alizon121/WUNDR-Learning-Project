@@ -5,7 +5,7 @@ from enum import Enum
 from datetime import datetime
 
 if TYPE_CHECKING:
-   from models.interaction_models import Notification, Activity, Event, Review
+   from models.interaction_models import Notification, Event, Review
 
 class Role(str, Enum):
   PARENT = "parent"

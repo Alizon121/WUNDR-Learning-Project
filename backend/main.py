@@ -17,6 +17,8 @@ from db.prisma_client import db
 
 # ! Clear PyCache: find . -name "*.pyc" -delete
 
+# ! Activate virtual environment in Python 12: source .venv/bin/activate
+
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

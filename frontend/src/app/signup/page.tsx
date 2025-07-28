@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // Если используешь Next.js 13+
+import { useRouter } from "next/navigation";
 import { FormErrors } from "@/types/forms";
 
 export default function SignupPage() {

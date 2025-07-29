@@ -31,6 +31,8 @@ class UserSignup(BaseModel):
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(user: UserSignup):
 
+    print("LOOK HERE", user)
+
     existing_user = await db.users.find_unique(
         where={"email": user.email}
     )

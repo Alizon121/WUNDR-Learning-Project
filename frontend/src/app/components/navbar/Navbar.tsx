@@ -9,8 +9,9 @@ import React from "react";
 export default function Navbar() {
   const {setModalContent} = useModal()
 
-  const handleSignup: React.MouseEventHandler<HTMLAnchorElement> = (e) => {
+  const handleSignup = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
+    console.log('OPENING MODAL....')
     setModalContent(<SignupModal/>)
   }
 
@@ -37,7 +38,8 @@ export default function Navbar() {
           <li><a href="#events" className="hover:underline">Support Us</a></li>
           <li><a href="#login" className="hover:underline">Enroll</a></li>
           <li><a href="#login" className="hover:underline">Login</a></li>
-          <li><a href="/signup" className="hover:underline" onClick={handleSignup}>Signup</a></li>
+          <li><div className="hover:underline" onClick={handleSignup}>Signup</div></li>
+          {/* <li><a href="/signup" className="hover:underline" onClick={handleSignup}>Signup</a></li> */}
           <li><a href="#profile" className="hover:underline">Profile</a></li>
         </ul>
       </div>

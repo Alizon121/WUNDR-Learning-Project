@@ -72,6 +72,7 @@ async def create_event(
             data={
                 "name": event_data.name,
                 "description": event_data.description,
+                "date": event_data.date,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIds,
                 "childIDs": event_data.childIds,
@@ -230,6 +231,9 @@ async def update_event(
 
     if event_data.description is not None:
         update_payload["description"] = event_data.description
+
+    if event_data.date is not None:
+        update_payload["date"] = event_data.date
 
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId
@@ -528,7 +532,7 @@ async def get_all_reviews_by_event(
     skip: int = 0,
     limit: int = 10
 ):
-    
+
     """
     GET all paginated reviews for an event
     """
@@ -546,9 +550,9 @@ async def get_all_reviews_by_event(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Reviews not found"
             )
-        
+
         return {"reviews": reviews}
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -565,9 +569,9 @@ async def get_review_by_id(
     """
      Get review by id
     """
-    
+
     try:
-        # Get a review 
+        # Get a review
         review = await db.reviews.find_unique(
             where={
                 "id": review_id,
@@ -579,15 +583,15 @@ async def get_review_by_id(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Review not found for this event"
             )
-        
+
         return {"review": review}
-        
+
     except Exception:
         raise HTTPException(
             status_code=500,
             detail="Failed to obtain review"
         )
-    
+
 @router.post("/{event_id}/reviews", status_code=status.HTTP_201_CREATED)
 async def create_review(
      event_id: str,
@@ -602,13 +606,13 @@ async def create_review(
      event = await db.events.find_unique(
             where={"id": event_id}
         )
-        
+
      if not event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Event not found"
         )
-     
+
 
     # ! Do we need to add logic for preventing one user making many reviews?
      existing_review = await db.reviews.find_first(
@@ -623,7 +627,7 @@ async def create_review(
              status_code=status.HTTP_400_BAD_REQUEST,
              detail="User cannot make more than one review for an event."
          )
-     
+
      try:
           review = await db.reviews.create(
                data={
@@ -635,10 +639,10 @@ async def create_review(
                }
           )
           return {
-            "review": review, 
+            "review": review,
             "message": "Review successfully made"
             }
-     
+
      except Exception as e:
           raise HTTPException(
                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

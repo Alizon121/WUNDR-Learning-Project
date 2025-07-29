@@ -33,7 +33,7 @@ async def create_child(
                 "firstName": child_data.firstName,
                 "lastName": child_data.lastName,
                 "homeschool": child_data.homeschool,
-                "age": child_data.age,
+                "birthday": child_data.birthday,
                 "parentIDs": [current_user.id], # Add the current user's ID to parentIDs
                 "eventIDs": [], # Create activityIDs array so we can easily add to it later
                 "createdAt": child_data.createdAt,

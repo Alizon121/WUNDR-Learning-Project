@@ -9,7 +9,8 @@ from routers.reviews import router as review_router
 from routers.password_reset import router as password_reset_router
 from db.prisma_client import db
 
-# ! Start Application: uvicorn main:app --reload
+# ! Start Backend: uvicorn main:app --reload
+# ! Start Frontend: npm run dev
 
 # ! prisma db push
 # ! prisma generate
@@ -18,17 +19,21 @@ from db.prisma_client import db
 
 # ! Clear PyCache: find . -name "*.pyc" -delete
 
+# ! Activate virtual environment in Python 12: source .venv/bin/activate
+
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
 
+
+# CORS Policy
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], 
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 
 # When we start the app, connect to the db. When we shut down the app, disconnect
 @app.on_event("startup")
@@ -44,6 +49,7 @@ async def shutdown():
 def read_root():
     return {"Hello": "World"}
 
+
 # Routers
 app.include_router(auth_router, prefix="/auth")
 
@@ -55,22 +61,6 @@ app.include_router(activity_router, prefix="/activity")
 
 app.include_router(event_router, prefix="/event")
 
-app.include_router(password_reset_router, prefix="/password_reset")
-
 app.include_router(review_router, prefix="/review")
-# @app.get("/items/")
-# async def read_items(token: Annotated[str,Depends(oauth2_scheme)]):
-#     return {"token": token}
 
-# def fake_decode_token(token):
-#     return User(
-#         username=token + "fakedecoded", email="john@example.com", full_name="John Doe"
-#     )
-
-# async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-#     user = fake_decode_token(token)
-#     return user
-
-# @app.get("/users/me")
-# async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
-#     return current_user
+app.include_router(password_reset_router, prefix="/password_reset")

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
 from typing import List, TYPE_CHECKING, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 if TYPE_CHECKING:
@@ -41,31 +41,34 @@ class Event(BaseModel):
 
    name: str = Field(min_length=1)
    description: str = Field(min_length=1)
+   date: datetime = Field(default_factory=datetime.now(timezone.utc))
 
    users: List["User"] = Field(default_factory=list)
    children: List["Child"] = Field(default_factory=list)
    reviews: List["Review"] = Field(default_factory=list)
 
-   createdAt: datetime = Field(default_factory=datetime.utcnow)
-   updatedAt: datetime = Field(default_factory=datetime.utcnow)
+   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 
 class EventCreate(BaseModel):
     activityId: str = Field(min_length=1)
 
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
+    date: datetime = Field(default_factory=datetime.now(timezone.utc))
 
     userIds: List[str] = Field(default_factory=list)
     childIds: List[str] = Field(default_factory=list)
 
-    createdAt: datetime = Field(default_factory=datetime.utcnow)
-    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+    createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 
 class EventUpdate(BaseModel):
     activityId: Optional[str] = Field(min_length=1)
 
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
+    date: datetime = Field(default_factory=datetime.now(timezone.utc))
 
     userIds: Optional[List[str]] = Field(default=None)
     childIds: Optional[List[str]] = Field(default=None)
@@ -91,7 +94,7 @@ class ReviewCreate(BaseModel):
         le=5
     )
     description: str = Field(min_length=20, max_length=400)
-    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 
 class ReviewUpdate(BaseModel):
     rating: int = Field(

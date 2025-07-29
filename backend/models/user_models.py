@@ -69,9 +69,9 @@ class UserResponse(BaseModel):
     state: Optional[str] = None
     zipCode: Optional[int] = None
     children: List["Child"] = Field(default_factory=list)
-    enrolledEvents: List[Event] = Field(default_factory=list)
-    reviews:List[Review] = Field(default_factory=list)
-    notifications: List[Notification] = Field(default_factory=list)
+    enrolledEvents: List["Event"] = Field(default_factory=list)
+    reviews:List["Review"] = Field(default_factory=list)
+    notifications: List["Notification"] = Field(default_factory=list)
     createdAt: datetime
     updatedAt: datetime
 

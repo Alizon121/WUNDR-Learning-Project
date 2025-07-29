@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
 from db.prisma_client import db
 from typing import Annotated
 from models.user_models import User
 from models.interaction_models import EventCreate, EventUpdate, ReviewCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin
+from backend.routers.notifications.notification_handlers import send_confirmation_message, send_notification_confirmation
 from datetime import datetime
 
 
@@ -648,3 +649,32 @@ async def create_review(
                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                detail=f'Failed to create review: {e}'
           )
+# * Notifications Endpoints
+@router.post("/{event_id}/notify/confirmation")
+async def send_confirmation(
+    event_id: str,
+    background_tasks: BackgroundTasks
+    ):
+        
+        # Query for the event
+        event = await db.events.find_unique(
+            where={
+                "id": event_id
+            }
+        )
+        
+        # Logic to send SMS/email immediately
+        background_tasks.add_task(send_notification_confirmation, event.name, event.date.isoformat(), event_id)
+
+        # Get user id by event
+        user = await db.users.find_first(
+                where={"eventIds": {"has":event_id}}
+        )
+
+         # Log notification
+        await db.notifications.create({
+            "description": "Confirmation for event",
+            "userId": user.id
+        })
+
+        return {"status": "Sent"}

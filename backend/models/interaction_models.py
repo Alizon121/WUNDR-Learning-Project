@@ -8,16 +8,6 @@ if TYPE_CHECKING:
     from models.user_models import User, Child
 
 
-# ! Notifications
-class Notification(BaseModel):
-    id: str = Field(..., min_length=1, description="Notification identifier")
-    description: str = Field(
-        min_length = 1,
-        max_length = 500,
-    )
-    user: "User"
-
-
 # ! Activities
 class Activity(BaseModel):
     id: str = Field(min_length=1, description="Activity identifier")
@@ -103,8 +93,29 @@ class ReviewUpdate(BaseModel):
     )
     description: str = Field(min_length=20, max_length=400)
 
+# ! Notifications
+class Notification(BaseModel):
+    id: str = Field(..., min_length=1, description="Notification identifier")
+    description: str = Field(
+        min_length = 1,
+        max_length = 500,
+    )
+    userId: str = Field(..., description="User id associated with the notification")
+
+    class Config:
+        orm_mode = True
+
 #! Jobs
 class Jobs(BaseModel):
     id: str
     runAt: datetime
+    reminderType: str
+    status: str
+    jobType: str
+    sentAt: Optional[datetime] = None
+    errorMessage: Optional[str] = None
+    eventId: str
+
+    class Config:
+        orm_mode = True
     

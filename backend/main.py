@@ -6,24 +6,13 @@ from routers.child import router as child_router
 from routers.activities import router as activity_router
 from routers.events import router as event_router
 from routers.reviews import router as review_router
+from backend.routers.notifications.notifications import router as notifications_router
 from routers.password_reset import router as password_reset_router
 from db.prisma_client import db
 
-# ! Start Backend: uvicorn main:app --reload
-# ! Start Frontend: npm run dev
-
-# ! prisma db push
-# ! prisma generate
-
-# ! DEMO email: jt.DomW1zOmMio9dA5ybrymnr@kQnoe9ChGw0avJa27VzH4.NsckKAguFtHjy
-
-# ! Clear PyCache: find . -name "*.pyc" -delete
-
-# ! Activate virtual environment in Python 12: source .venv/bin/activate
 
 # instantiate FastAPI app and Prisma db client
 app = FastAPI()
-
 
 # CORS Policy
 app.add_middleware(
@@ -62,5 +51,7 @@ app.include_router(activity_router, prefix="/activity")
 app.include_router(event_router, prefix="/event")
 
 app.include_router(review_router, prefix="/review")
+
+app.include_router(notifications_router, prefix="notifications")
 
 app.include_router(password_reset_router, prefix="/password_reset")

@@ -99,3 +99,9 @@ class ReviewUpdate(BaseModel):
         le=5
     )
     description: str = Field(min_length=20, max_length=400)
+
+#! Jobs
+class Jobs(BaseModel):
+    id: str
+    runAt: datetime
+    

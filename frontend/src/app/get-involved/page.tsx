@@ -40,14 +40,14 @@ export default function GetInvolved() {
       <main className="bg-wonderbg min-h-screen pb-16">
         {/* Intro Text */}
         <section className="py-12">
-          <p className="text-xl md:text-2xl text-center max-w-5xl mx-auto text-gray-700 mb-12">
+          <p className="text-xl md:text-2xl text-center max-w-7xl mx-auto text-gray-700 mb-12">
             There are many ways to support and participate in our mission to empower families through connection, creativity, and community-based learning. Choose the path that resonates with you!
           </p>
 
           {/* CARDS GRID */}
-          <section className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 px-4">
+          <section className="w-full max-w-7.2xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 px-4">
             {/* Family Enrollment Card */}
-            <div className="group relative bg-white rounded-2xl shadow-xl p-8 flex flex-col items-start transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] cursor-pointer overflow-hidden">
+            {/* <div className="group relative bg-white rounded-2xl shadow-xl p-8 flex flex-col items-start transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] cursor-pointer overflow-hidden">
               <div className="absolute left-0 top-0 h-2 w-full bg-wondergreen rounded-t-2xl scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left z-10"></div>
               <div className="flex items-center gap-6 mb-6">
                 <span className="block w-20 h-20 rounded-full bg-wondergreen flex items-center justify-center text-4xl text-white shrink-0">
@@ -70,7 +70,7 @@ export default function GetInvolved() {
               <button className="w-full py-3 rounded-full text-xl font-bold text-white bg-gradient-to-r from-wondergreen to-wonderleaf shadow hover:from-wonderleaf hover:to-wondergreen transition-colors">
                 Enroll Your Family
               </button>
-            </div>
+            </div> */}
             {/* Volunteer */}
             <div className="group relative bg-white rounded-2xl shadow-xl p-8 flex flex-col items-start transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] cursor-pointer overflow-hidden">
               <div className="absolute left-0 top-0 h-2 w-full bg-wondergreen rounded-t-2xl scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left z-10"></div>

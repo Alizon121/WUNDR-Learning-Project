@@ -62,7 +62,15 @@ const SignupModal = () => {
         setErrors({})
         setServerError(null)
 
-        const filteredChildren = form3List.filter(child => child.childFirstName || child.childLastName)
+        const filteredChildren = form3List
+            .filter(child => child.childFirstName || child.childLastName)
+            .map(child => ({
+                firstName: child.childFirstName,
+                lastName: child.childLastName,
+                homeschool: child.homeschool ?? false,
+                birthday: child.childAge
+            }))
+        console.log(filteredChildren)
 
         const data = {
             "firstName": form1.firstName,
@@ -346,7 +354,7 @@ const SignupModal = () => {
 
                     <button
                         type="button"
-                        className="bg-green-600 text-white p-2 rounded w-full hover:bg-green-700 transition disabled:opacity-60"
+                        className="bg-green-600 text-white p-2 pt-0 rounded w-full hover:bg-green-700 transition disabled:opacity-60"
                         onClick={() => {
                             setShowAdditionalModal2(false)
                             setShowAdditionalModal1(true)

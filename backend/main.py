@@ -6,7 +6,7 @@ from routers.child import router as child_router
 from routers.activities import router as activity_router
 from routers.events import router as event_router
 from routers.reviews import router as review_router
-from backend.routers.notifications.notifications import router as notifications_router
+# from routers.notifications import router as notifications_router
 from routers.password_reset import router as password_reset_router
 from db.prisma_client import db
 
@@ -52,6 +52,6 @@ app.include_router(event_router, prefix="/event")
 
 app.include_router(review_router, prefix="/review")
 
-app.include_router(notifications_router, prefix="notifications")
+# app.include_router(notifications_router, prefix="/notifications")
 
 app.include_router(password_reset_router, prefix="/password_reset")

@@ -5,7 +5,7 @@ from models.user_models import User
 from models.interaction_models import EventCreate, EventUpdate, ReviewCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin
-from backend.routers.notifications.notification_handlers import send_confirmation_message, send_notification_confirmation
+# from notification_handlers import send_notification_confirmation, send_notification_confirmation
 from datetime import datetime
 
 
@@ -299,7 +299,8 @@ async def delete_event_by_id(
 @router.post("/{event_id}/join", status_code=status.HTTP_200_OK)
 async def add_user_to_event(
     event_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -340,13 +341,29 @@ async def add_user_to_event(
         data={"userIDs": event.userIDs + [current_user.id]}
     )
 
-    return {"event": updated_event, "message": "User added to event"}
+    # Send confirmation notification
+    schedule_confirmation(
+        event_name=event.name,
+        event_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
+        user_id=current_user.id,
+        background_tasks=background_tasks
+    )
+
+    await db.notifications.create(
+        data={
+            "description": f"Confirmation for event {event.name}",
+            "userId": current_user.id
+        }
+    )
+
+    return {"event": updated_event, "message": "User added to event and notified"}
 
 @router.post("/{event_id}/enroll", status_code=status.HTTP_200_OK)
 async def add_child_to_event(
     event_id: str,
     child_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -405,7 +422,22 @@ async def add_child_to_event(
         data={"childIDs": event.childIDs + [child.id]}
     )
 
-    return {"event": updated_event, "message": "Child added to event"}
+    # Create notification
+    schedule_confirmation(
+        background_tasks,
+        event_name= event.name,
+        formatted_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
+        user_id=current_user.id
+    )
+
+    await db.notifications.create({
+        "data": {
+            "description": f"Confirmation for event {event.name}",
+            "userId": current_user.id
+        }
+    })
+
+    return {"event": updated_event, "message": "Child added to event and user notified"}
 
 
 @router.delete("/{event_id}/leave", status_code=status.HTTP_200_OK)
@@ -649,32 +681,59 @@ async def create_review(
                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                detail=f'Failed to create review: {e}'
           )
-# * Notifications Endpoints
-@router.post("/{event_id}/notify/confirmation")
-async def send_confirmation(
-    event_id: str,
-    background_tasks: BackgroundTasks
-    ):
+# * Notifications Endpoints ======================================
+
+def send_notification_confirmation(
+        event_name: str,
+        event_date: str,
+        user_id: str
+        ):
+            '''
+                Function for handling sending a confirmation message to user after enrolling to an event
+            '''
+
+            message = f'You have successfully scheduled for {event_name} on {event_date}. We will send a reminder one day before the event occurs. We hope to see you there!'
+            print(f"[Notification -> {user_id}: {message}]")
+
+def schedule_confirmation(
+    event_name: str,
+    event_date: str,
+    user_id: str,
+    background_tasks: BackgroundTasks,
+   
+):
+    background_tasks.add_task(
+        send_notification_confirmation,
+        event_name,
+        event_date,
+        user_id
+    )
+
+# @router.post("/{event_id}/notify/confirmation")
+# async def send_confirmation(
+#     event_id: str,
+#     background_tasks: BackgroundTasks
+#     ):
         
-        # Query for the event
-        event = await db.events.find_unique(
-            where={
-                "id": event_id
-            }
-        )
+#         # Query for the event
+#         event = await db.events.find_unique(
+#             where={
+#                 "id": event_id
+#             }
+#         )
         
-        # Logic to send SMS/email immediately
-        background_tasks.add_task(send_notification_confirmation, event.name, event.date.isoformat(), event_id)
+#         # Logic to send SMS/email immediately
+#         background_tasks.add_task(send_notification_confirmation, event.name, event.date.isoformat(), event_id)
 
-        # Get user id by event
-        user = await db.users.find_first(
-                where={"eventIds": {"has":event_id}}
-        )
+#         # Get user id by event
+#         user = await db.users.find_first(
+#                 where={"eventIds": {"has":event_id}}
+#         )
 
-         # Log notification
-        await db.notifications.create({
-            "description": "Confirmation for event",
-            "userId": user.id
-        })
+#          # Log notification
+#         await db.notifications.create({
+#             "description": "Confirmation for event",
+#             "userId": user.id
+#         })
 
-        return {"status": "Sent"}
+#         return {"status": "Sent"}

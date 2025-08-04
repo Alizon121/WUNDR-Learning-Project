@@ -7,9 +7,12 @@ from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 # from notification_handlers import send_notification_confirmation, send_notification_confirmation
 from datetime import datetime
-
+import os
+import yagmail
 
 router = APIRouter()
+yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
+yagmail_email = os.getenv("YAGMAIL_EMAIL")
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -283,7 +286,7 @@ async def delete_event_by_id(
     return {"message": "Event deleted successfully"}
 
 #! Change this endpoint to PUT instead of POST?
-@router.post("/{event_id}/join", status_code=status.HTTP_200_OK)
+@router.put("/{event_id}/join", status_code=status.HTTP_200_OK)
 async def add_user_to_event(
     event_id: str,
     current_user: Annotated[User, Depends(get_current_user)],
@@ -324,13 +327,15 @@ async def add_user_to_event(
         data={"userIDs": event.userIDs + [current_user.id]}
     )
 
-    # Send confirmation notification
-    # schedule_confirmation(
-    #     event_name=event.name,
-    #     event_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
-    #     user_id=current_user.id,
-    #     background_tasks=background_tasks
-    # )
+    # Create notification
+    background_tasks.add_task(
+        send_email,
+        yagmail_email,
+        yagmail_app_password,
+        current_user.email,
+        event.name,
+        event.date
+    )
 
     await db.notifications.create(
         data={
@@ -341,7 +346,7 @@ async def add_user_to_event(
 
     return {"event": updated_event, "message": "User added to event and notified"}
 
-@router.post("/{event_id}/enroll", status_code=status.HTTP_200_OK)
+@router.put("/{event_id}/enroll", status_code=status.HTTP_200_OK)
 async def add_child_to_event(
     event_id: str,
     child_id: str,
@@ -402,19 +407,21 @@ async def add_child_to_event(
     )
 
     # Create notification
-    # schedule_confirmation(
-    #     background_tasks,
-    #     event_name= event.name,
-    #     formatted_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
-    #     user_id=current_user.id
-    # )
+    background_tasks.add_task(
+        send_email,
+        yagmail_email,
+        yagmail_app_password,
+        current_user.email,
+        event.name,
+        event.date
+    )
 
-    await db.notifications.create({
-        "data": {
+    await db.notifications.create(
+        data= {
             "description": f"Confirmation for event {event.name}",
             "userId": current_user.id
         }
-    })
+    )
 
     return {"event": updated_event, "message": "Child added to event and user notified"}
 

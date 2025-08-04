@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
 from db.prisma_client import db
 from typing import Annotated
 from models.user_models import User
 from models.interaction_models import EventCreate, EventUpdate, ReviewCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin
+# from notification_handlers import send_notification_confirmation, send_notification_confirmation
 from datetime import datetime
 
 
@@ -294,11 +295,12 @@ async def delete_event_by_id(
 
     return {"message": "Event deleted successfully"}
 
-
+#! Change this endpoint to PUT instead of POST?
 @router.post("/{event_id}/join", status_code=status.HTTP_200_OK)
 async def add_user_to_event(
     event_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -339,13 +341,29 @@ async def add_user_to_event(
         data={"userIDs": event.userIDs + [current_user.id]}
     )
 
-    return {"event": updated_event, "message": "User added to event"}
+    # Send confirmation notification
+    schedule_confirmation(
+        event_name=event.name,
+        event_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
+        user_id=current_user.id,
+        background_tasks=background_tasks
+    )
+
+    await db.notifications.create(
+        data={
+            "description": f"Confirmation for event {event.name}",
+            "userId": current_user.id
+        }
+    )
+
+    return {"event": updated_event, "message": "User added to event and notified"}
 
 @router.post("/{event_id}/enroll", status_code=status.HTTP_200_OK)
 async def add_child_to_event(
     event_id: str,
     child_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -404,7 +422,22 @@ async def add_child_to_event(
         data={"childIDs": event.childIDs + [child.id]}
     )
 
-    return {"event": updated_event, "message": "Child added to event"}
+    # Create notification
+    schedule_confirmation(
+        background_tasks,
+        event_name= event.name,
+        formatted_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
+        user_id=current_user.id
+    )
+
+    await db.notifications.create({
+        "data": {
+            "description": f"Confirmation for event {event.name}",
+            "userId": current_user.id
+        }
+    })
+
+    return {"event": updated_event, "message": "Child added to event and user notified"}
 
 
 @router.delete("/{event_id}/leave", status_code=status.HTTP_200_OK)
@@ -648,3 +681,4 @@ async def create_review(
                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                detail=f'Failed to create review: {e}'
           )
+# * Notifications Endpoints ======================================

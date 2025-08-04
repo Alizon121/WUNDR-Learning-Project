@@ -62,17 +62,18 @@ const SignupModal = () => {
         setErrors({})
         setServerError(null)
 
+        const now = new Date()
         const filteredChildren = form3List
             .filter(child => child.childFirstName || child.childLastName)
             .map(child => ({
-                firstName: child.childFirstName,
-                lastName: child.childLastName,
-                homeschool: child.homeschool ?? false,
-                birthday: child.childAge
+                "firstName": child.childFirstName,
+                "lastName": child.childLastName,
+                "homeschool": child.homeschool ?? false,
+                "birthday": child.childAge,
             }))
-        console.log(filteredChildren)
+        console.log("FILTEREDDDDDD",filteredChildren)
 
-        const data = {
+        const userInfo = {
             "firstName": form1.firstName,
             "lastName": form1.lastName,
             "email": form1.email,
@@ -82,9 +83,52 @@ const SignupModal = () => {
             "city": form2.city,
             "state": form2.state,
             "zipCode": parseInt(form2.zipcode, 10),
-            "children": filteredChildren,
+            // "children": [],
             // event: []
         }
+
+
+        console.log("DATA", userInfo)
+        try {
+            const signupRes = await fetch("http://localhost:8000/auth/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(userInfo),
+            });
+
+            const enrollChild = await fetch("http://localhost:8000/child", {
+                method: "POST",
+                headers: { "Content-Type": "application/json"},
+                body: JSON.stringify(filteredChildren)
+            })
+
+
+            if (!signupRes.ok || !enrollChild.ok) {
+                const errorBody = await signupRes.json()
+                setServerError(errorBody.message || "Sign up failed")
+                return
+            }
+
+
+            const userResult = await signupRes.json();
+            console.log('SIGN RESPONSE', userResult)
+            const childResult = await enrollChild.json()
+            console.log("CHILD RESPONSE", childResult)
+
+            // if (filteredChildren.length > 0) {
+            //     const childRes = await fetch("http://localhost:8000/child", {
+            //         method: "POST",
+            //         headers: { "Content-Type": "application/json" },
+            //         body: JSON.stringify({ children: filteredChildren})
+            //     })
+
+            //     if (!childRes.ok) {
+            //         const errorBody = await childRes.json()
+            //         setServerError(errorBody.message || "adding child failed")
+            //         return
+            //     }
+            // }
+
 
 //  const data = {
 //   "firstName": "oneMoreUser",
@@ -116,39 +160,6 @@ const SignupModal = () => {
 //       "updatedAt": "2025-07-28T23:15:24.236Z"
 //     }
 //   ]
-
-        console.log("DATA", data)
-        try {
-            const signupRes = await fetch("http://localhost:8000/auth/signup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-            });
-
-
-            if (!signupRes.ok) {
-                const errorBody = await signupRes.json()
-                setServerError(errorBody.message || "Sign up failed")
-                return
-            }
-
-            const userResult = await signupRes.json();
-            console.log('SIGN RESPONSE', userResult)
-
-            // if (filteredChildren.length > 0) {
-            //     const childRes = await fetch("http://localhost:8000/child", {
-            //         method: "POST",
-            //         headers: { "Content-Type": "application/json" },
-            //         body: JSON.stringify({ children: filteredChildren})
-            //     })
-
-            //     if (!childRes.ok) {
-            //         const errorBody = await childRes.json()
-            //         setServerError(errorBody.message || "adding child failed")
-            //         return
-            //     }
-            // }
-
             closeModal()
         } catch (err) {
             setServerError("An error occurred. Please try again later.");

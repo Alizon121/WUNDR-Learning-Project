@@ -67,8 +67,8 @@ model Children {
   eventIDs String[] @db.ObjectId
   events Events[] @relation(fields: [eventIDs], references: [id])
 
-  createdAt         DateTime
-  updatedAt         DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime? @updatedAt
 }
 
 // ! Activities     =============================================================================

@@ -5,7 +5,6 @@ from models.user_models import User
 from models.interaction_models import EventCreate, EventUpdate, ReviewCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
-# from notification_handlers import send_notification_confirmation, send_notification_confirmation
 from datetime import datetime
 import os
 import yagmail

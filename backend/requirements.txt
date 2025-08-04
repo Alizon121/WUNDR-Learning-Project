@@ -10,3 +10,5 @@ python-dotenv==1.1.0
 python-jose==3.5.0
 pymongo==4.13.2
 yagmail==0.15.293
+tzlocal=5.3.1
+apscheduler=3.11.0

@@ -284,7 +284,6 @@ async def delete_event_by_id(
 
     return {"message": "Event deleted successfully"}
 
-#! Change this endpoint to PUT instead of POST?
 @router.put("/{event_id}/join", status_code=status.HTTP_200_OK)
 async def add_user_to_event(
     event_id: str,
@@ -666,4 +665,20 @@ async def create_review(
                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                detail=f'Failed to create review: {e}'
           )
-# * Notifications Endpoints ======================================
+
+# * Notifications Logic ======================================
+# Add helper function for sending notification email immediately
+def send_email(
+        yagmail_email,
+        yagmail_app_password,
+        user_email: str,
+        event_name: str,
+        event_date: str
+):
+    yag = yagmail.SMTP(yagmail_email, yagmail_app_password)
+    yag.send(
+        to=user_email,
+        subject="Enollment Confirmation",
+        # ? ADD link to make changes still
+        contents=f'This email confirms that you are enrolled for the {event_name} event on {event_date}. If you are no longer available to join the event, please make changes here:.'
+    )

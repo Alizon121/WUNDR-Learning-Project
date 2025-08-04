@@ -15,7 +15,9 @@ load_dotenv()
 
 ALGORITHM = "HS256"
 SECRET_KEY = os.getenv("SECRET_KEY")
-app_password = os.getenv("YAGMAIL_APP_PASSWORD")
+
+yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
+yagmail_email = os.getenv("YAGMAIL_EMAIL")
 
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
@@ -54,7 +56,7 @@ async def forgot_password(request: PasswordResetRequest):
 
     # Send the email
     try:
-        yag = yagmail.SMTP("wonderhood.project@gmail.com", app_password)
+        yag = yagmail.SMTP(yagmail_email, yagmail_app_password)
         yag.send(
             to=user.email,
             subject="Password reset",

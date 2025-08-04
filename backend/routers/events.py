@@ -4,7 +4,7 @@ from typing import Annotated
 from models.user_models import User
 from models.interaction_models import EventCreate, EventUpdate, ReviewCreate
 from .auth.login import get_current_user
-from .auth.utils import enforce_admin
+from .auth.utils import enforce_admin, enforce_authentication
 # from notification_handlers import send_notification_confirmation, send_notification_confirmation
 from datetime import datetime
 
@@ -26,12 +26,7 @@ async def create_event(
     Return the created event
     """
 
-    # Verify authentication
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to create an event."
-        )
+    enforce_authentication(current_user, "create an event")
 
     enforce_admin(current_user, "create an event")
 
@@ -181,11 +176,7 @@ async def update_event(
     """
 
     # Make sure the user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to update an event."
-        )
+    enforce_authentication(current_user, "update an event")
 
     # Verify admin status
     enforce_admin(current_user, "update an event")
@@ -273,11 +264,7 @@ async def delete_event_by_id(
     """
 
     # Make sure the user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an event."
-        )
+    enforce_authentication(current_user, "delete an event")
 
     # Verify admin status
     enforce_admin(current_user, "delete an event")
@@ -314,11 +301,7 @@ async def add_user_to_event(
     """
 
     # Make sure the current user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an event."
-        )
+    enforce_authentication(current_user, "join an event")
 
     # Fetch the event
     event = await db.events.find_unique(where={"id": event_id})
@@ -342,12 +325,12 @@ async def add_user_to_event(
     )
 
     # Send confirmation notification
-    schedule_confirmation(
-        event_name=event.name,
-        event_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
-        user_id=current_user.id,
-        background_tasks=background_tasks
-    )
+    # schedule_confirmation(
+    #     event_name=event.name,
+    #     event_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
+    #     user_id=current_user.id,
+    #     background_tasks=background_tasks
+    # )
 
     await db.notifications.create(
         data={
@@ -378,11 +361,7 @@ async def add_child_to_event(
     """
 
     # Make sure the current user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an event."
-        )
+    enforce_authentication(current_user, "enroll a child in an event")
 
     # Fetch the event
     event = await db.events.find_unique(where={"id": event_id})
@@ -423,12 +402,12 @@ async def add_child_to_event(
     )
 
     # Create notification
-    schedule_confirmation(
-        background_tasks,
-        event_name= event.name,
-        formatted_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
-        user_id=current_user.id
-    )
+    # schedule_confirmation(
+    #     background_tasks,
+    #     event_name= event.name,
+    #     formatted_date=event.date.strftime("%B %d, %Y at %I:%M %p"),
+    #     user_id=current_user.id
+    # )
 
     await db.notifications.create({
         "data": {
@@ -439,7 +418,7 @@ async def add_child_to_event(
 
     return {"event": updated_event, "message": "Child added to event and user notified"}
 
-
+#! Change this endpoint to PUT instead of DELETE?
 @router.delete("/{event_id}/leave", status_code=status.HTTP_200_OK)
 async def remove_user_from_event(
     event_id: str,
@@ -489,6 +468,7 @@ async def remove_user_from_event(
     return {"event": updated_event, "message": "User removed from event"}
 
 
+#! Change this endpoint to PUT instead of DELETE?
 @router.delete("/{event_id}/unenroll", status_code=status.HTTP_200_OK)
 async def remove_child_from_event(
     event_id: str,
@@ -508,11 +488,7 @@ async def remove_child_from_event(
     """
 
     # Make sure the current user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an event."
-        )
+    enforce_authentication(current_user, "unenroll a child from an event")
 
     # Fetch the event
     event = await db.events.find_unique(where={"id": event_id})
@@ -636,6 +612,9 @@ async def create_review(
 
         Get the current user for authentication and create review
      """
+
+     enforce_authentication(current_user, "leave a review")
+
      event = await db.events.find_unique(
             where={"id": event_id}
         )

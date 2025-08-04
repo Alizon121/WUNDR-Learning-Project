@@ -18,3 +18,10 @@ def enforce_admin(current_user: User, action: str = "perform this action"):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Unauthorized. You must be an admin to {action}."
         )
+
+def enforce_authentication(current_user: User, action: str = "perform this action"):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unauthorized. You must be authenticated to {action}."
+        )

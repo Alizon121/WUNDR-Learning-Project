@@ -4,7 +4,7 @@ from typing import Annotated
 from models.interaction_models import ReviewUpdate
 from models.user_models import User
 from .auth.login import get_current_user, get_current_active_user_by_email
-from .auth.utils import enforce_admin
+from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
 
 router = APIRouter()
@@ -27,13 +27,10 @@ async def get_all_reviews(
         return "reviews": {reviews}
         """
 
-        if not current_user:
-                raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail=f'You must be authorized to view all reviews'
-                )
-        
+        enforce_authentication(current_user, "get all reviews")
+
         enforce_admin(current_user, "get all reviews or filtered reviews")
+
         try:
             filters = {}
             if rating is not None:
@@ -60,7 +57,7 @@ async def get_all_reviews(
                 status_code=500,
                 detail="Failed to obtain review"
             )
-        
+
 
 @router.patch("/{review_id}", status_code=status.HTTP_200_OK)
 async def update_review(
@@ -68,20 +65,16 @@ async def update_review(
     review_data: ReviewUpdate,
     current_user = Depends(get_current_active_user_by_email)
 ):
-     """ 
+     """
      Update the current user's review
-     
+
      - **rating: Update rating (1-5 stars)
      - ** description: Update description (20-400 length)
      """
 
     # Authenticate user
-     if not current_user:
-          raise HTTPException(
-               status_code=status.HTTP_401_UNAUTHORIZED,
-               detail=(f"Unauthorized. You must be authenticated to update a review")
-          )
-     
+     enforce_authentication(current_user, "update a review")
+
     # Find the review
      review = await db.reviews.find_unique(
          where={"id": review_id}
@@ -92,7 +85,7 @@ async def update_review(
                status_code=status.HTTP_403_FORBIDDEN,
                detail="You do not have permission to make edit."
           )
-    
+
     # Update payload:
      payload = {}
 
@@ -124,6 +117,9 @@ async def delete_review(
 
     An authenticated user is allowed to delete their review
     """
+
+    enforce_authentication(current_user, "delete a review")
+    
     try:
         # Authenticate user
         if not current_user:
@@ -131,7 +127,7 @@ async def delete_review(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=(f'Unauthorized. You must be authenticared to delete a review')
             )
-        
+
         # Query review
         review = await db.reviews.find_unique(
             where={"id": review_id}
@@ -142,14 +138,14 @@ async def delete_review(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Review not found"
             )
-        
+
         deleted_review = await db.reviews.delete(
             where={"id": review_id}
         )
 
         if deleted_review:
             return "Review deleted successfully"
-    
+
     except HTTPException:
          raise
     except HTTPException as e:

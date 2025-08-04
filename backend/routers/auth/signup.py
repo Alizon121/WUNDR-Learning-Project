@@ -63,4 +63,6 @@ async def signup(user: UserSignup):
         }
     )
 
+    # Generate Access token after signup
+
     return {"user": created_user, "message": "User successfully created"}

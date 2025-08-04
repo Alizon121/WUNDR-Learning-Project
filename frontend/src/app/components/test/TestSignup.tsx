@@ -7,7 +7,7 @@ export default function TestSignup() {
   const testPayload: SignupPayload = {
     firstName: "Blaidd",
     lastName: "String",
-    email: "blaidd.test@example.com", // Use a unique email for testing
+    email: "totallyrandomemail@example.com", // Use a unique email for testing
     password: "SecurePass123!",
     role: "parent",
     avatar: "https://example.com/avatar.png",
@@ -15,6 +15,8 @@ export default function TestSignup() {
     state: "TX",
     zipCode: 78016,
   };
+
+  console.log("HERE IS THE PAYLOAD", testPayload);
 
   const onSignup = async () => {
     const response = await handleSignup(testPayload);

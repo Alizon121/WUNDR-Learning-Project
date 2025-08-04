@@ -27,6 +27,8 @@ export async function makeApiRequest<T>(
         finalHeaders["Authorization"] = `Bearer ${token}`;
     }
 
+    console.log("HERE IS THE REQUEST BODY", body);
+
     const response = await fetch(endpoint, {
         method,
         headers: finalHeaders,

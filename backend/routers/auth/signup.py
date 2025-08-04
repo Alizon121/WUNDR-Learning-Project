@@ -3,8 +3,15 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import List
 from models.user_models import ChildCreate, Role
 from db.prisma_client import db
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from .utils import hash_password
+from .login import create_access_token
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 # Router
 router = APIRouter()
@@ -64,5 +71,15 @@ async def signup(user: UserSignup):
     )
 
     # Generate Access token after signup
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": created_user.email},
+        expires_delta=access_token_expires
+    )
 
-    return {"user": created_user, "message": "User successfully created"}
+    return {
+        "user": created_user,
+        "token": access_token,
+        "token_type": "bearer",
+        "message": "User successfully created"
+    }

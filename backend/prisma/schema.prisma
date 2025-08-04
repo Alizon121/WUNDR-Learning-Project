@@ -101,6 +101,8 @@ model Events {
 
     reviews     Reviews[]
 
+    jobs        Jobs[]
+
     createdAt         DateTime
     updatedAt         DateTime
 }
@@ -120,4 +122,36 @@ model Reviews {
 
     createdAt         DateTime @default(now())
     updatedAt         DateTime? @updatedAt
+}
+
+
+// ! jobs           =============================================================================
+
+enum ReminderTypes {
+  email
+  sms
+}
+
+enum ReminderStatus {
+  pending
+  sent
+  undeliverable
+}
+
+enum JobTypes {
+  reminder
+  cancellation
+}
+
+model Jobs{
+   id                String      @id @default(auto()) @map("_id") @db.ObjectId
+   runAt             DateTime
+   reminderType      ReminderTypes
+   status            ReminderStatus
+   jobType           JobTypes
+   sentAt            DateTime?
+   errorMessage      String?          // Log issues if notification is undeliverable
+
+   event             Events @relation(fields:[eventId], references: [id])
+   eventId           String @db.ObjectId
 }

@@ -295,7 +295,7 @@ async def delete_event_by_id(
 
     return {"message": "Event deleted successfully"}
 
-
+#! Change this endpoint to PUT instead of POST?
 @router.post("/{event_id}/join", status_code=status.HTTP_200_OK)
 async def add_user_to_event(
     event_id: str,
@@ -682,58 +682,3 @@ async def create_review(
                detail=f'Failed to create review: {e}'
           )
 # * Notifications Endpoints ======================================
-
-def send_notification_confirmation(
-        event_name: str,
-        event_date: str,
-        user_id: str
-        ):
-            '''
-                Function for handling sending a confirmation message to user after enrolling to an event
-            '''
-
-            message = f'You have successfully scheduled for {event_name} on {event_date}. We will send a reminder one day before the event occurs. We hope to see you there!'
-            print(f"[Notification -> {user_id}: {message}]")
-
-def schedule_confirmation(
-    event_name: str,
-    event_date: str,
-    user_id: str,
-    background_tasks: BackgroundTasks,
-   
-):
-    background_tasks.add_task(
-        send_notification_confirmation,
-        event_name,
-        event_date,
-        user_id
-    )
-
-# @router.post("/{event_id}/notify/confirmation")
-# async def send_confirmation(
-#     event_id: str,
-#     background_tasks: BackgroundTasks
-#     ):
-        
-#         # Query for the event
-#         event = await db.events.find_unique(
-#             where={
-#                 "id": event_id
-#             }
-#         )
-        
-#         # Logic to send SMS/email immediately
-#         background_tasks.add_task(send_notification_confirmation, event.name, event.date.isoformat(), event_id)
-
-#         # Get user id by event
-#         user = await db.users.find_first(
-#                 where={"eventIds": {"has":event_id}}
-#         )
-
-#          # Log notification
-#         await db.notifications.create({
-#             "description": "Confirmation for event",
-#             "userId": user.id
-#         })
-
-#         return {"status": "Sent"}

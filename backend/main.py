@@ -9,6 +9,7 @@ from routers.reviews import router as review_router
 # from routers.notifications import router as notifications_router
 from routers.password_reset import router as password_reset_router
 from db.prisma_client import db
+from routers.notifications import start_scheduler, scheduler
 
 
 # instantiate FastAPI app and Prisma db client
@@ -29,8 +30,14 @@ app.add_middleware(
 async def startup():
     await db.connect()
 
+    # Start APScheduler here:
+    start_scheduler()
+
 @app.on_event("shutdown")
 async def shutdown():
+    # Shutdown APScheduler:
+    scheduler.shutdown(wait=False)
+
     await db.disconnect()
 
 # Main routes

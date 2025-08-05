@@ -7,7 +7,7 @@ from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
 import os
-import yagmail
+from notifications import send_email, schedule_reminder
 
 router = APIRouter()
 yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
@@ -421,6 +421,14 @@ async def add_child_to_event(
         }
     )
 
+    # Schedule the one-day reminder
+    background_tasks.add_task(
+        schedule_reminder,
+        current_user.id,
+        event_id,
+        event.date
+    )
+
     return {"event": updated_event, "message": "Child added to event and user notified"}
 
 #! Change this endpoint to PUT instead of DELETE?
@@ -665,20 +673,3 @@ async def create_review(
                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                detail=f'Failed to create review: {e}'
           )
-
-# * Notifications Logic ======================================
-# Add helper function for sending notification email immediately
-def send_email(
-        yagmail_email,
-        yagmail_app_password,
-        user_email: str,
-        event_name: str,
-        event_date: str
-):
-    yag = yagmail.SMTP(yagmail_email, yagmail_app_password)
-    yag.send(
-        to=user_email,
-        subject="Enollment Confirmation",
-        # ? ADD link to make changes still
-        contents=f'This email confirms that you are enrolled for the {event_name} event on {event_date}. If you are no longer available to join the event, please make changes here:.'
-    )

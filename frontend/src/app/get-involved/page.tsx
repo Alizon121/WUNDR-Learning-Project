@@ -39,7 +39,7 @@ export default function GetInvolved() {
       <main className="bg-wonderbg min-h-screen pb-16">
         {/* Intro Text + CARDS */}
         <section className="py-12 max-w-7xl mx-auto px-4 md:px-8">
-          <p className="text-xl md:text-2xl text-center max-w-4xl mx-auto text-gray-700 mb-12">
+          <p className="text-xl md:text-1xl text-center max-w-4xl mx-auto text-gray-700 mb-12">
             There are many ways to support and participate in our mission to empower families through connection, creativity, and community-based learning. Choose the path that resonates with you!
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

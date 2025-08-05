@@ -1,13 +1,13 @@
 from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
-from db.prisma_client import db
+from backend.db.prisma_client import db
 from typing import Annotated
-from models.user_models import User
-from models.interaction_models import EventCreate, EventUpdate, ReviewCreate
+from backend.models.user_models import User
+from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
 import os
-from notifications import send_email, schedule_reminder
+from .notifications import send_email, schedule_reminder
 
 router = APIRouter()
 yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
@@ -340,6 +340,14 @@ async def add_user_to_event(
             "description": f"Confirmation for event {event.name}",
             "userId": current_user.id
         }
+    )
+
+    # Schedule the one-day reminder
+    background_tasks.add_task(
+        schedule_reminder,
+        current_user.id,
+        event_id,
+        event.date
     )
 
     return {"event": updated_event, "message": "User added to event and notified"}

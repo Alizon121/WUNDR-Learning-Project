@@ -2,7 +2,7 @@
 
 ## Getting Started with development environment
 
-1. Change directory to "backend" and:
+1. Ensure running from backend directory and:
 
     - Activate virtual environment in Python 12: source .venv/bin/activate
     - Install dependecies: pip install -r requirements.txt
@@ -13,9 +13,9 @@
     - prisma db push
     - Clear PyCache using: find . -name "*.pyc" -delete
 
-3. Run the development server using:
+3. Run the development server from the ROOT directory using:
 
-    - uvicorn main:app --reload
+    - uvicorn backend.main:app --reload
 
     - After starting the server, navigate to http://127.0.0.1:8000/ on your local device to being viewing endpoint responses.
     -Navigate to http://127.0.0.1:8000/docs for interactive API docs.

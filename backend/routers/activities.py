@@ -1,10 +1,10 @@
 from fastapi import APIRouter, status, Depends, HTTPException, Security
-from db.prisma_client import db
+from backend.db.prisma_client import db
 from typing import Annotated
-from models.interaction_models import ActivityCreate, ActivityUpdate
-from models.user_models import User
+from backend.models.interaction_models import ActivityCreate, ActivityUpdate
+from backend.models.user_models import User
 from .auth.login import get_current_user
-from .auth.utils import enforce_admin
+from .auth.utils import enforce_admin, enforce_authentication
 
 
 router = APIRouter()
@@ -28,11 +28,7 @@ async def create_activity(
     """
 
     # Make sure the user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to create an activity."
-        )
+    enforce_authentication(current_user, "create an activity")
 
     # Verify admin status
     enforce_admin(current_user, "create an activity")
@@ -130,11 +126,7 @@ async def update_activity(
     """
 
     # Get the current user to verify authentication
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to update an activity."
-        )
+    enforce_authentication(current_user, "update an activity")
 
     # Verify admin status
     enforce_admin(current_user, "update an activity")
@@ -180,11 +172,7 @@ async def delete_activity(
     print("DELETE ROUTE CURRENT USER", current_user)
 
     # Verify authentication
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an activity."
-        )
+    enforce_authentication(current_user, "delete an activity")
 
     # Verify admin status
     enforce_admin(current_user, "delete an activity")

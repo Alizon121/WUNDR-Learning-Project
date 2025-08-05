@@ -1,14 +1,17 @@
-from fastapi import APIRouter, status, Depends, HTTPException
-from db.prisma_client import db
+from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
+from backend.db.prisma_client import db
 from typing import Annotated
-from models.user_models import User
-from models.interaction_models import EventCreate, EventUpdate, ReviewCreate
+from backend.models.user_models import User
+from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate
 from .auth.login import get_current_user
-from .auth.utils import enforce_admin
+from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
-
+import os
+from .notifications import send_email, schedule_reminder
 
 router = APIRouter()
+yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
+yagmail_email = os.getenv("YAGMAIL_EMAIL")
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -25,12 +28,7 @@ async def create_event(
     Return the created event
     """
 
-    # Verify authentication
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to create an event."
-        )
+    enforce_authentication(current_user, "create an event")
 
     enforce_admin(current_user, "create an event")
 
@@ -93,7 +91,7 @@ async def create_event(
 @router.get("", status_code=status.HTTP_200_OK)
 async def get_all_events(
     skip: int = 0,
-    limit: int = 10
+    limit: int = 10,
 ):
 
     """
@@ -180,11 +178,7 @@ async def update_event(
     """
 
     # Make sure the user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to update an event."
-        )
+    enforce_authentication(current_user, "update an event")
 
     # Verify admin status
     enforce_admin(current_user, "update an event")
@@ -272,11 +266,7 @@ async def delete_event_by_id(
     """
 
     # Make sure the user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an event."
-        )
+    enforce_authentication(current_user, "delete an event")
 
     # Verify admin status
     enforce_admin(current_user, "delete an event")
@@ -294,11 +284,11 @@ async def delete_event_by_id(
 
     return {"message": "Event deleted successfully"}
 
-
-@router.post("/{event_id}/join", status_code=status.HTTP_200_OK)
+@router.put("/{event_id}/join", status_code=status.HTTP_200_OK)
 async def add_user_to_event(
     event_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -312,11 +302,7 @@ async def add_user_to_event(
     """
 
     # Make sure the current user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an event."
-        )
+    enforce_authentication(current_user, "join an event")
 
     # Fetch the event
     event = await db.events.find_unique(where={"id": event_id})
@@ -339,13 +325,39 @@ async def add_user_to_event(
         data={"userIDs": event.userIDs + [current_user.id]}
     )
 
-    return {"event": updated_event, "message": "User added to event"}
+    # Create notification
+    background_tasks.add_task(
+        send_email,
+        yagmail_email,
+        yagmail_app_password,
+        current_user.email,
+        event.name,
+        event.date
+    )
 
-@router.post("/{event_id}/enroll", status_code=status.HTTP_200_OK)
+    await db.notifications.create(
+        data={
+            "description": f"Confirmation for event {event.name}",
+            "userId": current_user.id
+        }
+    )
+
+    # Schedule the one-day reminder
+    background_tasks.add_task(
+        schedule_reminder,
+        current_user.id,
+        event_id,
+        event.date
+    )
+
+    return {"event": updated_event, "message": "User added to event and notified"}
+
+@router.put("/{event_id}/enroll", status_code=status.HTTP_200_OK)
 async def add_child_to_event(
     event_id: str,
     child_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -360,11 +372,7 @@ async def add_child_to_event(
     """
 
     # Make sure the current user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an event."
-        )
+    enforce_authentication(current_user, "enroll a child in an event")
 
     # Fetch the event
     event = await db.events.find_unique(where={"id": event_id})
@@ -404,9 +412,34 @@ async def add_child_to_event(
         data={"childIDs": event.childIDs + [child.id]}
     )
 
-    return {"event": updated_event, "message": "Child added to event"}
+    # Create notification
+    background_tasks.add_task(
+        send_email,
+        yagmail_email,
+        yagmail_app_password,
+        current_user.email,
+        event.name,
+        event.date
+    )
 
+    await db.notifications.create(
+        data= {
+            "description": f"Confirmation for event {event.name}",
+            "userId": current_user.id
+        }
+    )
 
+    # Schedule the one-day reminder
+    background_tasks.add_task(
+        schedule_reminder,
+        current_user.id,
+        event_id,
+        event.date
+    )
+
+    return {"event": updated_event, "message": "Child added to event and user notified"}
+
+#! Change this endpoint to PUT instead of DELETE?
 @router.delete("/{event_id}/leave", status_code=status.HTTP_200_OK)
 async def remove_user_from_event(
     event_id: str,
@@ -456,6 +489,7 @@ async def remove_user_from_event(
     return {"event": updated_event, "message": "User removed from event"}
 
 
+#! Change this endpoint to PUT instead of DELETE?
 @router.delete("/{event_id}/unenroll", status_code=status.HTTP_200_OK)
 async def remove_child_from_event(
     event_id: str,
@@ -475,11 +509,7 @@ async def remove_child_from_event(
     """
 
     # Make sure the current user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to delete an event."
-        )
+    enforce_authentication(current_user, "unenroll a child from an event")
 
     # Fetch the event
     event = await db.events.find_unique(where={"id": event_id})
@@ -603,6 +633,9 @@ async def create_review(
 
         Get the current user for authentication and create review
      """
+
+     enforce_authentication(current_user, "leave a review")
+
      event = await db.events.find_unique(
             where={"id": event_id}
         )

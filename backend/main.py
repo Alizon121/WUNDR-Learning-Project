@@ -1,29 +1,36 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers.auth.routes import router as auth_router
-from routers.user import router as user_router
-from routers.child import router as child_router
-from routers.activities import router as activity_router
-from routers.events import router as event_router
-from routers.reviews import router as review_router
-from routers.password_reset import router as password_reset_router
-from db.prisma_client import db
+from backend.routers.auth.routes import router as auth_router
+from backend.routers.user import router as user_router
+from backend.routers.child import router as child_router
+from backend.routers.activities import router as activity_router
+from backend.routers.events import router as event_router
+from backend.routers.reviews import router as review_router
+from backend.routers.password_reset import router as password_reset_router
+from backend.db.prisma_client import db
+from backend.routers.notifications import start_scheduler, scheduler
+from contextlib import asynccontextmanager
 
-# ! Start Backend: uvicorn main:app --reload
-# ! Start Frontend: npm run dev
+# When we start the app, connect to the db. When we shut down the app, disconnect
+# @app.on_event("startup")
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    await db.connect()
 
-# ! prisma db push
-# ! prisma generate
+    # Start APScheduler here:
+    start_scheduler()
 
-# ! DEMO email: jt.DomW1zOmMio9dA5ybrymnr@kQnoe9ChGw0avJa27VzH4.NsckKAguFtHjy
+    yield
+# @asynccontextmanager
+# async def shutdown(app:FastAPI):
+#     # Shutdown APScheduler:
+    scheduler.shutdown(wait=False)
 
-# ! Clear PyCache: find . -name "*.pyc" -delete
+    await db.disconnect()
 
-# ! Activate virtual environment in Python 12: source .venv/bin/activate
 
 # instantiate FastAPI app and Prisma db client
-app = FastAPI()
-
+app = FastAPI(lifespan=lifespan)
 
 # CORS Policy
 app.add_middleware(
@@ -33,16 +40,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# When we start the app, connect to the db. When we shut down the app, disconnect
-@app.on_event("startup")
-async def startup():
-    await db.connect()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await db.disconnect()
 
 # Main routes
 @app.get('/')

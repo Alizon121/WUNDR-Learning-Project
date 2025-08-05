@@ -1,12 +1,12 @@
 from fastapi import APIRouter, status, HTTPException, Depends
 from pydantic import BaseModel, field_validator, ConfigDict
-from db.prisma_client import db
+from backend.db.prisma_client import db
 from typing import Annotated, Optional, List
-from models.user_models import User, Child, Role, UserUpdateRequest, UserResponse, UserUpdateResponse
-from models.interaction_models import Event, Review, Notification
+from backend.models.user_models import User, Child, Role, UserUpdateRequest, UserResponse, UserUpdateResponse
+from backend.models.interaction_models import Event, Review, Notification
 from datetime import datetime
 from .auth.login import get_current_active_user, get_current_active_user_by_email
-from .auth.utils import hash_password
+from .auth.utils import hash_password, enforce_authentication
 
 
 router = APIRouter()
@@ -50,6 +50,9 @@ async def get_current_user(
     Returns:
         UserResponse: Current user's profile information
     """
+
+    enforce_authentication(current_user, "view your information")
+
     try:
         user = await db.users.find_unique(
             where={
@@ -98,6 +101,8 @@ async def update_user(
     - **state**: Update state (2-50 characters)
     - **zipCode**: Update zip code
     """
+
+    enforce_authentication(current_user, "update your information")
 
     try:
         # Create a dictionary of fields to update (exclude None values)
@@ -171,6 +176,9 @@ UserUpdateResponse.model_rebuild()
 async def delete_user(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
+
+    enforce_authentication(current_user, "delete your profile")
+    
     try:
         deleted_user = await db.users.delete(
                 where={"id": current_user.id}

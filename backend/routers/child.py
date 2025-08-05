@@ -1,8 +1,9 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-from db.prisma_client import db
+from backend.db.prisma_client import db
 from typing import Annotated
-from models.user_models import User, ChildCreate, ChildUpdate
+from backend.models.user_models import User, ChildCreate, ChildUpdate
 from .auth.login import get_current_user
+from .auth.utils import enforce_authentication
 
 
 router = APIRouter()
@@ -18,11 +19,7 @@ async def create_child(
 ):
 
     # Make sure the user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to add a child."
-        )
+    enforce_authentication(current_user, "add a child")
 
     print("THIS IS THE PARENTID:", current_user.id)
 
@@ -68,6 +65,9 @@ async def create_child(
 async def get_children(
     current_user: Annotated[User, Depends(get_current_user)]
 ):
+
+    enforce_authentication(current_user, "view your children.")
+
     children = await db.children.find_many(
         where={
             "parentIDs":{
@@ -85,6 +85,8 @@ async def get_child_by_id(
     # Get the current user for security
     current_user: Annotated[User, Depends(get_current_user)]
 ):
+
+    enforce_authentication(current_user, "access your child's information")
 
     child = await db.children.find_unique(
         where={"id": child_id},
@@ -121,11 +123,7 @@ async def update_child(
 ):
 
     # Make sure the user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to update a child's information."
-        )
+    enforce_authentication(current_user, "update your child's information")
 
     # Fetch the child
     child = await db.children.find_unique(
@@ -170,11 +168,7 @@ async def delete_child(
 ):
 
     # Make sure the user is authenticated
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized. You must be authenticated to remove a child."
-        )
+    enforce_authentication(current_user, "remove your child")
 
     # Fetch the child
     child = await db.children.find_unique(

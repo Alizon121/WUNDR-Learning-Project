@@ -1,0 +1,47 @@
+export interface ApiRequestOptions {
+    method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+    body?: any
+    headers?: Record<string, string>;
+    // ^ What is this?
+    token?: string;
+}
+
+export async function makeApiRequest<T>(
+    endpoint: string,
+    options: ApiRequestOptions = {}
+): Promise<T> {
+
+    const {
+        method = "GET",
+        body,
+        headers = {},
+        token,
+    } = options;
+
+    const finalHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...headers,
+    };
+
+    if (token) {
+        finalHeaders["Authorization"] = `Bearer ${token}`;
+    }
+
+    console.log("HERE IS THE REQUEST BODY", body);
+
+    const response = await fetch(endpoint, {
+        method,
+        headers: finalHeaders,
+        body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        throw new Error(
+            `API Error ${response.status}: ${errorData.detail || response.statusText}`
+        );
+    }
+
+    return response.json();
+}

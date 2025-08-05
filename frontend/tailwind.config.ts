@@ -26,6 +26,18 @@ const config: Config = {
         xl: "1440px",    
         xxl: "1600px",  
       },
+      animation: {
+        'bounce-slow': 'bounce 3s infinite',
+        'float': 'float 4s ease-in-out infinite',
+        'float-slow': 'float 8s ease-in-out infinite',
+        'pulse-slow': 'pulse 3s infinite'
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
+      }
     },
   },
   plugins: [],

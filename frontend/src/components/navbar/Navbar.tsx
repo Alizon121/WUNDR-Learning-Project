@@ -25,7 +25,7 @@ export default function Navbar() {
           <li><Link href="/about" className="hover:underline">About</Link></li>
           <li><a href="#events" className="hover:underline">Events</a></li>
           <li><a href="#events" className="hover:underline">Support Us</a></li>
-          <li><a href="#login" className="hover:underline">Enroll</a></li>
+          <li><a href="/get-involved" className="hover:underline">Get Involved</a></li>
           <li><a href="#login" className="hover:underline">Login</a></li>
           <li><a href="/signup" className="hover:underline">Signup</a></li>
           <li><a href="#profile" className="hover:underline">Profile</a></li>

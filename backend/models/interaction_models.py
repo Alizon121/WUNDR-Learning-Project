@@ -103,7 +103,7 @@ class Notification(BaseModel):
     userId: str = Field(..., description="User id associated with the notification")
 
     class Config:
-        orm_mode = True
+        form_attributes = True
 
 #! Jobs
 class Jobs(BaseModel):
@@ -117,5 +117,5 @@ class Jobs(BaseModel):
     eventId: str
 
     class Config:
-        orm_mode = True
+        form_attributes = True
     

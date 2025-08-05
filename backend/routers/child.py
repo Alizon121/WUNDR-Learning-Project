@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-from db.prisma_client import db
+from backend.db.prisma_client import db
 from typing import Annotated
-from models.user_models import User, ChildCreate, ChildUpdate
+from backend.models.user_models import User, ChildCreate, ChildUpdate
 from .auth.login import get_current_user
 from .auth.utils import enforce_authentication
 

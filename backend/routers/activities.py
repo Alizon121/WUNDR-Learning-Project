@@ -1,8 +1,8 @@
 from fastapi import APIRouter, status, Depends, HTTPException, Security
-from db.prisma_client import db
+from backend.db.prisma_client import db
 from typing import Annotated
-from models.interaction_models import ActivityCreate, ActivityUpdate
-from models.user_models import User
+from backend.models.interaction_models import ActivityCreate, ActivityUpdate
+from backend.models.user_models import User
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 

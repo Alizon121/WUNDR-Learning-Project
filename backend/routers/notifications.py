@@ -1,10 +1,11 @@
-from db.prisma_client import db
+from backend.db.prisma_client import db
 from datetime import datetime, timedelta
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 import os
 import yagmail
+from pymongo import MongoClient
 
 
 def send_email(
@@ -27,18 +28,20 @@ def send_email(
     )
 
 # =======================================================
-# * Variable for connecting APScheduler to MongoDB
+# * Variables for connecting APScheduler to MongoDB
+
+MONGO_URI = os.getenv("DATABASE_URL")
+mongo_client = MongoClient(MONGO_URI)
+
 scheduler = AsyncIOScheduler(
     jobstores = {
         "mongo": MongoDBJobStore(
-            database=os.getenv("DATABASE_URL"),
-            collection="apscheduler_jobs",
-            host="localhost",
+            client=mongo_client,
+            database=os.getenv("DATABASE_NAME"),
             port=27017
         )
     }
 )
-
 
 # =======================================================
 async def schedule_reminder(

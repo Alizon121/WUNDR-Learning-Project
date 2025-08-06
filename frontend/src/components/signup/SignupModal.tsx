@@ -234,7 +234,7 @@ const SignupModal = () => {
                 <form onSubmit={handleSubmit} className="p-6">
                     {/* Header */}
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Join WonderHood</h2>
+                        <h2 className="text-2xl font-bold text-gray-800 text-green-600 w-full text-center">Join WonderHood</h2>
                         <button 
                             type="button" 
                             onClick={closeModal}
@@ -242,20 +242,6 @@ const SignupModal = () => {
                         >
                             ×
                         </button>
-                    </div>
-
-                    {/* Progress indicator */}
-                    <div className="flex justify-center mb-6">
-                        <div className="flex space-x-2">
-                            {[1, 2, 3, 4].map((step) => (
-                                <div 
-                                    key={step}
-                                    className={`w-3 h-3 rounded-full transition-colors ${
-                                        step <= currentStep ? 'bg-green-500' : 'bg-gray-300'
-                                    }`}
-                                />
-                            ))}
-                        </div>
                     </div>
 
                     {/* Error Message */}
@@ -331,6 +317,21 @@ const SignupModal = () => {
                             {passwordError && passwordTouched && (
                                 <div className="text-red-500 text-sm mt-1">{passwordError}</div>
                             )}
+
+                            {/* Progress indicator */}
+                            <div className="flex justify-center mb-6">
+                                <div className="flex space-x-2">
+                                    {[1, 2, 3, 4].map((step) => (
+                                        <div 
+                                            key={step}
+                                            className={`w-3 h-3 rounded-full transition-colors ${
+                                                step <= currentStep ? 'bg-green-500' : 'bg-gray-300'
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
 
                             <button
                                 type="button"

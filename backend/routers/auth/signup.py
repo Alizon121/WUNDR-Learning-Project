@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import List
 from backend.models.user_models import ChildCreate, Role
 from backend.db.prisma_client import db
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from .utils import hash_password
 from .login import create_access_token
 from dotenv import load_dotenv
@@ -25,7 +25,6 @@ class UserSignup(BaseModel):
     password: str = Field(min_length=6)
     role: Role
     # avatar: HttpUrl
-
     # Address Fields
     city: str = Field(min_length=2, max_length=50)
     state: str = Field(min_length=2, max_length=50)

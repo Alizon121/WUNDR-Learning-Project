@@ -4,8 +4,12 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 type User = {
   id: string;
   firstName: string;
+  lastName: string;
   email: string;
-  // и т.д.
+  role: 'parent' | 'volunteer' | 'admin' | 'instructor';
+  city: string;
+  state: string;
+  zipCode: number;
 } | null;
 
 type AuthContextType = {
@@ -13,18 +17,24 @@ type AuthContextType = {
   setUser: (user: User) => void;
   isLoggedIn: boolean;
   logout: () => void;
+  loginWithToken: (token: string, user?: User) => void;
+  token: string | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
+    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedToken) setToken(storedToken);
   }, []);
 
+  //save user
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
@@ -33,14 +43,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const logout = () => setUser(null);
+  //save token
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("token", token);
+    } else {
+      localStorage.removeItem("token");
+    }
+  }, [token]);
 
-  return (
-    <AuthContext.Provider value={{ user, setUser, isLoggedIn: !!user, logout }}>
+   const loginWithToken = (token: string, user?: User) => {
+    setToken(token);
+    if (user) {
+      setUser(user);
+    }
+    // Если backend не возвращает user — можешь декодировать токен и вытянуть инфу о пользователе
+  };
+
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+  };
+
+    return (
+    <AuthContext.Provider value={{ user, setUser, isLoggedIn: !!user, logout, loginWithToken, token }}>
       {children}
     </AuthContext.Provider>
   );
 }
+
 
 export function useAuth() {
   const ctx = useContext(AuthContext);

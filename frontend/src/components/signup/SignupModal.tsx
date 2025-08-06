@@ -1,9 +1,11 @@
 import { useModal } from "@/app/context/modal"
 import { FormErrors } from "@/types/forms"
 import React, { useState } from "react"
+import { useAuth } from "@/app/context/auth";
 
 const SignupModal = () => {
     const { closeModal } = useModal()
+    const { loginWithToken } = useAuth();
 
     const [errors, setErrors] = useState<FormErrors>({})
     const [serverError, setServerError] = useState<string | null>(null)
@@ -12,6 +14,7 @@ const SignupModal = () => {
     const [hasHomeschoolChild, setHasHomeschoolChild] = useState<boolean | null>(null)
     const [passwordError, setPasswordError] = useState<string | null>(null);
     const [passwordTouched, setPasswordTouched] = useState(false);
+    
 
 
     
@@ -174,10 +177,13 @@ const SignupModal = () => {
 
 
             const token = signupBody.token;
+            const user = signupBody.user;
             if (!token) {
                 setServerError("No token received after registration.");
                 return;
             }
+
+            loginWithToken(token, user); 
 
             // Add children if any
             if (filteredChildren.length > 0) {

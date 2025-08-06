@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 import { Modal, ModalProvider } from "./context/modal";
+import { AuthProvider } from "@/app/context/auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,12 +28,14 @@ export default function RootLayout({ children }: Readonly<{children: React.React
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <AuthProvider>
           <ModalProvider>
             <Navbar />
               {children}
             <Footer />
             <Modal />
           </ModalProvider>
+          </AuthProvider>
 
       </body>
     </html>

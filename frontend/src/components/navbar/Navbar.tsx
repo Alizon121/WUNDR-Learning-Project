@@ -3,23 +3,35 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useModal } from "@/app/context/modal";
-import SignupModal from "../signup/SignupModal"
-import LoginModal from '../login/LoginModal'
+import SignupModal from "../signup/SignupModal";
+import LoginModal from '../login/LoginModal';
 import React from "react";
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
-  const {setModalContent} = useModal()
+  const { setModalContent } = useModal();
+  const pathname = usePathname();
+
+  // ! ВРЕМЕННО: состояние логина
+  const isLoggedIn = false; // Подключи auth-контекст в будущем
 
   const handleSignup = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    console.log('OPENING MODAL....')
-    setModalContent(<SignupModal/>)
+    e.preventDefault();
+    setModalContent(<SignupModal />);
   }
 
   const handleLogin = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setModalContent(<LoginModal/>)
+    e.preventDefault();
+    setModalContent(<LoginModal />);
   }
+
+  // Ссылки для навигации
+  const navLinks = [
+    { href: '/about', label: 'About' },
+    { href: '/events', label: 'Events' },
+    { href: '/support', label: 'Support Us' },
+    { href: '/get-involved', label: 'Get Involved' }
+  ];
 
   return (
     <nav className="bg-wonderbg shadow-md px-32 py-4">
@@ -39,13 +51,50 @@ export default function Navbar() {
         </Link>
 
         <ul className="flex space-x-16 text-[22px] font-bold text-wondergreen">
-          <li><Link href="/about" className="hover:underline">About</Link></li>
-          <li><a href="#events" className="hover:underline">Events</a></li>
-          <li><a href="#events" className="hover:underline">Support Us</a></li>
-          <li><a href="/get-involved" className="hover:underline">Get Involved</a></li>
-          <li><div className="hover:underline" onClick={handleLogin}>Login</div></li>
-          <li><div className="hover:underline" onClick={handleSignup}>Signup</div></li>
-          <li><a href="#profile" className="hover:underline">Profile</a></li>
+          {navLinks.map(({ href, label }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className={`hover:underline ${
+                  pathname === href
+                    ? "border-b-4 border-green-500 pb-1" // Подчеркиваем активный
+                    : ""
+                }`}
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
+
+          {!isLoggedIn && (
+            <>
+              <li>
+                <div className="hover:underline cursor-pointer" onClick={handleLogin}>
+                  Login
+                </div>
+              </li>
+              <li>
+                <div className="hover:underline cursor-pointer" onClick={handleSignup}>
+                  Signup
+                </div>
+              </li>
+            </>
+          )}
+
+          {isLoggedIn && (
+            <li>
+              <Link
+                href="/profile"
+                className={`hover:underline ${
+                  pathname === "/profile"
+                    ? "border-b-4 border-green-500 pb-1"
+                    : ""
+                }`}
+              >
+                Profile
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
     </nav>

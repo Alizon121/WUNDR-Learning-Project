@@ -57,11 +57,16 @@ async def forgot_password(request: PasswordResetRequest):
     # Send the email
     try:
         yag = yagmail.SMTP(yagmail_email, yagmail_app_password)
+        link = f"http://localhost:3000/reset-password/{reset_token}"
+        contents = (
+            "To reset your password, please click the link below:\n\n"
+            f"{link}"
+        )
+
         yag.send(
             to=user.email,
             subject="Password reset",
-            # contents="Reset link: https://your-app/reset?token={reset_token}"
-            contents=reset_token
+            contents=contents,
         )
 
     except Exception as e:

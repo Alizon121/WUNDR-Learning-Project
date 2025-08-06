@@ -24,7 +24,7 @@ class UserSignup(BaseModel):
     email: str = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     password: str = Field(min_length=6)
     role: Role
-    avatar: HttpUrl
+    # avatar: HttpUrl
 
     # Address Fields
     city: str = Field(min_length=2, max_length=50)
@@ -32,7 +32,7 @@ class UserSignup(BaseModel):
     zipCode: int
 
     # Children
-    children: List[ChildCreate] = Field(default_factory=list)
+    # children: List[ChildCreate] = Field(default_factory=list)
 
 # Signup Route
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
@@ -59,7 +59,7 @@ async def signup(user: UserSignup):
             "lastName": user.lastName,
             "email": user.email,
             "role": user.role.lower(),
-            "avatar": str(user.avatar),
+            # "avatar": str(user.avatar),
             "password": hashed_password,
             "city": user.city,
             "state": user.state,

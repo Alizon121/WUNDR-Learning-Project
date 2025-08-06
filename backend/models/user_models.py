@@ -13,6 +13,7 @@ class Role(str, Enum):
   PARENT = "parent"
   ADMIN = "admin"
   INSTRUCTOR = "instructor"
+  VOLUNTEER = "volunteer" 
 
 class User(BaseModel):
     id: str = Field(..., min_length=1, description="User identifier")

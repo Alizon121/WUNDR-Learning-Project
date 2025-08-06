@@ -43,6 +43,7 @@ enum Roles {
   parent
   admin
   instructor
+  volunteer
 }
 
 

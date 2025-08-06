@@ -386,8 +386,8 @@ const SignupModal = () => {
                                             {selectedRole === 'volunteer' && <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>}
                                         </div>
                                         <div>
-                                            <div className="font-medium">I'm a Teen/College Volunteer</div>
-                                            <div className="text-sm text-gray-600">Want to help and earn service hours</div>
+                                            <div className="font-medium">I'm a Volunteer</div>
+                                            <div className="text-sm text-gray-600">Want to help or earn service hours</div>
                                         </div>
                                     </div>
                                 </button>
@@ -461,12 +461,13 @@ const SignupModal = () => {
                                     Back
                                 </button>
                                 <button
-                                    type="button"
-                                    onClick={selectedRole === 'volunteer' ? handleSubmit : nextStep}
+                                    type={selectedRole === 'volunteer' ? "submit" : "button"}
+                                    onClick={selectedRole === 'volunteer' ? undefined : nextStep}
                                     className="flex-1 bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                                >
+                                    >
                                     {selectedRole === 'volunteer' ? 'Create Account' : 'Continue'}
                                 </button>
+
                             </div>
                         </div>
                     )}

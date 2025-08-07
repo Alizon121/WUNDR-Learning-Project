@@ -674,3 +674,7 @@ async def create_review(
                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                detail=f'Failed to create review: {e}'
           )
+     
+# * =============================================
+# Add the Jobs routes here
+# If an event is deleted, all jobs associated with that event are deleted

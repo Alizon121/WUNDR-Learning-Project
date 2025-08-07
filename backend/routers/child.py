@@ -2,6 +2,8 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from backend.db.prisma_client import db
 from typing import Annotated
 from backend.models.user_models import User, ChildCreate, ChildUpdate
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from .auth.login import get_current_user
 from .auth.utils import enforce_authentication
 
@@ -21,7 +23,7 @@ async def create_child(
     # Make sure the user is authenticated
     enforce_authentication(current_user, "add a child")
 
-    print("THIS IS THE PARENTID:", current_user.id)
+    # print("THIS IS THE PARENTID:", current_user.id)
 
     # Add the child
     try:
@@ -56,9 +58,18 @@ async def create_child(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create child: {str(e)}"
         )
+    
+    # payload = {
+    #     "child": created_child,
+    #     "parent": updated_user,
+    #     "message": "Child added successfully"
+    # }
 
+    # return JSONResponse(
+    #     status_code=201,
+    #     content=jsonable_encoder(payload)
+    # )
     return {"child": created_child, "parent": updated_user, "message": "Child added successfully"}
-
 
 # ! Get Children of the Current User
 @router.get("/current", status_code=status.HTTP_200_OK)

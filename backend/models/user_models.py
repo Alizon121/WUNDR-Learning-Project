@@ -117,7 +117,13 @@ class ChildCreate(BaseModel):
   firstName: str = Field(min_length=1, max_length=50)
   lastName: str = Field(min_length=1, max_length=50)
   homeschool: bool = False
-  birthday: date = Field(description="Child's date of birth", default_factory=date.today)
+  # birthday: date = Field(description="Child's date of birth", default_factory=date.today)
+  birthday: datetime = Field(
+      description="Child's date of birth",
+      default_factory=lambda: datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0
+      )
+    )
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 

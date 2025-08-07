@@ -102,11 +102,11 @@ async def schedule_reminder(
     scheduler.add_job(
         # lambda allows us to pass a zero-argument callable func
         # func=lambda: asyncio.run(schedule_reminder(job.id, user_id, event_id)),
-        func=schedule_reminder,
+        func=send_email_and_reschedule,
         trigger="date",
         run_date=run_at,
         id=job.id,
-        args=[user_id, event_id, event_date]
+        args=[user_id, event_id, event_date, job.id]
     )
 
 # =======================================================
@@ -118,17 +118,17 @@ async def send_email_and_reschedule(
         job_record_id: str
 ):
     """
-        Callback function for actually sending the email and updating Jobs instance
+        Callback function for actually sending the one day reminder email and updating Jobs instance
     """
     # Query user and events for writing the message subject/body
     user = await db.users.find_unique(where={"id": user_id})
     event = await db.events.find_unique(where={"id": event_id})
 
-    subject = f"Reminder: Your event “{event.name}” is tomorrow"
-    body = f"Hey {user.firstName},\n\nJust a quick reminder that “{event.name}” happens at {event_date.isoformat()}.\n\nCheers!"
+    subject = f"Reminder: Your Wonderhood event “{event.name}” is tomorrow"
+    body = f"Hey {user.firstName},\n\nJust a quick reminder that “{event.name}” with Wonderhood happens at {event_date.isoformat()}.\n\nCheers!"
     
     # Send the email with yagmail
-    yag.send(to=user.email, subject=subject, body=body)
+    yag.send(to=user.email, subject=subject, contents=body)
 
     # Update jobs record
     await db.jobs.update(

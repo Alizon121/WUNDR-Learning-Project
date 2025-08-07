@@ -10,9 +10,6 @@ import os
 from .notifications import send_email, schedule_reminder
 
 router = APIRouter()
-yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
-yagmail_email = os.getenv("YAGMAIL_EMAIL")
-
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_event(
@@ -328,8 +325,6 @@ async def add_user_to_event(
     # Create notification
     background_tasks.add_task(
         send_email,
-        yagmail_email,
-        yagmail_app_password,
         current_user.email,
         event.name,
         event.date
@@ -415,8 +410,6 @@ async def add_child_to_event(
     # Create notification
     background_tasks.add_task(
         send_email,
-        yagmail_email,
-        yagmail_app_password,
         current_user.email,
         event.name,
         event.date

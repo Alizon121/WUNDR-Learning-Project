@@ -279,6 +279,7 @@ async def delete_event_by_id(
     # Delete the event
     await db.events.delete(where={"id": event_id})
 
+
     return {"message": "Event deleted successfully"}
 
 @router.put("/{event_id}/join", status_code=status.HTTP_200_OK)
@@ -678,3 +679,6 @@ async def create_review(
 # * =============================================
 # Add the Jobs routes here
 # If an event is deleted, all jobs associated with that event are deleted
+
+# Should I make a one-to-many rellationship between Jobs and Users
+# Jobs and Children? If a User or child is removed from an event, then the User should not get the reminder

@@ -155,6 +155,6 @@ model Jobs{
    sentAt            DateTime?
    errorMessage      String?          // Log issues if notification is undeliverable
 
-   event             Events? @relation(fields:[eventId], references: [id])
+   event             Events? @relation(fields:[eventId], references: [id], onDelete: Cascade)
    eventId           String @db.ObjectId
 }

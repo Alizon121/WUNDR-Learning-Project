@@ -66,9 +66,9 @@ async def signup(user: UserSignup):
             "zipCode": user.zipCode,
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow(),
-            "children": [],
+            "children": {
                 "create": [child.model_dump(mode="json") for child in user.children]
-
+            }
         }
     )
 

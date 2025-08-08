@@ -13,7 +13,7 @@ class Role(str, Enum):
   PARENT = "parent"
   ADMIN = "admin"
   INSTRUCTOR = "instructor"
-  VOLUNTEER = "volunteer" 
+  VOLUNTEER = "volunteer"
 
 class User(BaseModel):
     id: str = Field(..., min_length=1, description="User identifier")
@@ -105,7 +105,7 @@ class Child(BaseModel):
   firstName: str = Field(min_length=1, max_length=50)
   lastName: str = Field(min_length=1, max_length=50)
   homeschool: bool = Field(default_factory=False)
-  birthday: date = Field(description="Child's date of birth", default_factory=date.today)
+  birthday: datetime = Field(default_factory=datetime.now(timezone.utc))
 
   parents: Optional[List["User"]] = Field(default_factory=list)
   enrolledEvents: List["Event"] = Field(default_factory=list)
@@ -117,7 +117,7 @@ class ChildCreate(BaseModel):
   firstName: str = Field(min_length=1, max_length=50)
   lastName: str = Field(min_length=1, max_length=50)
   homeschool: bool = False
-  birthday: date = Field(description="Child's date of birth", default_factory=date.today)
+  birthday: datetime = Field(description="Child's date of birth", default_factory=datetime.now(timezone.utc))
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 

@@ -2,6 +2,13 @@ import { makeApiRequest } from "./api";
 
 // ! Signup ===================================================
 
+export interface ChildPayload {
+  firstName: string;
+  lastName: string;
+  homeschool?: boolean;
+  birthday: string; // update once we know correct format
+}
+
 export interface SignupPayload {
     firstName: string;
     lastName: string;
@@ -12,6 +19,7 @@ export interface SignupPayload {
     city: string;
     state: string;
     zipCode: number;
+    children?: ChildPayload[];
 }
 
 export async function handleSignup(payload: SignupPayload) {

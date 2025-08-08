@@ -1,12 +1,12 @@
 import { makeApiRequest } from "./api";
 
-// ! Signup ===================================================
+// * Signup ===================================================
 
 export interface ChildPayload {
   firstName: string;
   lastName: string;
   homeschool?: boolean;
-  birthday: string; // update once we know correct format
+  birthday: string;
 }
 
 export interface SignupPayload {
@@ -40,7 +40,39 @@ export async function handleSignup(payload: SignupPayload) {
   return response;
 }
 
-// ! Login  ===================================================
+// & Example Body for handleSignup:
+
+const payload: SignupPayload = {
+  firstName: "Jane",
+  lastName: "Doe",
+  email: "jane.doe@example.com",
+  password: "securePassword123",
+  role: "parent",
+  avatar: "https://example.com/avatar.jpg",
+  city: "Austin",
+  state: "TX",
+  zipCode: 78701,
+  children: [
+    {
+      firstName: "Ella",
+      lastName: "Doe",
+      homeschool: false,
+      birthday: new Date("2015-06-15").toISOString(), // → "2015-06-15T00:00:00.000Z"
+    },
+    {
+      firstName: "Max",
+      lastName: "Doe",
+      homeschool: true,
+      birthday: new Date("2018-09-22").toISOString(),
+    },
+  ],
+};
+
+// & Example function call:
+
+const response = await handleSignup(payload);
+
+// * Login  ===================================================
 
 export async function handleLogin(email: string, password: string) {
 
@@ -70,7 +102,7 @@ export async function handleLogin(email: string, password: string) {
     return result;
 }
 
-// ! Logout ===================================================
+// * Logout ===================================================
 
 export function handleLogout() {
   localStorage.removeItem("token");

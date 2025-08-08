@@ -25,13 +25,14 @@ class UserSignup(BaseModel):
     password: str = Field(min_length=6)
     role: Role
     # avatar: HttpUrl
+
     # Address Fields
     city: str = Field(min_length=2, max_length=50)
     state: str = Field(min_length=2, max_length=50)
     zipCode: int
 
     # Children
-    # children: List[ChildCreate] = Field(default_factory=list)
+    children: List[ChildCreate] = Field(default_factory=list)
 
 # Signup Route
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
@@ -65,8 +66,8 @@ async def signup(user: UserSignup):
             "zipCode": user.zipCode,
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow(),
-            # "children": []
-                # "create": [child.dict() for child in user.children]
+            "children": [],
+                "create": [child.model_dump(mode="json") for child in user.children]
 
         }
     )

@@ -678,7 +678,6 @@ async def create_review(
      
 # * =============================================
 # Add the Jobs routes here
-# If an event is deleted, all jobs associated with that event are deleted
-
+# If an event is deleted, then all the users associated with tthat event should get a notification
 # Should I make a one-to-many rellationship between Jobs and Users
 # Jobs and Children? If a User or child is removed from an event, then the User should not get the reminder

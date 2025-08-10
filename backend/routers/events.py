@@ -6,8 +6,7 @@ from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCr
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
-import os
-from .notifications import send_email, schedule_reminder
+from .notifications import send_email, schedule_reminder, send_email_deletion
 
 router = APIRouter()
 
@@ -276,6 +275,16 @@ async def delete_event_by_id(
             detal="Event not found"
         )
 
+    # Query the users of the event
+    users = await db.users.find_many({
+        "where":{
+            "eventIDs": {
+                "has": event.id
+            }
+        }})
+    
+    print("USUSUSUSUSUSU", users)
+
     # Delete the event
     await db.events.delete(where={"id": event_id})
 
@@ -434,7 +443,7 @@ async def add_child_to_event(
     return {"event": updated_event, "message": "Child added to event and user notified"}
 
 #! Change this endpoint to PUT instead of DELETE?
-@router.delete("/{event_id}/leave", status_code=status.HTTP_200_OK)
+@router.put("/{event_id}/leave", status_code=status.HTTP_200_OK)
 async def remove_user_from_event(
     event_id: str,
     current_user: Annotated[User, Depends(get_current_user)]

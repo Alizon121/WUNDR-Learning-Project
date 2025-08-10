@@ -29,6 +29,23 @@ def send_email(
     )
 
 # =======================================================
+
+def send_email_deletion(
+    user_email: str,
+    event_name: str,
+    event_date: str,
+):
+    """
+        Call back function for sending an email to all enrolled users upon deletion of event
+    """
+
+    yag.send(
+        to=user_email,
+        subject=f'Wonderhood: {event_name} Cancellation',
+        contents=f'Hello,\n\nWe regret to inform you that the {event_name} on {event_date} has been cancelled. Please take a look at our website for upcoming events.\n\n best,\n\n Wunderhood Team'
+    )
+
+# =======================================================
 # * Variables for connecting APScheduler to MongoDB
 
 MONGO_URI = os.getenv("DATABASE_URL")

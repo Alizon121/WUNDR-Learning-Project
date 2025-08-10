@@ -9,7 +9,12 @@
         pyenv install 3.12.7
         pyenv local 3.12.7
 
-    - Install dependecies: 
+    - Create a virtual environment inside the ROOT directory and activate it:
+
+        python -m venv .venv
+        source .venv/bin/activate
+
+    - Install dependecies inside the backend directory: 
         
         pip install -r requirements.txt
 

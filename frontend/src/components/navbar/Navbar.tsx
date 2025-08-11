@@ -8,12 +8,15 @@ import LoginModal from '../login/LoginModal';
 import React, { useState } from "react";
 import { usePathname } from 'next/navigation';
 import { useAuth } from "@/app/context/auth";
+import UserDropdown from "./UserDropdown";
 
 export default function Navbar() {
   const { setModalContent } = useModal();
   const pathname = usePathname();
   const { user, isLoggedIn, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
 
   const handleSignup = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -48,7 +51,7 @@ export default function Navbar() {
                 className="cursor-pointer relative z-10 group-hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <span className="text-2xl lg:text-3xl text-wondergreen font-bold bg-gradient-to-r from-wondergreen to-wonderleaf bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
+            <span className="text-2xl md:text-[27px] text-wondergreen font-bold bg-gradient-to-r from-wondergreen to-wonderleaf bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
               WonderHood
             </span>
           </Link>
@@ -80,7 +83,7 @@ export default function Navbar() {
               {!isLoggedIn && (
                 <>
                   <div 
-                    className="px-6 py-2 text-wondergreen font-semibold hover:text-wonderleaf cursor-pointer transition-colors duration-300 hover:bg-wondergreen/5 rounded-lg"
+                    className="px-6 py-2 text-wondergreen font-semibold hover:text-wonderleaf cursor-pointer transition-colors duration-300 hover:bg-wondergreen/5 rounded-lg text-lg"
                     onClick={handleLogin}
                   >
                     Login
@@ -94,12 +97,13 @@ export default function Navbar() {
                 </>
               )}
 
+              {/* User Name */}
               {isLoggedIn && user && (
                 <div className="relative group">
-                  <Link
-                    href="/profile"
+                  <button
+                    onClick={() => setShowDropdown(v => !v)}
                     className={`
-                      flex items-center px-6 py-3 bg-white/70 backdrop-blur-sm border-2 rounded-xl font-semibold
+                      flex items-center px-4 py-2 bg-white/70 backdrop-blur-sm border-2 rounded-xl font-semibold
                       hover:shadow-lg transition-all duration-300 hover:scale-105
                       ${pathname === "/profile" 
                         ? "border-wondergreen bg-wondergreen/10 text-wondergreen shadow-lg" 
@@ -110,10 +114,13 @@ export default function Navbar() {
                     <div className="w-8 h-8 bg-gradient-to-r from-wonderleaf to-wondergreen rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
                       {user.firstName.charAt(0).toUpperCase()}
                     </div>
-                    {user.firstName}
+                    <span className="text-sm md:text-lg font-bold text-wondergreen">{user.firstName}</span>
                     <svg className="w-4 h-4 ml-2 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" strokeWidth="2"
                       viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                  </Link>
+                  </button>
+                  {showDropdown && (
+                    <UserDropdown onLogout={logout} />
+                  )}
                 </div>
               )}
             </div>

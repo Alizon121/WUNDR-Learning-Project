@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react";
+import Profile from '../../components/profile/Profile'
 
 export default function ProfilePage() {
     const [firstName, setFirstName] = useState("");
@@ -15,12 +16,13 @@ export default function ProfilePage() {
     }, []);
 
     return (
-        <div className="max-w-md mx-auto mt-16 p-8 bg-white rounded shadow text-center">
-            <h2 className="text-2xl font-bold mb-4">
+        <div className="mx-auto w-full mt-16 p-8 bg-white rounded shadow text-center">
+            <Profile />
+            {/* <h2 className="text-2xl font-bold mb-4">
                 Hello, {firstName ? firstName : "друг"}! 👋
-            </h2>
+            </h2> */}
             {/* Здесь потом появится информация о профиле */}
-            <div className="text-gray-600">Welcome to  WonderHood!</div>
+            {/* <div className="text-gray-600">Welcome to  WonderHood!</div> */}
         </div>
     );
 }

@@ -18,7 +18,7 @@ const SignupModal = () => {
     const [passwordTouched, setPasswordTouched] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    
+
     // Form fields for each step
     const [form1, setForm1] = useState({
         firstName: '',
@@ -32,12 +32,12 @@ const SignupModal = () => {
         state: "",
         zipcode: ""
     })
-    const [form3List, setForm3List] = useState([{
-        childFirstName: '',
-        childLastName: '',
-        homeschool: true,
-        childAge: ''
-    }])
+    // const [form3List, setForm3List] = useState([{
+    //     childFirstName: '',
+    //     childLastName: '',
+    //     homeschool: true,
+    //     childAge: ''
+    // }])
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -62,31 +62,33 @@ const SignupModal = () => {
             setForm1(prev => ({ ...prev, [name]: value}))
         } else if (name in form2) {
             setForm2(prev => ({ ...prev, [name]: value}))
-        } else if (childIndex !== null) {
-            setForm3List(prev =>
-                prev.map((child, index) =>
-                    index === childIndex ? { ...child, [name]: type === 'checkbox' ? checked : value }
-                    : child
-                )
-            )
         }
+
+        // else if (childIndex !== null) {
+        //     setForm3List(prev =>
+        //         prev.map((child, index) =>
+        //             index === childIndex ? { ...child, [name]: type === 'checkbox' ? checked : value }
+        //             : child
+        //         )
+        //     )
+        // }
 
         setErrors(prev => ({ ...prev, [name]: undefined}))
         setServerError(null)
     }
 
-    const addAnotherChild = () => {
-        setForm3List((prev) => [
-            ...prev,
-            {childFirstName: "", childLastName: "", homeschool: true, childAge: ""}
-        ])
-    }
+    // const addAnotherChild = () => {
+    //     setForm3List((prev) => [
+    //         ...prev,
+    //         {childFirstName: "", childLastName: "", homeschool: true, childAge: ""}
+    //     ])
+    // }
 
-    const removeChild = (index: number) => {
-        if (form3List.length > 1) {
-            setForm3List(prev => prev.filter((_, i) => i !== index))
-        }
-    }
+    // const removeChild = (index: number) => {
+    //     if (form3List.length > 1) {
+    //         setForm3List(prev => prev.filter((_, i) => i !== index))
+    //     }
+    // }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -108,37 +110,37 @@ const SignupModal = () => {
         }
 
         // Prepare children data (only if parent with homeschool children)
-        filteredChildren = [];
-        if (selectedRole === 'parent' && hasHomeschoolChild === true) {
-            filteredChildren = form3List
-                .filter(child => child.childFirstName || child.childLastName)
-                .map(child => ({
-                    firstName: child.childFirstName,
-                    lastName: child.childLastName,
-                    homeschool: child.homeschool,
-                    birthday: child.childAge,
-                }));
+        // filteredChildren = [];
+        // if (selectedRole === 'parent' && hasHomeschoolChild === true) {
+        //     filteredChildren = form3List
+        //         .filter(child => child.childFirstName || child.childLastName)
+        //         .map(child => ({
+        //             firstName: child.childFirstName,
+        //             lastName: child.childLastName,
+        //             homeschool: child.homeschool,
+        //             birthday: child.childAge,
+        //         }));
 
-            // Validate children's age
-            for (let child of filteredChildren) {
-                if (!child.birthday) {
-                    setServerError("Please enter your child's date of birth.");
-                    return;
-                }
-                const birthYear = new Date(child.birthday).getFullYear();
-                const currentYear = new Date().getFullYear();
-                const age = currentYear - birthYear;
-                if (age < 10 || age > 18) {
-                    setServerError("Child's age must be between 10 and 18 years old.");
-                    return;
-                }
-            }
+        //     // Validate children's age
+        //     for (let child of filteredChildren) {
+        //         if (!child.birthday) {
+        //             setServerError("Please enter your child's date of birth.");
+        //             return;
+        //         }
+        //         const birthYear = new Date(child.birthday).getFullYear();
+        //         const currentYear = new Date().getFullYear();
+        //         const age = currentYear - birthYear;
+        //         if (age < 10 || age > 18) {
+        //             setServerError("Child's age must be between 10 and 18 years old.");
+        //             return;
+        //         }
+        //     }
 
-            if (filteredChildren.length === 0) {
-                setServerError("Please add at least one child's information.");
-                return;
-            }
-        }
+        //     if (filteredChildren.length === 0) {
+        //         setServerError("Please add at least one child's information.");
+        //         return;
+        //     }
+        // }
 
         // Prepare user data
         const userInfo = {
@@ -183,7 +185,7 @@ const SignupModal = () => {
                 return;
             }
 
-            loginWithToken(token, user); 
+            loginWithToken(token, user);
 
             // Add children if any
             if (filteredChildren.length > 0) {
@@ -255,8 +257,8 @@ const SignupModal = () => {
                     {/* Header */}
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold text-gray-800 text-green-600 w-full text-center">Join WonderHood</h2>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={closeModal}
                             className="text-gray-400 hover:text-gray-600 text-2xl"
                         >
@@ -275,7 +277,7 @@ const SignupModal = () => {
                     {currentStep === 1 && (
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">Tell us about yourself</h3>
-                            
+
                             <div className="grid grid-cols-2 gap-4">
                                 <input
                                     type="text"
@@ -317,7 +319,7 @@ const SignupModal = () => {
                                     placeholder="Password"
                                     value={form1.password}
                                     onChange={handlePasswordChange}
-                                    onBlur={() => setPasswordTouched(true)}   
+                                    onBlur={() => setPasswordTouched(true)}
                                     className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     required
                                     minLength={6}
@@ -361,7 +363,7 @@ const SignupModal = () => {
                             <div className="flex justify-center mb-6">
                                 <div className="flex space-x-2">
                                     {[1, 2, 3, 4].map((step) => (
-                                        <div 
+                                        <div
                                             key={step}
                                             className={`w-3 h-3 rounded-full transition-colors ${
                                                 step <= currentStep ? 'bg-green-500' : 'bg-gray-300'
@@ -385,14 +387,14 @@ const SignupModal = () => {
                     {currentStep === 2 && (
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">What brings you to WonderHood?</h3>
-                            
+
                             <div className="space-y-3">
                                 <button
                                     type="button"
                                     onClick={() => setSelectedRole('parent')}
                                     className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                                        selectedRole === 'parent' 
-                                            ? 'border-green-500 bg-green-50 text-green-700' 
+                                        selectedRole === 'parent'
+                                            ? 'border-green-500 bg-green-50 text-green-700'
                                             : 'border-gray-300 hover:border-gray-400'
                                     }`}
                                 >
@@ -413,8 +415,8 @@ const SignupModal = () => {
                                     type="button"
                                     onClick={() => setSelectedRole('volunteer')}
                                     className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                                        selectedRole === 'volunteer' 
-                                            ? 'border-green-500 bg-green-50 text-green-700' 
+                                        selectedRole === 'volunteer'
+                                            ? 'border-green-500 bg-green-50 text-green-700'
                                             : 'border-gray-300 hover:border-gray-400'
                                     }`}
                                 >
@@ -515,7 +517,7 @@ const SignupModal = () => {
                     {currentStep === 4 && selectedRole === 'parent' && (
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">Tell us about your children</h3>
-                            
+
                             {/* Homeschool question */}
                             <div className="bg-blue-50 p-4 rounded-lg mb-4">
                                 <p className="font-medium text-gray-700 mb-3">Do you have children who are homeschooled?</p>
@@ -524,8 +526,8 @@ const SignupModal = () => {
                                         type="button"
                                         onClick={() => setHasHomeschoolChild(true)}
                                         className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                                            hasHomeschoolChild === true 
-                                                ? 'border-green-500 bg-green-50 text-green-700' 
+                                            hasHomeschoolChild === true
+                                                ? 'border-green-500 bg-green-50 text-green-700'
                                                 : 'border-gray-300 hover:border-gray-400 bg-white'
                                         }`}
                                     >
@@ -535,8 +537,8 @@ const SignupModal = () => {
                                         type="button"
                                         onClick={() => setHasHomeschoolChild(false)}
                                         className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                                            hasHomeschoolChild === false 
-                                                ? 'border-red-500 bg-red-50 text-red-700' 
+                                            hasHomeschoolChild === false
+                                                ? 'border-red-500 bg-red-50 text-red-700'
                                                 : 'border-gray-300 hover:border-gray-400 bg-white'
                                         }`}
                                     >
@@ -553,10 +555,10 @@ const SignupModal = () => {
                                 </div>
                             )}
 
-                            {hasHomeschoolChild === true && (
+                            {/* {hasHomeschoolChild === true && (
                                 <>
                                     <p className="text-sm text-gray-600 mb-4">Add your children's information below. All children must be between 10-18 years old.</p>
-                                    
+
                                     {form3List.map((child, idx) => (
                                         <div key={idx} className="border border-gray-200 p-4 rounded-lg bg-gray-50">
                                             <div className="flex justify-between items-center mb-3">
@@ -571,7 +573,7 @@ const SignupModal = () => {
                                                     </button>
                                                 )}
                                             </div>
-                                            
+
                                             <div className="space-y-3">
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <input
@@ -615,7 +617,7 @@ const SignupModal = () => {
                                         + Add Another Child
                                     </button>
                                 </>
-                            )}
+                            )} */}
 
                             <div className="flex space-x-3 pt-4">
                                 <button
@@ -627,7 +629,10 @@ const SignupModal = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={hasHomeschoolChild === null || (hasHomeschoolChild === true && form3List.some(child => !child.childFirstName || !child.childLastName || !child.childAge))}
+                                    disabled={hasHomeschoolChild === null
+                                        // ||
+                                        // (hasHomeschoolChild === true && form3List.some(child => !child.childFirstName || !child.childLastName || !child.childAge))
+                                    }
                                     className="flex-1 bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
                                 >
                                     Create Account

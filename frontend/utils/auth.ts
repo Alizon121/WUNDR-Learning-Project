@@ -57,7 +57,7 @@ const payload: SignupPayload = {
       firstName: "Ella",
       lastName: "Doe",
       homeschool: false,
-      birthday: new Date("2015-06-15").toISOString(), // → "2015-06-15T00:00:00.000Z"
+      birthday: new Date("2015-06-15").toISOString(), // "2015-06-15T00:00:00.000Z"
     },
     {
       firstName: "Max",

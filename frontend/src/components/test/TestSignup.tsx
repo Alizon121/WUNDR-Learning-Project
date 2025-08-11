@@ -1,7 +1,7 @@
 // components/TestSignup.tsx
 "use client";
 
-import { handleSignup, SignupPayload } from "../../../../utils/auth";
+import { handleSignup, SignupPayload } from "../../../utils/auth";
 
 export default function TestSignup() {
   const testPayload: SignupPayload = {

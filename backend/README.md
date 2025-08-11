@@ -4,7 +4,8 @@
 
 1. Ensure running from backend directory and:
 
-    - Activate virtual environment in Python 12: source .venv/bin/activate
+    - Activate virtual environment in Python 12: source backend/.venv/bin/activate
+        - OLD COMMAND: source .venv/bin/activate
     - Install dependecies: pip install -r requirements.txt
 
 2. Run Prisma commands:

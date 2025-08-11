@@ -12,10 +12,10 @@ yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
 yagmail_email = os.getenv("YAGMAIL_EMAIL")
 yag = yagmail.SMTP(yagmail_email, yagmail_app_password)
 
-def send_email(
+def send_email_one_user(
         user_email: str,
-        event_name: str,
-        event_date: str
+        subject: str,
+        contents: str
 ):
     
     """
@@ -23,27 +23,26 @@ def send_email(
     """
     yag.send(
         to=user_email,
-        subject="Enollment Confirmation",
-        # ? ADD link to make changes still
-        contents=f'This email confirms that you are enrolled for the {event_name} event on {event_date}. If you are no longer available to join the event, please make changes here:.'
+        subject=subject,
+        contents=contents
     )
 
 # =======================================================
 
-def send_email_deletion(
+def send_email_multiple_users(
     user_emails: list[str],
-    event_name: str,
-    event_date: str,
+    subject: str,
+    contents: str
 ):
     """
-        Call back function for sending an email to all enrolled users upon deletion of event
+        Call back function for sending an email to all enrolled users
     """
 
     for email in user_emails:
         yag.send(
             to=email,
-            subject=f'Wonderhood: {event_name} Cancellation',
-            contents=f'Hello,\n\nWe regret to inform you that the {event_name} event on {event_date} has been cancelled. Please take a look at our website for upcoming events.\n\n best,\n\n Wunderhood Team'
+            subject=subject,
+            contents=contents
         )
 
 # =======================================================

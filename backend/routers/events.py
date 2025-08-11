@@ -6,7 +6,7 @@ from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCr
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
-from .notifications import send_email, schedule_reminder, send_email_deletion
+from .notifications import send_email_one_user, schedule_reminder, send_email_multiple_users
 
 router = APIRouter()
 
@@ -283,20 +283,23 @@ async def delete_event_by_id(
     users =  event.users
     user_emails = [user.email for user in users]
 
+    # Send the email notification to users
+    subject = f'Wonderhood: {event.name} Cancellation'
+    contents = f'Hello,\n\nWe regret to inform you that the {event.name} event on {event.date} has been cancelled. Please take a look at our website for upcoming events.\n\n Best,\n\n Wonderhood Team'
+
+    background_tasks.add_task(
+        send_email_multiple_users,
+        user_emails,
+        subject,
+        contents
+    )
+
     # Delete the event
     await db.events.delete(where={"id": event_id})
 
-    # Send the email notification to users
-    background_tasks.add_task(
-        send_email_deletion,
-        user_emails,
-        event.name,
-        event.date
-    )
-
     return {"message": "Event deleted successfully"}
 
-@router.put("/{event_id}/join", status_code=status.HTTP_200_OK)
+@router.patch("/{event_id}/join", status_code=status.HTTP_200_OK)
 async def add_user_to_event(
     event_id: str,
     current_user: Annotated[User, Depends(get_current_user)],
@@ -338,11 +341,15 @@ async def add_user_to_event(
     )
 
     # Create notification
+    subject = f"Enollment Confirmation: {event.name}"
+     # ? ADD link to make changes still
+    contents = f'This email confirms that you are enrolled for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here:.\n\nBest,\n\nWondherhood Team'
+
     background_tasks.add_task(
-        send_email,
+        send_email_one_user,
         current_user.email,
-        event.name,
-        event.date
+        subject,
+        contents
     )
 
     await db.notifications.create(
@@ -362,7 +369,7 @@ async def add_user_to_event(
 
     return {"event": updated_event, "message": "User added to event and notified"}
 
-@router.put("/{event_id}/enroll", status_code=status.HTTP_200_OK)
+@router.patch("/{event_id}/enroll", status_code=status.HTTP_200_OK)
 async def add_child_to_event(
     event_id: str,
     child_id: str,
@@ -423,11 +430,14 @@ async def add_child_to_event(
     )
 
     # Create notification
+    subject = f'Enrollment Confirmation: {event.name}'
+    content = f'Hello,\n\nThis email confirms that your child has been enrolled for the {event.name} event at Wonderhood for {event.date}.\n\nWe look forward to see you there!\n\nBest,\n\nWonderhood Team'
+
     background_tasks.add_task(
-        send_email,
+        send_email_one_user,
         current_user.email,
-        event.name,
-        event.date
+        subject,
+        content
     )
 
     await db.notifications.create(
@@ -447,11 +457,11 @@ async def add_child_to_event(
 
     return {"event": updated_event, "message": "Child added to event and user notified"}
 
-#! Change this endpoint to PUT instead of DELETE?
-@router.put("/{event_id}/leave", status_code=status.HTTP_200_OK)
+@router.patch("/{event_id}/leave", status_code=status.HTTP_200_OK)
 async def remove_user_from_event(
     event_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -485,6 +495,17 @@ async def remove_user_from_event(
             status_code=400,
             detail="User is not enrolled"
         )
+    
+    # Send notification to User that they have been removed from event
+    subject = f'Unenrollment Confirmation: {event.name}'
+    content = f'Hello,\n\nThis email confirms that you have been unenrolled from the {event.name} event at Wonderhood on {event.date}. Please find more events at our website.\n\nBest,\n\nWonderhood Team'
+    
+    background_tasks.add_task(
+        send_email_one_user,
+        current_user.email,
+        subject,
+        content
+    )
 
     # Remove the user from the event
     updated_user_list = [uid for uid in event.userIDs if uid != current_user.id]
@@ -498,11 +519,12 @@ async def remove_user_from_event(
 
 
 #! Change this endpoint to PUT instead of DELETE?
-@router.delete("/{event_id}/unenroll", status_code=status.HTTP_200_OK)
+@router.patch("/{event_id}/unenroll", status_code=status.HTTP_200_OK)
 async def remove_child_from_event(
     event_id: str,
     child_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -550,6 +572,17 @@ async def remove_child_from_event(
             status_code=400,
             detail="Child is not enrolled"
         )
+    
+    # Notification to user for unenrolling child
+    subject = f'Unenrollment Confirmation: {event.name}'
+    content = f'Hello,\n\nThis email confirms that your child has been unenrolled from the {event.name} on {event.date}. Please find more events on our website.\n\nBest,\n\nWonderhood Team'
+    
+    background_tasks.add_task(
+        send_email_one_user,
+        current_user.email,
+        subject,
+        content
+    )
 
     # Remove child from event
     updated_child_list = [id for id in event.childIDs if id != child.id]
@@ -692,6 +725,6 @@ async def create_review(
      
 # * =============================================
 # Add the Jobs routes here
-# If an event is deleted, then all the users associated with tthat event should get a notification
+# Add a message on UI noting to look for correspondences from us in their spam folder
 # Should I make a one-to-many rellationship between Jobs and Users
 # Jobs and Children? If a User or child is removed from an event, then the User should not get the reminder

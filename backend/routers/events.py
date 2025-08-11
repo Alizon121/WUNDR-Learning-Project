@@ -249,7 +249,8 @@ async def update_event(
 @router.delete("/{event_id}", status_code=status.HTTP_200_OK)
 async def delete_event_by_id(
     event_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -268,26 +269,30 @@ async def delete_event_by_id(
     enforce_admin(current_user, "delete an event")
 
     # Verify that the event exists
-    event = await db.events.find_unique(where={"id": event_id})
+    event = await db.events.find_unique(
+        where={"id": event_id},
+        include={"users": True}
+        )
     if not event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detal="Event not found"
+            detail="Event not found"
         )
-
-    # Query the users of the event
-    users = await db.users.find_many({
-        "where":{
-            "eventIDs": {
-                "has": event.id
-            }
-        }})
     
-    print("USUSUSUSUSUSU", users)
+    # Get all the emails associated with an event as list
+    users =  event.users
+    user_emails = [user.email for user in users]
 
     # Delete the event
     await db.events.delete(where={"id": event_id})
 
+    # Send the email notification to users
+    background_tasks.add_task(
+        send_email_deletion,
+        user_emails,
+        event.name,
+        event.date
+    )
 
     return {"message": "Event deleted successfully"}
 

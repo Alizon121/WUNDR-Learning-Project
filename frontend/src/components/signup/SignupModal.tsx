@@ -2,6 +2,9 @@ import { useModal } from "@/app/context/modal"
 import { FormErrors } from "@/types/forms"
 import React, { useState } from "react"
 import { useAuth } from "@/app/context/auth";
+import { handleSignup, SignupPayload } from "../../../utils/auth";
+
+type UserInfo = SignupPayload
 
 const SignupModal = () => {
     // Modal and Auth actions
@@ -32,12 +35,12 @@ const SignupModal = () => {
         state: "",
         zipcode: ""
     })
-    // const [form3List, setForm3List] = useState([{
-    //     childFirstName: '',
-    //     childLastName: '',
-    //     homeschool: true,
-    //     childAge: ''
-    // }])
+    const [form3List, setForm3List] = useState([{
+        childFirstName: '',
+        childLastName: '',
+        homeschool: true,
+        childAge: ''
+    }])
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -62,33 +65,31 @@ const SignupModal = () => {
             setForm1(prev => ({ ...prev, [name]: value}))
         } else if (name in form2) {
             setForm2(prev => ({ ...prev, [name]: value}))
+        } else if (childIndex !== null) {
+            setForm3List(prev =>
+                prev.map((child, index) =>
+                    index === childIndex ? { ...child, [name]: type === 'checkbox' ? checked : value }
+                    : child
+                )
+            )
         }
-
-        // else if (childIndex !== null) {
-        //     setForm3List(prev =>
-        //         prev.map((child, index) =>
-        //             index === childIndex ? { ...child, [name]: type === 'checkbox' ? checked : value }
-        //             : child
-        //         )
-        //     )
-        // }
 
         setErrors(prev => ({ ...prev, [name]: undefined}))
         setServerError(null)
     }
 
-    // const addAnotherChild = () => {
-    //     setForm3List((prev) => [
-    //         ...prev,
-    //         {childFirstName: "", childLastName: "", homeschool: true, childAge: ""}
-    //     ])
-    // }
+    const addAnotherChild = () => {
+        setForm3List((prev) => [
+            ...prev,
+            {childFirstName: "", childLastName: "", homeschool: true, childAge: ""}
+        ])
+    }
 
-    // const removeChild = (index: number) => {
-    //     if (form3List.length > 1) {
-    //         setForm3List(prev => prev.filter((_, i) => i !== index))
-    //     }
-    // }
+    const removeChild = (index: number) => {
+        if (form3List.length > 1) {
+            setForm3List(prev => prev.filter((_, i) => i !== index))
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -108,102 +109,112 @@ const SignupModal = () => {
             setServerError("This program is currently only available for homeschool families. We'd love to expand in the future!");
             return;
         }
+        console.log('loooooooook here', form3List)
+        console.log('filter children', form3List.filter((child) => child.childFirstName))
 
         // Prepare children data (only if parent with homeschool children)
-        // filteredChildren = [];
-        // if (selectedRole === 'parent' && hasHomeschoolChild === true) {
-        //     filteredChildren = form3List
-        //         .filter(child => child.childFirstName || child.childLastName)
-        //         .map(child => ({
-        //             firstName: child.childFirstName,
-        //             lastName: child.childLastName,
-        //             homeschool: child.homeschool,
-        //             birthday: child.childAge,
-        //         }));
+        filteredChildren = [];
+        if (selectedRole === 'parent' && hasHomeschoolChild === true) {
+            console.log("SANITY CHECK", form3List)
+            filteredChildren = form3List
+                .filter(child => child.childFirstName || child.childLastName)
+                .map(child => ({
+                    firstName: child.childFirstName,
+                    lastName: child.childLastName,
+                    homeschool: child.homeschool,
+                    birthday: new Date(child.childAge).toISOString(),
+                }));
 
-        //     // Validate children's age
-        //     for (let child of filteredChildren) {
-        //         if (!child.birthday) {
-        //             setServerError("Please enter your child's date of birth.");
-        //             return;
-        //         }
-        //         const birthYear = new Date(child.birthday).getFullYear();
-        //         const currentYear = new Date().getFullYear();
-        //         const age = currentYear - birthYear;
-        //         if (age < 10 || age > 18) {
-        //             setServerError("Child's age must be between 10 and 18 years old.");
-        //             return;
-        //         }
-        //     }
+            // Validate children's age
+            for (let child of filteredChildren) {
+                if (!child.birthday) {
+                    setServerError("Please enter your child's date of birth.");
+                    return;
+                }
+                const birthYear = new Date(child.birthday).getFullYear();
+                const currentYear = new Date().getFullYear();
+                const age = currentYear - birthYear;
+                if (age < 10 || age > 18) {
+                    setServerError("Child's age must be between 10 and 18 years old.");
+                    return;
+                }
+            }
 
-        //     if (filteredChildren.length === 0) {
-        //         setServerError("Please add at least one child's information.");
-        //         return;
-        //     }
-        // }
+            if (filteredChildren.length === 0) {
+                setServerError("Please add at least one child's information.");
+                return;
+            }
+
+            // return filteredChildren
+        }
 
         // Prepare user data
-        const userInfo = {
+        const userInfo: UserInfo = {
             firstName: form1.firstName,
             lastName: form1.lastName,
             email: form1.email,
             password: form1.password,
-            role: selectedRole,
+            role: selectedRole as "parent" | "admin" | "instructor" | "volunteer",
+            avatar: "",
             city: form2.city,
             state: form2.state,
             zipCode: parseInt(form2.zipcode, 10),
+            children: filteredChildren
         };
 
         console.log("userInfo before signup:", userInfo);
 
         try {
             // Signup request
-            const signupRes = await fetch("http://localhost:8000/auth/signup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(userInfo),
-            });
+            // const signupRes = await fetch("http://localhost:8000/auth/signup", {
+            //     method: "POST",
+            //     headers: { "Content-Type": "application/json" },
+            //     body: JSON.stringify(userInfo),
+            // });
 
-            const signupBody = await signupRes.json();
+            await handleSignup(userInfo)
+            // const signupBody = await signupRes.json();
 
-            if (!signupRes.ok) {
-                // Pydantic can return errors as an array
-                if (Array.isArray(signupBody.detail)) {
-                    signupBody.detail.map((err: { msg: string }) => err.msg).join(" ")
-                } else if (typeof signupBody.detail === 'object' && signupBody.detail.msg) {
-                    setServerError(signupBody.detail.msg);
-                } else {
-                    setServerError(signupBody.detail || signupBody.message || "Registration failed.");
-                }
-                return;
-            }
+            // if (!signupRes.ok) {
+            //     // Pydantic can return errors as an array
+            //     if (Array.isArray(signupBody.detail)) {
+            //         signupBody.detail.map((err: { msg: string }) => err.msg).join(" ")
+            //     } else if (typeof signupBody.detail === 'object' && signupBody.detail.msg) {
+            //         setServerError(signupBody.detail.msg);
+            //     } else {
+            //         setServerError(signupBody.detail || signupBody.message || "Registration failed.");
+            //     }
+            //     return;
+            // }
 
-            const token = signupBody.token;
-            const user = signupBody.user;
-            if (!token) {
-                setServerError("No token received after registration.");
-                return;
-            }
 
-            loginWithToken(token, user);
+            // const token = signupBody.token;
+            // const user = signupBody.user;
+            // if (!token) {
+            //     setServerError("No token received after registration.");
+            //     return;
+            // }
+
+            // loginWithToken(token, user);
+            console.log('FILTERED CHILDREN') //this is an empty array
 
             // Add children if any
-            if (filteredChildren.length > 0) {
-                const childrenRes = await fetch("http://localhost:8000/child", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(filteredChildren),
-                });
+            // if (filteredChildren.length > 0) {
+            //     const childrenRes = await fetch("http://localhost:8000/child", {
+            //         method: "POST",
+            //         headers: {
+            //             "Content-Type": "application/json",
+            //             "Authorization": `Bearer ${token}`,
+            //         },
+            //         body: JSON.stringify(filteredChildren),
+            //     });
 
-                const childrenBody = await childrenRes.json();
-                if (!childrenRes.ok) {
-                    setServerError(childrenBody.message || "Failed to add child information.");
-                    return;
-                }
-            }
+            //     const childrenBody = await childrenRes.json();
+            //     if (!childrenRes.ok) {
+            //         setServerError(childrenBody.message || "Failed to add child information.");
+            //         return;
+            //     }
+            // }
 
             closeModal();
         } catch (err) {
@@ -555,7 +566,7 @@ const SignupModal = () => {
                                 </div>
                             )}
 
-                            {/* {hasHomeschoolChild === true && (
+                            {hasHomeschoolChild === true && (
                                 <>
                                     <p className="text-sm text-gray-600 mb-4">Add your children's information below. All children must be between 10-18 years old.</p>
 
@@ -617,7 +628,7 @@ const SignupModal = () => {
                                         + Add Another Child
                                     </button>
                                 </>
-                            )} */}
+                            )}
 
                             <div className="flex space-x-3 pt-4">
                                 <button
@@ -629,9 +640,8 @@ const SignupModal = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={hasHomeschoolChild === null
-                                        // ||
-                                        // (hasHomeschoolChild === true && form3List.some(child => !child.childFirstName || !child.childLastName || !child.childAge))
+                                    disabled={hasHomeschoolChild === null ||
+                                        (hasHomeschoolChild === true && form3List.some(child => !child.childFirstName || !child.childLastName || !child.childAge))
                                     }
                                     className="flex-1 bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
                                 >

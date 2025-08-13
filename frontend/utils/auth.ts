@@ -14,7 +14,7 @@ export interface SignupPayload {
     lastName: string;
     email: string;
     password: string;
-    role: "parent" | "admin" | "instructor"
+    role: "parent" | "admin" | "instructor" | "volunteer"
     avatar: string;
     city: string;
     state: string;
@@ -70,7 +70,7 @@ const payload: SignupPayload = {
 
 // & Example function call:
 
-const response = await handleSignup(payload);
+// const response = await handleSignup(payload);
 
 // * Login  ===================================================
 

@@ -105,7 +105,7 @@ class Child(BaseModel):
   firstName: str = Field(min_length=1, max_length=50)
   lastName: str = Field(min_length=1, max_length=50)
   homeschool: bool = Field(default_factory=False)
-  birthday: datetime = Field(default_factory=datetime.now(timezone.utc))
+  birthday: datetime = Field(default_factory=..., description="Child's birthday")
 
   parents: Optional[List["User"]] = Field(default_factory=list)
   enrolledEvents: List["Event"] = Field(default_factory=list)

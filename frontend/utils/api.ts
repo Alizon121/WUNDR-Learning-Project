@@ -2,7 +2,6 @@ export interface ApiRequestOptions {
     method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
     body?: any
     headers?: Record<string, string>;
-    // ^ What is this?
     token?: string;
 }
 

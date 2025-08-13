@@ -123,6 +123,8 @@ const SignupModal = () => {
                     lastName: child.childLastName,
                     homeschool: child.homeschool,
                     birthday: new Date(child.childAge).toISOString(),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
                 }));
 
             // Validate children's age

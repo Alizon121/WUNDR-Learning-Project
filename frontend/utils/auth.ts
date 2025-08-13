@@ -7,6 +7,8 @@ export interface ChildPayload {
   lastName: string;
   homeschool?: boolean;
   birthday: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SignupPayload {
@@ -58,12 +60,16 @@ const payload: SignupPayload = {
       lastName: "Doe",
       homeschool: false,
       birthday: new Date("2015-06-15").toISOString(), // "2015-06-15T00:00:00.000Z"
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
       firstName: "Max",
       lastName: "Doe",
       homeschool: true,
       birthday: new Date("2018-09-22").toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
   ],
 };

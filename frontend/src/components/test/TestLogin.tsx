@@ -1,5 +1,5 @@
 // components/TestLogin.tsx
-import { handleLogin } from "../../../../utils/auth";
+import { handleLogin } from "../../../utils/auth";
 
 export default function TestLogin() {
   const testLogin = async () => {

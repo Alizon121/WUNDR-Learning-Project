@@ -26,7 +26,7 @@ const mockData = [
 
 export default function EventsPage() {
     return (
-        <main className="px-6 py-8 max-w-7xl mx-auto bg-amber-50 min-h-screen">
+        <main className="px-6 py-8 max-w-5xl md:max-w-7xl mx-auto bg-wonderbg min-h-screen">
             
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold mb-4 text-green-800">Upcoming Events</h1>

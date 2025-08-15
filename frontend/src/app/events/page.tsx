@@ -26,11 +26,11 @@ const mockData = [
 
 export default function EventsPage() {
     return (
-        <main>
-            <div>
-                <h1>Upcoming Events</h1>
-
-                <p>
+        <main className="px-6 py-8 max-w-7x1 mx-auto">
+            
+            <div className="text-center mb-8">
+                <h1 className="text-3x1 font-bold mb-4">Upcoming Events</h1>
+                <p className="text-gray-600 max-w-2x1 mx-auto">
                     Connect with other homeschooling families through hands-on experiences, outdoor adventures, and educational opportunities.
                 </p>
             </div>

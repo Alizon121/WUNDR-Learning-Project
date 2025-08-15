@@ -5,6 +5,10 @@ interface Props {
     events: any[];
 }
 
+const getActivityIcon = (activityname: string) => {
+    
+}
+
 export default function ActivityBlock({ activityName, events }: Props) {
     return (
         <div className="mb-6">

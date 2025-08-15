@@ -1,42 +1,47 @@
-import CategorySection from "@/components/eventsPage/CategorySection"
+import ActivityBlock from "@/components/eventsPage/ActivityBlock";
 
 const mockData = [
     {
-        category: "Outdoor",
-        activities: [
-            { name: "Hiking", events: [/* maybe put event objects here */] },
-            { name: "Skiing", events: [] }
+        activity: "Outdoor",
+        events: [
+            { id: "1", name: "Mountain Hiking Adventure", date: "2025-08-20", description: "Explore beautiful trails" },
+            { id: "2", name: "Nature Scavenger Hunt", date: "2025-08-25", description: "Find natural treasures" },
         ]
     },
     {
-        category: "Indoor",
-        activities: [
-            { name: "Museum Trip", events: [] },
-            { name: "Crafting", events: [] }
+        activity: "Indoor",
+        events: [
+            { id: "3", name: "Museum Tour", date: "2025-08-22", description: "Local history exploration" },
+            { id: "4", name: "Art Workshop", date: "2025-08-28", description: "Creative expression session" }
         ]
     },
     {
-        category: "STEM",
-        activities: [
-            { name: "Mycology", events: [] },
-            { name: "Coding", events: [] }
+        activity: "STEM",
+        events: [
+            { id: "5", name: "Robotics Workshop", date: "2025-08-24", description: "Build and program robots" },
+            { id: "6", name: "Science Experiments", date: "2025-09-03", description: "Fun chemistry and physics" }
         ]
     }
-        
 ]
 
 export default function EventsPage() {
     return (
-        <main className="px-6-8">
-            {/* <h1 className="text-3x1 font-bold mb-6 text-center">Events</h1> */}
+        <main>
+            <div>
+                <h1>Upcoming Events</h1>
 
-            {mockData.map(({ category, activities }) => (
-                <CategorySection
-                    key={category}
-                    categoryName={category}
-                    activities={activities}
+                <p>
+                    Connect with other homeschooling families through hands-on experiences, outdoor adventures, and educational opportunities.
+                </p>
+            </div>
+
+            {mockData.map(({ activity, events }) => (
+                <ActivityBlock
+                    key={activity}
+                    activityName={activity}
+                    events={events}
                 />
             ))}
         </main>
-    );
+    )
 }

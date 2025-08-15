@@ -1,7 +1,6 @@
 // components/TestProtectedRoute.tsx
 "use client";
-
-import { makeApiRequest } from "../../../../utils/api";
+import { makeApiRequest } from "../../../utils/api";
 
 export default function TestProtectedRoute() {
   const testProtectedRoute = async () => {

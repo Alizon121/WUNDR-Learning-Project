@@ -7,6 +7,8 @@ export interface ChildPayload {
   lastName: string;
   homeschool?: boolean;
   birthday: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SignupPayload {
@@ -14,7 +16,7 @@ export interface SignupPayload {
     lastName: string;
     email: string;
     password: string;
-    role: "parent" | "admin" | "instructor"
+    role: "parent" | "admin" | "instructor";
     avatar: string;
     city: string;
     state: string;
@@ -57,13 +59,17 @@ const payload: SignupPayload = {
       firstName: "Ella",
       lastName: "Doe",
       homeschool: false,
-      birthday: new Date("2015-06-15").toISOString(), // "2015-06-15T00:00:00.000Z"
+      birthday: new Date("2015-06-15").toISOString(), // "2015-06-15T00:00:00.000Z",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
     {
       firstName: "Max",
       lastName: "Doe",
       homeschool: true,
       birthday: new Date("2018-09-22").toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   ],
 };
@@ -101,6 +107,23 @@ export async function handleLogin(email: string, password: string) {
 
     return result;
 }
+
+// & Example Implementation
+
+// import { handleLogin } from "@/lib/api"; // adjust path as needed
+
+// function SomeComponent() {
+//   const loginUser = async () => {
+//     try {
+//       const result = await handleLogin("user@example.com", "securePassword123");
+//       console.log("Logged in!", result);
+//     } catch (error) {
+//       console.error("Login failed:", error);
+//     }
+//   };
+
+//   return <button onClick={loginUser}>Login</button>;
+// }
 
 // * Logout ===================================================
 

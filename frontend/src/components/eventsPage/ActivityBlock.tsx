@@ -18,6 +18,19 @@ const getActivityIcon = (activityName: string) => {
     }
 }
 
+const getActivityIconBg = (activityName: string) => {
+    switch (activityName.toLowerCase()) {
+        case 'outdoor':
+            return 'bg-green-700';
+        case 'indoor':
+            return 'bg-amber-700';
+        case 'stem':
+            return 'bg-blue-700';
+        default:
+            return 'bg-gray-700';
+    }
+}
+
 const getActivityColor = ( activityName: string ) => {
     switch (activityName.toLowerCase()) {
         case 'outdoor':
@@ -36,11 +49,11 @@ export default function ActivityBlock({ activityName, events }: Props) {
         <section className="mb-12">
 
             {/* Activity Header */}
-            <div className={`flex items-center gap-4 mb-6 pb-2 border-b-3 ${getActivityColor(activityName)}`}>
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gray-100`}>
+            <div className={`flex items-center gap-4 mb-6 pb-2 border-b-4 ${getActivityColor(activityName)}`}>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl text-white ${getActivityIconBg(activityName)}`}>
                     {getActivityIcon(activityName)}
                 </div>
-                <h2 className="text-2x1 font-semibold text-gray-800">{activityName}</h2>
+                <h2 className="text-2xl font-semibold text-gray-800">{activityName}</h2>
             </div>
 
             {/* Events Scroll Container */}

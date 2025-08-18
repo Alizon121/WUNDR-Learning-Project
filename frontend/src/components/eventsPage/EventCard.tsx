@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface Event {
     id: string;
     name: string;
@@ -42,7 +44,9 @@ export default function EventCard({ event }: Props) {
                     5 families signed up
                 </span>
                 <button className="bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-                    View Details
+                    <Link href={`/events/${event.id}`}>
+                        View Details
+                    </Link>
                 </button>
             </div>
 

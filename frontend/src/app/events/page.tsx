@@ -1,5 +1,4 @@
 import ActivityBlock from "@/components/eventsPage/ActivityBlock";
-import Link from "next/link";
 
 const mockData = [
     {

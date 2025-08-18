@@ -31,7 +31,7 @@ const getActivityIconBg = (activityName: string) => {
     }
 }
 
-const getActivityColor = ( activityName: string ) => {
+const getActivityColor = (activityName: string) => {
     switch (activityName.toLowerCase()) {
         case 'outdoor':
             return 'border-green-600';

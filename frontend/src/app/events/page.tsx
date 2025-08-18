@@ -1,4 +1,5 @@
 import ActivityBlock from "@/components/eventsPage/ActivityBlock";
+import Link from "next/link";
 
 const mockData = [
     {
@@ -27,7 +28,7 @@ const mockData = [
 export default function EventsPage() {
     return (
         <main className="px-6 py-8 max-w-5xl md:max-w-7xl mx-auto bg-wonderbg min-h-screen">
-            
+
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold mb-4 text-green-800">Upcoming Events</h1>
                 <p className="text-green-700 max-w-2xl mx-auto text-lg">
@@ -36,11 +37,14 @@ export default function EventsPage() {
             </div>
 
             {mockData.map(({ activity, events }) => (
-                <ActivityBlock
-                    key={activity}
-                    activityName={activity}
-                    events={events}
-                />
+
+                <div>
+                    <ActivityBlock
+                        key={activity}
+                        activityName={activity}
+                        events={events}
+                    />
+                </div>
             ))}
         </main>
     )

@@ -37,15 +37,15 @@ export default function EventCard({ event }: Props) {
             </p>
 
             {/* Event Metadata */}
-            <div className="flex items-center justify-between mt-auto">
-                <span className="text-xs text-gray-500">
+            <div className="flex flex-col justify-center mt-auto">
+                <span className="text-xs text-gray-500 mb-2">
                     5 families signed up
                 </span>
                 <button className="bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-                    Join Event
+                    View Details
                 </button>
             </div>
-            
+
         </div>
     )
 }

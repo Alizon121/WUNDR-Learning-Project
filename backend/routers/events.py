@@ -341,9 +341,9 @@ async def add_user_to_event(
     )
 
     # Create notification
-    subject = f"Enollment Confirmation: {event.name}"
+    subject = f"Enrollment Confirmation: {event.name}"
      # ? ADD link to make changes still
-    contents = f'This email confirms that you are enrolled for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here:.\n\nBest,\n\nWondherhood Team'
+    contents = f'This email confirms that you are enrolled for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
 
     background_tasks.add_task(
         send_email_one_user,

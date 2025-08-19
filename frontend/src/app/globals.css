@@ -20,6 +20,17 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* ---- anti-horizontal-scroll ---- */
+html, body {
+  overflow-x: hidden; 
+}
+
+
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
 /* === Swiper pagination custom styles === */
 .swiper-pagination-bullet {
   background: #18d979 !important;
@@ -31,4 +42,9 @@ body {
 .swiper-pagination-bullet-active {
   opacity: 1;
   background: #f5a940 !important;
+}
+
+.swiper,
+.hero {
+  overflow: hidden;
 }

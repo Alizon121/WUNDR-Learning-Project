@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useModal } from "@/app/context/modal";
 import SignupModal from "../signup/SignupModal";
 import LoginModal from '../login/LoginModal';
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, } from "react";
 import { usePathname } from 'next/navigation';
 import { useAuth } from "@/app/context/auth";
 import UserDropdown from "./UserDropdown";
@@ -16,6 +16,7 @@ export default function Navbar() {
   const { user, isLoggedIn, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
 
   const handleSignup = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -28,6 +29,36 @@ export default function Navbar() {
     setModalContent(<LoginModal />);
   }
 
+  // Закрыть моб.меню при смене маршрута
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
+  // Клик вне меню
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    if (isMenuOpen) document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [isMenuOpen]);
+
+  // Блокируем скролл боди, когда открыто меню
+  useEffect(() => {
+    const { body } = document;
+    if (!body) return;
+    if (isMenuOpen) {
+      body.style.overflow = 'hidden';
+    } else {
+      body.style.overflow = '';
+    }
+    return () => { body.style.overflow = ''; };
+  }, [isMenuOpen]);
+
+
   const navLinks = [
     { href: '/about', label: 'About' },
     { href: '/events', label: 'Events' },
@@ -38,7 +69,7 @@ export default function Navbar() {
   return (
     <nav className="bg-gradient-to-r from-wonderbg via-white to-wondersun/20 backdrop-blur-sm border-b border-wonderleaf/20 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo + name */}
           <Link href="/" className="flex items-center space-x-3 shrink-0 group">
             <div className="relative">

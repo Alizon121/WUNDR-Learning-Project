@@ -98,8 +98,8 @@ model Events {
 
     jobs        Jobs[]
 
-    createdAt         DateTime
-    updatedAt         DateTime
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime? @default(now())
 }
 
 // ! reviews        =============================================================================

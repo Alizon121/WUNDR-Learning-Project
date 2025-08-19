@@ -29,12 +29,12 @@ export default function Navbar() {
     setModalContent(<LoginModal />);
   }
 
-  // Закрыть моб.меню при смене маршрута
+  // Close mobile menu when changing route
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
 
-  // Клик вне меню
+  // Click outside the menu
   useEffect(() => {
     function onDown(e: MouseEvent) {
       if (!menuRef.current) return;
@@ -46,7 +46,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', onDown);
   }, [isMenuOpen]);
 
-  // Блокируем скролл боди, когда открыто меню
+  // Block the scroll body when the menu is open
   useEffect(() => {
     const { body } = document;
     if (!body) return;
@@ -114,7 +114,7 @@ export default function Navbar() {
               {!isLoggedIn && (
                 <>
                   <div 
-                    className="px-6 py-2 text-wondergreen font-semibold hover:text-wonderleaf cursor-pointer transition-colors duration-300 hover:bg-wondergreen/5 rounded-lg text-lg"
+                    className="px-6 py-1 text-wondergreen font-semibold hover:text-wonderleaf cursor-pointer transition-colors duration-300 hover:bg-wondergreen/5 rounded-lg text-lg border-2 border-wondergreen hover:bg-wondergreen hover:text-white"
                     onClick={handleLogin}
                   >
                     Login

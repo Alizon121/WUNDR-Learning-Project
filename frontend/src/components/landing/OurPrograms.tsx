@@ -35,7 +35,7 @@ export default function OurPrograms() {
     return (
         <section className="w-full py-12 sm:py-16 text-wondergreen bg-[#FAF7ED]">
             <div className="max-w-7xl mx-auto flex flex-col px-4 sm:px-6 lg:px-8">
-                {/* Заголовок - центр на мобилке, слева на десктопе */}
+
                 <div className="flex flex-col items-center sm:items-start">
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                         Our Programs
@@ -52,11 +52,11 @@ export default function OurPrograms() {
                     {programs.map((prog) => (
                         <div
                             key={prog.title}
-                            className="bg-[#f9faf7] rounded-3xl shadow-lg p-6 sm:p-8 flex flex-col items-start min-h-[220px] sm:min-h-[250px] relative overflow-hidden"
+                            className="bg-[#f9faf7] rounded-3xl shadow-lg p-6 sm:p-6 flex flex-col items-start min-h-[220px] sm:min-h-[250px] relative overflow-hidden"
                         >
                             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-wondergreen to-wondersun" />
-                            <div className="flex items-center gap-3 sm:gap-4 mb-4 mt-2 z-10">
-                                <img src={prog.icon} alt="" className="w-10 h-10 sm:w-12 sm:h-12" />
+                            <div className="flex items-center gap-3 sm:gap-4 mb-2 mt-2 z-10">
+                                <img src={prog.icon} alt="" className="w-10 h-10 sm:w-14 sm:h-14" />
                                 <h3 className="text-lg sm:text-xl lg:text-[21px] font-bold text-wondergreen">
                                     {prog.title}
                                 </h3>

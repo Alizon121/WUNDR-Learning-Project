@@ -16,25 +16,21 @@ export default function LandingPage() {
       xmlns="http://www.w3.org/2000/svg"
       className="w-12 h-12"
     >
-      {/* Основная звезда */}
       <path 
         d="M24 4L28.854 16.146L42 18L32 26.708L35.416 40L24 33.292L12.584 40L16 26.708L6 18L19.146 16.146L24 4Z" 
         fill="#4A7C59"
       />
       
-      {/* Внутренняя звезда */}
       <path 
         d="M24 10L26.854 18.146L35 19L29 24.708L31.416 32L24 27.292L16.584 32L19 24.708L13 19L21.146 18.146L24 10Z" 
         fill="#F4A261"
       />
       
-      {/* Маленькие звездочки вокруг */}
       <circle cx="12" cy="12" r="2" fill="#8FBC8F"/>
       <circle cx="36" cy="12" r="2" fill="#8FBC8F"/>
       <circle cx="8" cy="32" r="1.5" fill="#8FBC8F"/>
       <circle cx="40" cy="32" r="1.5" fill="#8FBC8F"/>
       
-      {/* Декоративные элементы */}
       <path 
         d="M4 24C4 24 6 22 8 24C10 26 12 24 12 24" 
         stroke="#8FBC8F" 

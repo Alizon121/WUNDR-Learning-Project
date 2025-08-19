@@ -51,17 +51,21 @@ export default function LandingPage() {
   
   return (
     <main>
+      {/* Top sections of the landing page */}
       <HeroSection />
       <ImpactStats />
       <Story_Mission />
       <OurPrograms />
       
+      {/* Volunteer section container */}
       <div className="mt-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-[#f9faf7] rounded-3xl shadow-lg p-6 sm:p-8 relative overflow-hidden">
 
+          {/* Decorative top border line (gradient bar) */}
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-wondergreen to-wondersun" />
 
           <div className="mt-2 space-y-4">
+            {/* Title row: icon + heading aligned in one line */}
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-12 h-12 mb-2  sm:mb-0 sm:w-10 sm:h-10 flex items-center justify-center ml-2">
                 <VolunteerIcon />
@@ -71,6 +75,7 @@ export default function LandingPage() {
               </h3>
             </div>
 
+            {/* Description text under the title */}
             <div className="space-y-3">
               <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed ml-4">
                 WonderHood offers volunteer opportunities for high school and college students to earn

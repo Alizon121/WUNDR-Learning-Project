@@ -10,7 +10,7 @@ export default function Story_Mission(){
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center min-h-[400px] px-4 sm:px-6 lg:px-8 py-10">
         {/* Left: Text */}
         <div className="flex flex-col justify-center">
-          {/* Заголовок и линия - центр на мобилке, слева на десктопе */}
+         {/* Title and line - centered on mobile, left-aligned on desktop */}
           <div className="flex flex-col items-center md:items-start">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-wondergreen mb-4 md:mb-6 leading-tight">
               Our Story & Mission
@@ -18,7 +18,7 @@ export default function Story_Mission(){
             <div className="h-1 w-3/4 md:w-3/4 bg-gradient-to-r from-wonderleaf to-wondergreen rounded-full shadow-md mb-6" />
           </div>
 
-          {/* Текст - центр на мобилке, слева на десктопе */}
+          {/* Paragraphs - centered on mobile, left-aligned on desktop */}
           <div className="text-center md:text-left">
             <p className="text-base sm:text-lg md:text-xl mb-4 leading-relaxed">
               WonderHood was born from a simple need: homeschool families in small mountain towns
@@ -32,7 +32,7 @@ export default function Story_Mission(){
           </div>
         </div>
 
-        {/* Right: Photo Carousel */}
+        {/* Right: Image carousel */}
         <div className="flex h-full items-center justify-center md:justify-start lg:ml-14">
           <div className="
               relative
@@ -49,6 +49,7 @@ export default function Story_Mission(){
               modules={[Autoplay]}
               className="w-full h-full"
             >
+                {/* Slide 1 */}
               <SwiperSlide>
                 <div className="relative w-full h-full">
                   <Image
@@ -61,6 +62,7 @@ export default function Story_Mission(){
                 </div>
               </SwiperSlide>
 
+                {/* Slide 2 */}
               <SwiperSlide>
                 <div className="relative w-full h-full">
                   <Image
@@ -72,6 +74,7 @@ export default function Story_Mission(){
                 </div>
               </SwiperSlide>
 
+                {/* Slide 3 */}
               <SwiperSlide>
                 <div className="relative w-full h-full">
                   <Image

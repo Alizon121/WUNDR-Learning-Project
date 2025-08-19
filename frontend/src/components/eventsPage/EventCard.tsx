@@ -5,6 +5,8 @@ interface Event {
     name: string;
     date: string;
     description: string;
+    image: string;
+    participants: number;
 }
 
 interface Props {

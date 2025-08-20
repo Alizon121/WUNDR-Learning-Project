@@ -68,13 +68,13 @@ export default function EventsPage() {
 
             {groupedEvents.map(({ activity, events }) => (
 
-                <div>
-                    <ActivityBlock
-                        key={activity}
-                        activityName={activity}
-                        events={events}
-                    />
-                </div>
+                // <div>
+                <ActivityBlock
+                    key={activity}
+                    activityName={activity}
+                    events={events}
+                />
+                // </div>
             ))}
         </main>
     )

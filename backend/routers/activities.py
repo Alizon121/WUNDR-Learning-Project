@@ -206,10 +206,10 @@ async def delete_activity(
         )
 
     except Exception as e:
-         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete activity: {str(e)}"
-        )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete activity: {str(e)}"
+            )
 
     return {"message": "Activity  deleted successfully"}
 

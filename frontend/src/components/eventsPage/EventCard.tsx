@@ -36,14 +36,14 @@ export default function EventCard({ event }: Props) {
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 {event.name}
             </h3>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+            <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[3.5rem]">
                 {event.description}
             </p>
 
             {/* Event Metadata */}
             <div className="flex flex-col justify-center mt-auto">
                 <span className="text-xs text-gray-500 mb-2">
-                    {event.participants} families signed up
+                    {event.participants} participant(s) enrolled
                 </span>
                 <button className="bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
                     <Link href={`/events/${event.id}`}>

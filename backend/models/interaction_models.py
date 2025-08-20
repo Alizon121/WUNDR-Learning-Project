@@ -26,19 +26,21 @@ class ActivityUpdate(BaseModel):
 
 # ! Events
 class Event(BaseModel):
-   id: str = Field(..., min_length=1, description="Event identifier")
-   activity: "Activity"
+    id: str = Field(..., min_length=1, description="Event identifier")
+    activity: "Activity"
 
-   name: str = Field(min_length=1)
-   description: str = Field(min_length=1)
-   date: datetime = Field(default_factory=datetime.now(timezone.utc))
+    name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    date: datetime = Field(default_factory=datetime.now(timezone.utc))
+    image: str = Field(min_length=1)
+    participants: int = Field(default=0)
+    
+    users: List["User"] = Field(default_factory=list)
+    children: List["Child"] = Field(default_factory=list)
+    reviews: List["Review"] = Field(default_factory=list)
 
-   users: List["User"] = Field(default_factory=list)
-   children: List["Child"] = Field(default_factory=list)
-   reviews: List["Review"] = Field(default_factory=list)
-
-   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
-   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 
 class EventCreate(BaseModel):
     activityId: str = Field(min_length=1)
@@ -46,6 +48,8 @@ class EventCreate(BaseModel):
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
     date: datetime = Field(default_factory=datetime.now(timezone.utc))
+    image: str = Field(min_length=1)
+    participants: int = Field(default=0)
 
     userIds: List[str] = Field(default_factory=list)
     childIds: List[str] = Field(default_factory=list)
@@ -60,6 +64,8 @@ class EventUpdate(BaseModel):
     description: str = Field(min_length=1)
     date: datetime = Field(default_factory=datetime.now(timezone.utc))
 
+    image: Optional[str] = Field(default=None)
+    participants: Optional[int] = Field
     userIds: Optional[List[str]] = Field(default=None)
     childIds: Optional[List[str]] = Field(default=None)
 

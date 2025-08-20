@@ -135,7 +135,7 @@ export default function GetInvolved() {
             {/* Program Sponsor */}
             <div className="group relative bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 w-full max-w-[370px] mx-auto">
                 <div className="flex items-center w-full justify-center mb-4">
-                    <span className="block w-16 h-16 rounded-full bg-wonderleaf/30 flex items-center justify-center text-3xl mr-4">
+                    <span className="block w-14 h-14 rounded-full bg-wonderleaf/30 flex items-center justify-center text-3xl mr-4">
                     🎓
                     </span>
                     <div className="flex flex-col justify-center">
@@ -154,7 +154,7 @@ export default function GetInvolved() {
             {/* Event Sponsor */}
             <div className="group relative bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 w-full max-w-[370px] mx-auto">
                 <div className="flex items-center w-full justify-center mb-4">
-                <span className="block w-16 h-16 rounded-full bg-wonderleaf/30 flex items-center justify-center text-3xl mr-4">🎉</span>
+                <span className="block w-14 h-14 rounded-full bg-wonderleaf/30 flex items-center justify-center text-3xl mr-4">🎉</span>
                 <div className="flex flex-col justify-center">
                     <span className="text-xl font-semibold text-wondergreen leading-tight">Event Sponsor</span>
                     <span className="text-2xl font-bold text-wondergreen mt-1">$1000+</span>
@@ -173,7 +173,7 @@ export default function GetInvolved() {
             {/* Adventure Sponsor */}
             <div className="group relative bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 w-full max-w-[370px] mx-auto">
                 <div className="flex items-center w-full justify-center mb-4">
-                <span className="block w-16 h-16 rounded-full bg-wonderleaf/30 flex items-center justify-center text-3xl mr-4">🏕️</span>
+                <span className="block w-14 h-14 rounded-full bg-wonderleaf/30 flex items-center justify-center text-3xl mr-4">🏕️</span>
                 <div className="flex flex-col justify-center">
                     <span className="text-xl font-semibold text-wondergreen leading-tight">Adventure Sponsor</span>
                     <span className="text-2xl font-bold text-wondergreen mt-1">$1500+</span>
@@ -192,7 +192,7 @@ export default function GetInvolved() {
             {/* Creative Sponsor */}
             <div className="group relative bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 w-full max-w-[370px] mx-auto">
                 <div className="flex items-center w-full justify-center mb-4">
-                <span className="block w-16 h-16 rounded-full bg-wonderleaf/30 flex items-center justify-center text-3xl mr-4">🎨</span>
+                <span className="block w-14 h-14 rounded-full bg-wonderleaf/30 flex items-center justify-center text-3xl mr-4">🎨</span>
                 <div className="flex flex-col justify-center">
                     <span className="text-xl font-semibold text-wondergreen leading-tight">Creative Sponsor</span>
                     <span className="text-2xl font-bold text-wondergreen mt-1">$750+</span>

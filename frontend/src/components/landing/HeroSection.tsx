@@ -7,114 +7,130 @@ import 'swiper/css/pagination';
 
 export default function HeroSection() {
 
-  return (
-    <section className="relative h-[45vh] w-full overflow-hidden">
-      <Swiper
-        modules={[Pagination, Autoplay]}
-        pagination={{ clickable: true }}
-        autoplay={{ delay: 10000, disableOnInteraction: false }}
-        spaceBetween={0}
-        slidesPerView={1}
-        className="h-[45vh] swiper-custom-pagination"
+    return (
+        <section className="hero relative h-[45vh] w-full overflow-hidden">
+            <Swiper
+            modules={[Pagination, Autoplay]}
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 10000, disableOnInteraction: false }}
+            spaceBetween={0}
+            slidesPerView={1}
+            className="h-[45vh] w-full"
+            >
+            {/* Slide 1 */}
+            <SwiperSlide>
+                <div className="relative h-full w-full">
+                <Image
+                    src="/hero.png"
+                    alt="Kids outdoors"
+                    fill
+                    className="object-cover object-[center_40%]"
+                    priority
+                />
+                {/* <div className="absolute inset-0 bg-black/20" aria-hidden /> */}
+                {/* <div className="absolute inset-0 bg-white/10 z-10 pointer-events-none" /> */}
+                <div className="absolute inset-0 bg-black/1 aria-hidden" />
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 mt-16 md:mt-16">
+                    <h1 className="text-white font-bold leading-tight
+                                text-2xl sm:text-3xl md:text-4xl lg:text-6xl
+                                lg:whitespace-nowrap
+                                drop-shadow-[2px_2px_6px_rgba(0,0,0,0.8)]">
+                    More than Just Homeschooling
+                    </h1>
+                    <p className="text-white mt-3 md:mt-4
+                                text-base sm:text-lg md:text-xl lg:text-2xl
+                                max-w-[90%] mx-auto
+                                drop-shadow-[1px_1px_4px_rgba(0,0,0,0.8)]">
+                    Clubs, projects, nature, creativity — together.
+                    </p>
+                    <Link href="/get-involved" className="mt-4 md:mt-6">
+                    <button className="bg-wondergreen text-white
+                                        px-5 py-3 md:px-7 md:py-4
+                                        rounded-lg text-base md:text-lg lg:text-xl
+                                        font-semibold shadow-lg
+                                        transition-all duration-300 hover:scale-105 hover:bg-wonderleaf">
+                        Get Involved
+                    </button>
+                    </Link>
+                </div>
+                </div>
+            </SwiperSlide>
 
-      >
-        {/* Slide 1 */}
-       <SwiperSlide>
-        {/* Slide 1 — уже был */}
-        <div className="relative h-full w-full">
-            <Image
-            src="/hero.png"
-            alt="Kids outdoors"
-            fill
-            className="object-cover object-[center_40%] h-full w-full"
-            priority
-            />
-            <div className="absolute inset-0 bg-white/10 z-10 pointer-events-none" />
-            <div className="absolute top-[35%] left-1/2 transform -translate-x-1/2 z-10 text-white text-center px-4 whitespace-nowrap">
-            <h1 className="text-4xl md:text-6xl font-bold"
-                style={{ textShadow: '2px 2px 6px rgba(0, 0, 0, 0.8)' }}>
-                More than Just Homeschooling
-            </h1>
-            <p className="text-xl md:text-2xl mt-4"
-                style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
-                Clubs, projects, nature, creativity — together.
-            </p>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center top-[50%] z-10">
-            <Link href="/get-involved">
-                <button className="bg-wondergreen text-white px-8 py-4 rounded-lg text-xl font-semibold shadow-lg hover:bg-wonderleaf transition-colors duration-300 hover:scale-105 transform">
-                Get Involved
-                </button>
-            </Link>
-            </div>
-        </div>
-        </SwiperSlide>
+            {/* Slide 2 */}
+            <SwiperSlide>
+                <div className="relative h-full w-full">
+                <Image
+                    src="/test4.png"
+                    alt="Kids outdoors"
+                    fill
+                    className="object-cover object-[center_25%]"
+                    priority
+                />
+                <div className="absolute inset-0 bg-black/1" aria-hidden />
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 mt-16 md:mt-16">
+                    <h1 className="text-white font-bold leading-tight
+                                text-2xl sm:text-3xl md:text-4xl lg:text-6xl
+                                lg:whitespace-nowrap
+                                drop-shadow-[2px_2px_6px_rgba(0,0,0,0.8)]">
+                    A Place to Belong, Explore, and Create
+                    </h1>
+                    <p className="text-white mt-3 md:mt-4
+                                text-base sm:text-lg md:text-xl lg:text-2xl
+                                max-w-[90%] mx-auto
+                                drop-shadow-[1px_1px_4px_rgba(0,0,0,0.8)]">
+                    For homeschoolers seeking fun, friendships, and meaningful adventures.
+                    </p>
+                    <Link href="/get-involved" className="mt-4 md:mt-6">
+                    <button className="bg-wondergreen text-white
+                                        px-5 py-3 md:px-7 md:py-4
+                                        rounded-lg text-base md:text-lg lg:text-xl
+                                        font-semibold shadow-lg
+                                        transition-all duration-300 hover:scale-105 hover:bg-wonderleaf">
+                        Get Involved
+                    </button>
+                    </Link>
+                </div>
+                </div>
+            </SwiperSlide>
 
-        <SwiperSlide>
-        {/* Slide 2 */}
-        <div className="relative h-full w-full">
-            <Image
-            src="/test4.png"
-            alt="Kids outdoors"
-            fill
-            // className="object-cover object-[center_50%]"
-            className="object-cover object-[center_25%] h-full w-full"
-            priority
-            />
-            <div className="absolute inset-0 bg-white/10 z-10 pointer-events-none" />
-            <div className="absolute top-[35%] left-1/2 transform -translate-x-1/2 z-10 text-white text-center px-4 whitespace-nowrap">
-            <h1 className="text-4xl md:text-6xl font-bold"
-                style={{ textShadow: '2px 2px 6px rgba(0, 0, 0, 0.8)' }}>
-                A Place to Belong, Explore, and Create
-            </h1>
-            <p className="text-xl md:text-2xl mt-6"
-                style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
-                For homeschoolers seeking fun, friendships, and meaningful adventures.
-            </p>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center top-[50%] z-10">
-            <Link href="/get-involved">
-                <button className="bg-wondergreen text-white px-8 py-4 rounded-lg text-xl font-semibold shadow-lg hover:bg-wonderleaf transition-colors duration-300 hover:scale-105 transform mt-4">
-                Get Involved
-                </button>
-            </Link>
-            </div>
-        </div>
-        </SwiperSlide>
+            {/* Slide 3 */}
+            <SwiperSlide>
+                <div className="relative h-full w-full">
+                <Image
+                    src="/hero3.png"
+                    alt="Kids outdoors"
+                    fill
+                    className="object-cover object-[center_35%]"
+                    priority
+                />
+                <div className="absolute inset-0 bg-black/1" aria-hidden />
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 mt-16 md:mt-16">
+                    <h1 className="text-white font-bold leading-tight
+                                text-2xl sm:text-3xl md:text-4xl lg:text-6xl
+                                lg:whitespace-nowrap
+                                drop-shadow-[2px_2px_6px_rgba(0,0,0,0.8)]">
+                    Where Homeschool Kids Connect & Grow
+                    </h1>
+                    <p className="text-white mt-3 md:mt-4
+                                text-base sm:text-lg md:text-xl lg:text-2xl
+                                max-w-[90%] mx-auto
+                                drop-shadow-[1px_1px_4px_rgba(0,0,0,0.8)]">
+                    Creative activities, new friendships, real-life experiences.
+                    </p>
+                    <Link href="/get-involved" className="mt-4 md:mt-6">
+                    <button className="bg-wondergreen text-white
+                                        px-5 py-3 md:px-7 md:py-4
+                                        rounded-lg text-base md:text-lg lg:text-xl
+                                        font-semibold shadow-lg
+                                        transition-all duration-300 hover:scale-105 hover:bg-wonderleaf">
+                        Get Involved
+                    </button>
+                    </Link>
+                </div>
+                </div>
+            </SwiperSlide>
+            </Swiper>
+        </section>
+    )
 
-        <SwiperSlide>
-        {/* Slide 3 */}
-        <div className="relative h-full w-full">
-            <Image
-            src="/hero3.png"
-            alt="Kids outdoors"
-            fill
-            // className="object-cover object-[center_35%]"
-            className="object-cover object-[center_35%] h-full w-full"
-            priority
-            />
-            <div className="absolute inset-0 bg-white/10 z-10 pointer-events-none" />
-            <div className="absolute top-[35%] left-1/2 transform -translate-x-1/2 z-10 text-white text-center px-4 whitespace-nowrap">
-            <h1 className="text-4xl md:text-6xl font-bold"
-                style={{ textShadow: '2px 2px 6px rgba(0, 0, 0, 0.8)' }}>
-                Where Homeschool Kids Connect & Grow
-            </h1>
-            <p className="text-xl md:text-2xl mt-6"
-                style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
-                Creative activities, new friendships, real-life experiences.
-            </p>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center top-[50%] z-10">
-            <Link href="/get-involved">
-                <button className="bg-wondergreen text-white px-8 py-4 rounded-lg text-xl font-semibold shadow-lg hover:bg-wonderleaf transition-colors duration-300 hover:scale-105 transform mt-6">
-                Get Involved
-                </button>
-            </Link>
-            </div>
-        </div>
-        </SwiperSlide>
-
-      </Swiper>
-    </section>
-  );
 }

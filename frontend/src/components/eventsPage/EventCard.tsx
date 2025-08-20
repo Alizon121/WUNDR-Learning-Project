@@ -45,11 +45,12 @@ export default function EventCard({ event }: Props) {
                 <span className="text-xs text-gray-500 mb-2">
                     {event.participants} participant(s) enrolled
                 </span>
-                <button className="bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-                    <Link href={`/events/${event.id}`}>
-                        View Details
-                    </Link>
-                </button>
+                    <button className="mt-2 bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
+                        <Link href={`/events/${event.id}`}>
+                            <strong>View Details</strong>
+                            {/* View Details */}
+                        </Link>
+                    </button>
             </div>
 
         </div>

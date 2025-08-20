@@ -80,7 +80,7 @@ export default function EventsPage() {
 
                 // Group events by activity name
                 const grouped: Record<string, Event[]> = {};
-                
+
                 events.forEach((event) => {
                     const activityName = activityMap[event.activityId] || "Unknown";
 
@@ -121,13 +121,13 @@ export default function EventsPage() {
 
             {groupedEvents.map(({ activity, events }) => (
 
-                <div>
-                    <ActivityBlock
-                        key={activity}
-                        activityName={activity}
-                        events={events}
-                    />
-                </div>
+                // <div>
+                <ActivityBlock
+                    key={activity}
+                    activityName={activity}
+                    events={events}
+                />
+                // </div>
             ))}
         </main>
     )

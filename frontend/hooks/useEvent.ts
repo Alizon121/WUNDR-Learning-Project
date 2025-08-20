@@ -2,11 +2,11 @@ import { useState, useEffect } from "react"
 import { makeApiRequest } from "../utils/api"
 
 interface Event {
-  eventId: string
-  eventName: string
-  eventImage: string
-  eventDate: string
-  eventDescription: string
+  id: string
+  name: string
+  image: string
+  date: string
+  description: string
 }
 
 export function useEvent(eventId: string | string[] | undefined) {
@@ -25,7 +25,7 @@ export function useEvent(eventId: string | string[] | undefined) {
         setLoading(true)
         setError(null)
         const eventData = await makeApiRequest<Event>(
-          `http://localhost:8000/events/${eventId}/`,
+          `http://localhost:8000/event/${eventId}/`,
           { method: "GET" }
         )
         setEvent(eventData)

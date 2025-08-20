@@ -3,12 +3,22 @@
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useEvent } from "../../../../hooks/useEvent"
-import { useState, useEffect } from "react"
+// import { useState, useEffect } from "react"
+
+interface Event {
+    eventId: string
+    eventName: string
+    eventImage: string
+    eventDate: string
+    eventDescription: string
+}
 
 
-export function EventsDetailPage() {
+export default function EventsDetailPage() {
     const { eventId } = useParams()
     const { event, loading, error, refetch } = useEvent(eventId)
+
+    console.log("ALALALA", event?.name)
 
     if (loading) {
         return (
@@ -46,9 +56,9 @@ export function EventsDetailPage() {
         <div>
             <header>
                 <h1>View Details Below</h1>
-                <Image
-                    src={event.eventImage}
-                    alt={event.eventName}
+                <img
+                    src={event?.image}
+                    alt={event?.name}
                     width={800}
                     height={300}
                     className="h-[300px] w-[800px] object-cover"
@@ -57,15 +67,15 @@ export function EventsDetailPage() {
 
             <main>
                 <div>
-                    <h2>{event.eventName} - {event.eventDate}</h2>
-                    <p>{event.eventDescription}</p>
+                    <h2>{event?.name} - {event?.date}</h2>
+                    <p>{event?.description}</p>
                 </div>
             </main>
 
             <div>
                 <button
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    onClick={() => console.log("Enrolling in event:", event.eventId)}
+                    onClick={() => console.log("Enrolling in event:", event?.id)}
                 >
                     Enroll in Event
                 </button>

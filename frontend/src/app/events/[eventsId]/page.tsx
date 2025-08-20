@@ -1,61 +1,75 @@
 "use client"
 
 import Image from "next/image"
-import { makeApiRequest } from "../../../../utils/api"
 import { useParams } from "next/navigation"
+import { useEvent } from "../../../../hooks/useEvent"
 import { useState, useEffect } from "react"
 
-interface Event {
-    eventId: string
-    eventName: string
-    eventImage: string
-    eventDate: string
-    eventDescription: string
-}
 
-export function useEvent() {
-    const [event, setEvent] = useState<Event | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+export function EventsDetailPage() {
+    const { eventId } = useParams()
+    const { event, loading, error, refetch } = useEvent(eventId)
 
-    useEffect(() => {
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div>Loading event details...</div>
+            </div>
+        )
+    }
 
-    })
-}
+    if (error) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="text-red-500">
+                    Error: {error}
+                    <button
+                        onClick={refetch}
+                        className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        )
+    }
 
-const { eventIdUrl } = useParams()
-const event = makeApiRequest(`http://localhost:8000/events/${eventIdUrl}/`, {
-    method: "GET",
-})
+    if (!event) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div>Event not found</div>
+            </div>
+        )
+    }
 
-export default function EventsDetailPage({ }) {
     return (
         <div>
-            {/* Header */}
             <header>
                 <h1>View Details Below</h1>
                 <Image
-                    src={`${params.eventImage}`}
-                    alt={`${params.eventName}`}
-                    className="h-[300px] w-[800px]"
+                    src={event.eventImage}
+                    alt={event.eventName}
+                    width={800}
+                    height={300}
+                    className="h-[300px] w-[800px] object-cover"
                 />
-
             </header>
-            <body>
+
+            <main>
                 <div>
-                    <h2>{`${params.eventName} - ${params.eventDate}`}</h2>
-                    <p>
-                        {`${params.eventDescription}`}
-                    </p>
+                    <h2>{event.eventName} - {event.eventDate}</h2>
+                    <p>{event.eventDescription}</p>
                 </div>
-            </body>
+            </main>
+
             <div>
-                <button>Enroll in Event</button>
+                <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={() => console.log("Enrolling in event:", event.eventId)}
+                >
+                    Enroll in Event
+                </button>
             </div>
-
-
         </div>
     )
-
-
 }

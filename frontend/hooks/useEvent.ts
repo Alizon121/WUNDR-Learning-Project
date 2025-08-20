@@ -14,13 +14,12 @@ export function useEvent(eventId: string | string[] | undefined) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!eventId || Array.isArray(eventId)) {
-        setError("Invalid event ID")
-        setLoading(false)
-        return
-      }
+  const fetchEvent = async () => {
+    if (!eventId || Array.isArray(eventId)) {
+      setError("Invalid event ID")
+      setLoading(false)
+      return
+    }
 
       try {
         setLoading(true)
@@ -38,8 +37,9 @@ export function useEvent(eventId: string | string[] | undefined) {
       }
     }
 
-    fetchEvent()
-  }, [eventId])
+    useEffect(() => {
+        fetchEvent()
+    }, [eventId])
 
   const refetch = () => {
     if (eventId && !Array.isArray(eventId)) {

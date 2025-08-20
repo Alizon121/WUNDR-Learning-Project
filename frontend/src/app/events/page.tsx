@@ -4,30 +4,6 @@ import { useEffect, useState } from "react";
 import ActivityBlock from "@/components/eventsPage/ActivityBlock";
 import { makeApiRequest } from "../../../utils/api";
 
-// const mockData = [
-//     {
-//         activity: "Outdoor",
-//         events: [
-//             { id: "1", name: "Mountain Hiking Adventure", date: "2025-08-20", description: "Explore beautiful trails" },
-//             { id: "2", name: "Nature Scavenger Hunt", date: "2025-08-25", description: "Find natural treasures" },
-//         ]
-//     },
-//     {
-//         activity: "Indoor",
-//         events: [
-//             { id: "3", name: "Museum Tour", date: "2025-08-22", description: "Local history exploration" },
-//             { id: "4", name: "Art Workshop", date: "2025-08-28", description: "Creative expression session" }
-//         ]
-//     },
-//     {
-//         activity: "STEM",
-//         events: [
-//             { id: "5", name: "Robotics Workshop", date: "2025-08-24", description: "Build and program robots" },
-//             { id: "6", name: "Science Experiments", date: "2025-09-03", description: "Fun chemistry and physics" }
-//         ]
-//     }
-// ]
-
 interface Event {
     id: string;
     name: string;
@@ -35,13 +11,13 @@ interface Event {
     date: string;
     image: string;
     participants: number;
-    activityId: string
 }
 
 interface Activity {
     id: string;
     name: string;
     description: string;
+    events: Event[]
 }
 
 interface GroupedEvents {
@@ -54,59 +30,30 @@ export default function EventsPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchEvents = async () => {
+
+        const fetchActivitiesWithEvents = async () => {
 
             try {
-                // Fetch events
-                const { events } = await makeApiRequest<{ events: Event[] }>(
-                    "http://localhost:8000/event"
+
+                const { activities } = await makeApiRequest<{ activities: Activity[] }>(
+                    "http://localhost:8000/activity/with-events"
                 );
 
-                // Fetch unique activityIds
-                const activityIds = [...new Set(events.map((e) => e.activityId))];
-
-                // Fetch activities by ID
-                const activityMap: Record<string, string> = {};
-
-                await Promise.all(
-                    activityIds.map(async (id) => {
-                        const activity = await makeApiRequest<Activity>(
-                            `http://localhost:8000/activity/${id}`
-                        );
-
-                        activityMap[id] = activity.name;
-                    })
-                )
-
-                // Group events by activity name
-                const grouped: Record<string, Event[]> = {};
-
-                events.forEach((event) => {
-                    const activityName = activityMap[event.activityId] || "Unknown";
-
-                    if (!grouped[activityName]) grouped[activityName] = [];
-
-                    grouped[activityName].push(event)
-                });
-
-                // Convert into an array
-                const formatted: GroupedEvents[] = Object.entries(grouped).map(
-                    ([activity, events]) => ({
-                        activity,
-                        events
-                    })
-                );
+                const formatted: GroupedEvents[] = activities.map((activity) => ({
+                    activity: activity.name,
+                    events: activity.events
+                }));
 
                 setGroupedEvents(formatted);
 
             } catch (err) {
-                console.error("Failed to fetch events:", err);
+                console.error("Failed to fetch activities with events:", err);
             } finally {
-                setLoading(false);
+                setLoading(false)
             }
         };
 
-        fetchEvents();
+        fetchActivitiesWithEvents();
     }, []);
 
     return (

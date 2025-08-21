@@ -2,11 +2,11 @@ import { useState, useEffect } from "react"
 import { makeApiRequest } from "../utils/api"
 
 interface Event {
-  eventId: string
-  eventName: string
-  eventImage: string
-  eventDate: string
-  eventDescription: string
+  id: string
+  name: string
+  image: string
+  date: string
+  description: string
 }
 
 export function useEvent(eventId: string | string[] | undefined) {
@@ -14,19 +14,18 @@ export function useEvent(eventId: string | string[] | undefined) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!eventId || Array.isArray(eventId)) {
-        setError("Invalid event ID")
-        setLoading(false)
-        return
-      }
+  const fetchEvent = async () => {
+    if (!eventId || Array.isArray(eventId)) {
+      setError("Invalid event ID")
+      setLoading(false)
+      return
+    }
 
       try {
         setLoading(true)
         setError(null)
         const eventData = await makeApiRequest<Event>(
-          `http://localhost:8000/events/${eventId}/`,
+          `http://localhost:8000/event/${eventId}/`,
           { method: "GET" }
         )
         setEvent(eventData)
@@ -38,8 +37,9 @@ export function useEvent(eventId: string | string[] | undefined) {
       }
     }
 
-    fetchEvent()
-  }, [eventId])
+    useEffect(() => {
+        fetchEvent()
+    }, [eventId])
 
   const refetch = () => {
     if (eventId && !Array.isArray(eventId)) {

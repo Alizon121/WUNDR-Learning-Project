@@ -126,30 +126,23 @@ async def get_event_by_id(event_id: str):
 
     try:
         # Fetch the event
-        event = await db.events.find_unique(where={"id": event_id})
+        event = await db.events.find_unique(
+            where={"id": event_id},
+            include={
+                "reviews": True,
+                "users": True,
+                "activity": True,
+                "children": True
+            }
+        )
 
         if not event:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Event not found"
             )
-
-        # Query for related data
-        users = await db.users.find_many(where={"id": {"in": event.userIDs}})
-        children = await db.children.find_many(where={"id": {"in": event.childIDs}})
-        activity = await db.activities.find_unique(where={"id": event.activityId})
-        reviews = await db.reviews.find_many(where={"eventId": event.id})
-
-        # Add the data to the event
-        hydrated_event = {
-            **event.dict(),
-            "users": users,
-            "children": children,
-            "activity": activity,
-            "reviews": reviews
-        }
-
-        return hydrated_event
+        
+        return event
 
     except Exception as e:
         raise HTTPException(

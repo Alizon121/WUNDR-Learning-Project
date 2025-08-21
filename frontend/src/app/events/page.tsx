@@ -1,30 +1,61 @@
-import ActivityBlock from "@/components/eventsPage/ActivityBlock";
+"use client"
 
-const mockData = [
-    {
-        activity: "Outdoor",
-        events: [
-            { id: "1", name: "Mountain Hiking Adventure", date: "2025-08-20", description: "Explore beautiful trails" },
-            { id: "2", name: "Nature Scavenger Hunt", date: "2025-08-25", description: "Find natural treasures" },
-        ]
-    },
-    {
-        activity: "Indoor",
-        events: [
-            { id: "3", name: "Museum Tour", date: "2025-08-22", description: "Local history exploration" },
-            { id: "4", name: "Art Workshop", date: "2025-08-28", description: "Creative expression session" }
-        ]
-    },
-    {
-        activity: "STEM",
-        events: [
-            { id: "5", name: "Robotics Workshop", date: "2025-08-24", description: "Build and program robots" },
-            { id: "6", name: "Science Experiments", date: "2025-09-03", description: "Fun chemistry and physics" }
-        ]
-    }
-]
+import { useEffect, useState } from "react";
+import ActivityBlock from "@/components/eventsPage/ActivityBlock";
+import { makeApiRequest } from "../../../utils/api";
+
+interface Event {
+    id: string;
+    name: string;
+    description: string;
+    date: string;
+    image: string;
+    participants: number;
+}
+
+interface Activity {
+    id: string;
+    name: string;
+    description: string;
+    events: Event[]
+}
+
+interface GroupedEvents {
+    activity: string;
+    events: Event[]
+}
 
 export default function EventsPage() {
+    const [groupedEvents, setGroupedEvents] = useState<GroupedEvents[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+
+        const fetchActivitiesWithEvents = async () => {
+
+            try {
+
+                const { activities } = await makeApiRequest<{ activities: Activity[] }>(
+                    "http://localhost:8000/activity/with-events"
+                );
+
+                const formatted: GroupedEvents[] = activities.map((activity) => ({
+                    activity: activity.name,
+                    events: activity.events
+                }));
+
+                setGroupedEvents(formatted);
+
+            } catch (err) {
+                console.error("Failed to fetch activities with events:", err);
+            } finally {
+                setLoading(false)
+            }
+        };
+
+        fetchActivitiesWithEvents();
+    }, []);
+
     return (
         <main className="px-6 py-8 max-w-5xl md:max-w-7xl mx-auto bg-wonderbg min-h-screen">
 
@@ -35,15 +66,15 @@ export default function EventsPage() {
                 </p>
             </div>
 
-            {mockData.map(({ activity, events }) => (
+            {groupedEvents.map(({ activity, events }) => (
 
-                <div>
-                    <ActivityBlock
-                        key={activity}
-                        activityName={activity}
-                        events={events}
-                    />
-                </div>
+                // <div>
+                <ActivityBlock
+                    key={activity}
+                    activityName={activity}
+                    events={events}
+                />
+                // </div>
             ))}
         </main>
     )

@@ -86,6 +86,28 @@ async def get_all_activities():
     return {"activities": activities}
 
 
+@router.get("/with-events", status_code=200)
+async def get_all_activities_with_events():
+    """
+    Get all Activities with their associated Events
+    
+    Returns a list of activites, each bundled with its events
+    """
+    
+    try:
+        activities = await db.activities.find_many(
+            include={"events": True},
+            order={"name": "asc"} # order alphabetically??
+        )
+        
+        return {"activities": activities}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch activities with events: {str(e)}"
+        )
+
+
 @router.get("/{activity_id}", status_code=status.HTTP_200_OK)
 async def get_activity(activity_id: str):
 
@@ -184,10 +206,10 @@ async def delete_activity(
         )
 
     except Exception as e:
-         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete activity: {str(e)}"
-        )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete activity: {str(e)}"
+            )
 
     return {"message": "Activity  deleted successfully"}
 

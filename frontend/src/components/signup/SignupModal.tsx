@@ -109,8 +109,6 @@ const SignupModal = () => {
             setServerError("This program is currently only available for homeschool families. We'd love to expand in the future!");
             return;
         }
-        console.log('loooooooook here', form3List)
-        console.log('filter children', form3List.filter((child) => child.childFirstName))
 
         // Prepare children data (only if parent with homeschool children)
         filteredChildren = [];
@@ -146,8 +144,6 @@ const SignupModal = () => {
                 setServerError("Please add at least one child's information.");
                 return;
             }
-
-            // return filteredChildren
         }
 
         // Prepare user data
@@ -156,7 +152,7 @@ const SignupModal = () => {
             lastName: form1.lastName,
             email: form1.email,
             password: form1.password,
-            role: selectedRole as "parent" | "admin" | "instructor" | "volunteer",
+            role: selectedRole as "parent" | "admin" | "instructor",
             avatar: "",
             city: form2.city,
             state: form2.state,
@@ -167,38 +163,7 @@ const SignupModal = () => {
         console.log("userInfo before signup:", userInfo);
 
         try {
-            // Signup request
-            // const signupRes = await fetch("http://localhost:8000/auth/signup", {
-            //     method: "POST",
-            //     headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify(userInfo),
-            // });
-
             await handleSignup(userInfo)
-            // const signupBody = await signupRes.json();
-
-            // if (!signupRes.ok) {
-            //     // Pydantic can return errors as an array
-            //     if (Array.isArray(signupBody.detail)) {
-            //         signupBody.detail.map((err: { msg: string }) => err.msg).join(" ")
-            //     } else if (typeof signupBody.detail === 'object' && signupBody.detail.msg) {
-            //         setServerError(signupBody.detail.msg);
-            //     } else {
-            //         setServerError(signupBody.detail || signupBody.message || "Registration failed.");
-            //     }
-            //     return;
-            // }
-
-
-            // const token = signupBody.token;
-            // const user = signupBody.user;
-            // if (!token) {
-            //     setServerError("No token received after registration.");
-            //     return;
-            // }
-
-            // loginWithToken(token, user);
-            console.log('FILTERED CHILDREN') //this is an empty array
 
             // Add children if any
             // if (filteredChildren.length > 0) {

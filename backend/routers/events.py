@@ -70,7 +70,7 @@ async def create_event(
                 "image": event_data.image,
                 "participants": event_data.participants,
                 "limit": event_data.limit,
-                "location": event_data.location,
+                "location": event_data.location.model_dump(),
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIds,
                 "childIDs": event_data.childIds,
@@ -191,7 +191,7 @@ async def update_event(
         if len(users) != len(event_data.userIds):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="One mor more user IDs are invalid"
+                detail="One or more user IDs are invalid"
             )
 
     if event_data.childIds:

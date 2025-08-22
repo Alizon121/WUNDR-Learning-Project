@@ -1,22 +1,14 @@
 "use client"
 
-import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useEvent } from "../../../../hooks/useEvent"
-// import { useState, useEffect } from "react"
-
-interface Event {
-    eventId: string
-    eventName: string
-    eventImage: string
-    eventDate: string
-    eventDescription: string
-}
 
 
 export default function EventsDetailPage() {
     const { eventId } = useParams()
     const { event, loading, error, refetch } = useEvent(eventId)
+
+    console.log(event?.participants > 0)
 
     if (loading) {
         return (
@@ -72,14 +64,16 @@ export default function EventsDetailPage() {
                         <h2 className="text-2xl md:text-3xl font-bold text-white-800 mb-2">
                             {event?.name}
                         </h2>
-                        <div className="flex items-senter text-white-600 font-medium">
+                        <div className="flex items-center text-white-600 font-medium">
                             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"></path>
                             </svg>
-                            {event?.date}
+                            {event?.date.split("T")[0]}
                         </div>
-
-
+                        <div className="mt-3">
+                            <h3 className="flex items-center text-white-800 text-lg font-semibold">{event?.participants == 1 ? "Participant" : "Participants"}</h3>
+                            <span>{event?.participants}</span>
+                        </div>
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-white-800 mt-3">About this Event</h3>
                             <p className="text-white-800 leading-relaxed text-base md:text-lg">

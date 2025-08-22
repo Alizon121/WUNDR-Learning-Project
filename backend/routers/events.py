@@ -70,6 +70,7 @@ async def create_event(
                 "image": event_data.image,
                 "participants": event_data.participants,
                 "limit": event_data.limit,
+                "location": event_data.location,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIds,
                 "childIDs": event_data.childIds,
@@ -229,6 +230,9 @@ async def update_event(
         
     if event_data.limit is not None:
         update_payload["limit"] = event_data.limit
+        
+    if event_data.location is not None:
+        update_payload["location"] = event_data.location.model_dump()
 
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId
@@ -347,7 +351,7 @@ async def add_user_to_event(
 
     # Create notification
     subject = f"Enrollment Confirmation: {event.name}"
-     # ? ADD link to make changes still
+        # ? ADD link to make changes still
     contents = f'This email confirms that you are enrolled for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
 
     background_tasks.add_task(

@@ -7,6 +7,7 @@ interface Event {
   image: string
   date: string
   description: string
+  participants: number
 }
 
 export function useEvent(eventId: string | string[] | undefined) {

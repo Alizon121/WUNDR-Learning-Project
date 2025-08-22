@@ -34,6 +34,7 @@ class Event(BaseModel):
     date: datetime = Field(default_factory=datetime.now(timezone.utc))
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
+    limit: int = Field(default=10)
     
     users: List["User"] = Field(default_factory=list)
     children: List["Child"] = Field(default_factory=list)
@@ -50,6 +51,7 @@ class EventCreate(BaseModel):
     date: datetime = Field(default_factory=datetime.now(timezone.utc))
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
+    limit: int = Field(default=10)
 
     userIds: List[str] = Field(default_factory=list)
     childIds: List[str] = Field(default_factory=list)
@@ -66,6 +68,7 @@ class EventUpdate(BaseModel):
 
     image: Optional[str] = Field(default=None)
     participants: Optional[int] = Field
+    limit: Optional[int] = Field
     userIds: Optional[List[str]] = Field(default=None)
     childIds: Optional[List[str]] = Field(default=None)
 

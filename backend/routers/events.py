@@ -69,6 +69,7 @@ async def create_event(
                 "date": event_data.date,
                 "image": event_data.image,
                 "participants": event_data.participants,
+                "limit": event_data.limit,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIds,
                 "childIDs": event_data.childIds,
@@ -225,6 +226,9 @@ async def update_event(
         
     if event_data.participants is not None:
         update_payload["participants"] = event_data.participants
+        
+    if event_data.limit is not None:
+        update_payload["limit"] = event_data.limit
 
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId

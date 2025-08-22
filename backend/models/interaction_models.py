@@ -67,8 +67,8 @@ class EventUpdate(BaseModel):
     date: datetime = Field(default_factory=datetime.now(timezone.utc))
 
     image: Optional[str] = Field(default=None)
-    participants: Optional[int] = Field
-    limit: Optional[int] = Field
+    participants: Optional[int] = Field(default=None)
+    limit: Optional[int] = Field(default=None)
     userIds: Optional[List[str]] = Field(default=None)
     childIds: Optional[List[str]] = Field(default=None)
 

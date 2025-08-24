@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from jose import jwt
 from dotenv import load_dotenv
 import os
-import yagmail
+# import yagmail
+from backend.routers.notifications import get_yag
 
 
 router = APIRouter()
@@ -16,8 +17,7 @@ load_dotenv()
 ALGORITHM = "HS256"
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
-yagmail_email = os.getenv("YAGMAIL_EMAIL")
+
 
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
@@ -27,7 +27,7 @@ async def forgot_password(request: PasswordResetRequest):
     Initiates password reset process
 
     Generates JWT reset token
-    Sends token to user email via SendGrid
+    Sends token to user email via Gmail/yagmail
     """
 
     # Get the user
@@ -56,14 +56,16 @@ async def forgot_password(request: PasswordResetRequest):
 
     # Send the email
     try:
-        yag = yagmail.SMTP(yagmail_email, yagmail_app_password)
-        link = f"http://localhost:3000/reset-password/{reset_token}"
+        # yag = yagmail.SMTP(yagmail_email, yagmail_app_password)
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        # link = f"http://localhost:3000/reset-password/{reset_token}"
+        link = f"{frontend_url}/reset-password/{reset_token}"
         contents = (
             "To reset your password, please click the link below:\n\n"
             f"{link}"
         )
 
-        yag.send(
+        get_yag().send(
             to=user.email,
             subject="Password reset",
             contents=contents,

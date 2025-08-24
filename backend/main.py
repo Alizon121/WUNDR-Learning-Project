@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routers.auth.routes import router as auth_router
@@ -10,6 +12,9 @@ from backend.routers.password_reset import router as password_reset_router
 from backend.db.prisma_client import db
 from backend.routers.notifications import start_scheduler, scheduler
 from contextlib import asynccontextmanager
+from backend.routers import admin
+from backend.routers import check_admins
+
 
 # When we start the app, connect to the db. When we shut down the app, disconnect
 # @app.on_event("startup")
@@ -61,3 +66,7 @@ app.include_router(event_router, prefix="/event")
 app.include_router(review_router, prefix="/review")
 
 app.include_router(password_reset_router, prefix="/password_reset")
+
+app.include_router(admin.router)
+
+app.include_router(check_admins.router, prefix="/utils")

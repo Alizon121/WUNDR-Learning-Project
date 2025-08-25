@@ -9,6 +9,7 @@
         pyenv install 3.12.7
         pyenv local 3.12.7
 
+
     Create a virtual environment inside the ROOT directory and activate it:
 
         python -m venv .venv

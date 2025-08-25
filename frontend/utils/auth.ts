@@ -7,8 +7,8 @@ export interface ChildPayload {
   lastName: string;
   homeschool?: boolean;
   birthday: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SignupPayload {
@@ -76,7 +76,7 @@ const payload: SignupPayload = {
 
 // & Example function call:
 
-const response = await handleSignup(payload);
+// const response = await handleSignup(payload);
 
 // * Login  ===================================================
 

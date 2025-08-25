@@ -58,7 +58,7 @@ async def create_child(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create child: {str(e)}"
         )
-    
+
     # payload = {
     #     "child": created_child,
     #     "parent": updated_user,
@@ -76,6 +76,7 @@ async def create_child(
 async def get_children(
     current_user: Annotated[User, Depends(get_current_user)]
 ):
+    print("current_user:", getattr(current_user, "id", None))
 
     enforce_authentication(current_user, "view your children.")
 
@@ -252,3 +253,8 @@ async def delete_child(
         "message": "Child deleted successfully.",
         "parent": updated_user
     }
+
+@router.get("/ping")
+async def ping():
+    print("PING /child/__ping")
+    return {"ok": True}

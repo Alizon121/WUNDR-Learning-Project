@@ -5,7 +5,7 @@ from enum import Enum
 from datetime import datetime, timedelta, timezone, date
 
 if TYPE_CHECKING:
-    from models.interaction_models import Notification, Event, Review
+    from models.interaction_models import Notification, Event, Review, Location
 
 
 # * User models

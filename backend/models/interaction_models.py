@@ -43,7 +43,7 @@ class Event(BaseModel):
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
     limit: int = Field(default=10)
-    location: Location
+    location: "Location"
     
     users: List["User"] = Field(default_factory=list)
     children: List["Child"] = Field(default_factory=list)
@@ -61,7 +61,7 @@ class EventCreate(BaseModel):
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
     limit: int = Field(default=10)
-    location: Location
+    location: "Location"
 
     userIds: List[str] = Field(default_factory=list)
     childIds: List[str] = Field(default_factory=list)
@@ -79,7 +79,7 @@ class EventUpdate(BaseModel):
     image: Optional[str] = Field(default=None)
     participants: Optional[int] = Field(default=None)
     limit: Optional[int] = Field(default=None)
-    location: Optional[Location] = Field(default=None)
+    location: Optional["Location"] = Field(default=None)
     userIds: Optional[List[str]] = Field(default=None)
     childIds: Optional[List[str]] = Field(default=None)
 

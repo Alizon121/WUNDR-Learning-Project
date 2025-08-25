@@ -2,7 +2,6 @@ export interface ApiRequestOptions {
     method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
     body?: any
     headers?: Record<string, string>;
-    // ^ What is this?
     token?: string;
 }
 
@@ -15,7 +14,7 @@ export async function makeApiRequest<T>(
         method = "GET",
         body,
         headers = {},
-        token,
+        token = localStorage.getItem("token") ?? undefined,
     } = options;
 
     const finalHeaders: Record<string, string> = {

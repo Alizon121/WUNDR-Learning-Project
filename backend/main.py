@@ -61,3 +61,6 @@ app.include_router(event_router, prefix="/event")
 app.include_router(review_router, prefix="/review")
 
 app.include_router(password_reset_router, prefix="/password_reset")
+
+
+

@@ -162,3 +162,11 @@ def start_scheduler():
         Function for calling the APScheduler
     """
     scheduler.start()
+
+
+# ========================================================
+
+# Have an admin send a blast message on the website and via email
+
+
+# Have admin send a message to the users of children of an event

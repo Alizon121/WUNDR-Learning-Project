@@ -5,7 +5,7 @@ from backend.models.user_models import User, ChildCreate, ChildUpdate
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from .auth.login import get_current_user
-from .auth.utils import enforce_authentication
+from .auth.utils import enforce_authentication, enforce_admin
 
 
 router = APIRouter()
@@ -122,6 +122,39 @@ async def get_child_by_id(
         )
 
     return child
+
+# ! Get children of an event
+@router.get("/event", status_code=status.HTTP_200_OK)
+async def get_children_of_event(
+    eventId: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+        Get the children for an event
+        Is only for admin
+    """
+
+    # Authenticate
+    enforce_authentication(current_user)
+
+    # Check if admin
+    enforce_admin(current_user)
+
+    try: 
+        # Query for all children of event
+        children = await db.children.find_many(
+            where= {
+                "eventIDs": {eventId}
+            }
+        )
+
+    except:
+        raise HTTPException(
+            status_code=400,
+            detail="Children not found"
+        )
+    
+    return children
 
 
 # ! Update Child

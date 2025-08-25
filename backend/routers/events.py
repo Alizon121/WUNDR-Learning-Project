@@ -8,6 +8,9 @@ from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
 from .notifications import send_email_one_user, schedule_reminder, send_email_multiple_users
 
+import json
+import pprint
+
 router = APIRouter()
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -59,6 +62,22 @@ async def create_event(
             status_code=400,
             detail="One or more child IDs are invalid."
         )
+    
+    # # ! DEBUG
+    # pprint.pprint({
+    #     "name": event_data.name,
+    #     "description": event_data.description,
+    #     "date": event_data.date,
+    #     "image": event_data.image,
+    #     "participants": event_data.participants,
+    #     "limit": event_data.limit,
+    #     "location": event_data.location.model_dump(),
+    #     "activityId": event_data.activityId,
+    #     "userIDs": event_data.userIds,
+    #     "childIDs": event_data.childIds,
+    #     "createdAt": event_data.createdAt,
+    #     "updatedAt": event_data.updatedAt
+    # })
 
     # Create the event
     try:
@@ -70,15 +89,15 @@ async def create_event(
                 "image": event_data.image,
                 "participants": event_data.participants,
                 "limit": event_data.limit,
-                "location": event_data.location.model_dump(),
+                "location": json.loads(event_data.location.model_dump_json()),
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIds,
                 "childIDs": event_data.childIds,
                 "createdAt": event_data.createdAt,
                 "updatedAt": event_data.updatedAt
-
             }
         )
+    
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -164,25 +164,6 @@ const SignupModal = () => {
 
         try {
             await handleSignup(userInfo)
-
-            // Add children if any
-            // if (filteredChildren.length > 0) {
-            //     const childrenRes = await fetch("http://localhost:8000/child", {
-            //         method: "POST",
-            //         headers: {
-            //             "Content-Type": "application/json",
-            //             "Authorization": `Bearer ${token}`,
-            //         },
-            //         body: JSON.stringify(filteredChildren),
-            //     });
-
-            //     const childrenBody = await childrenRes.json();
-            //     if (!childrenRes.ok) {
-            //         setServerError(childrenBody.message || "Failed to add child information.");
-            //         return;
-            //     }
-            // }
-
             closeModal();
         } catch (err) {
             setServerError("A network error occurred. Please try again later.");

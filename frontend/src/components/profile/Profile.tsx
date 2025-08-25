@@ -1,18 +1,20 @@
 import { useState } from "react"
-import JoinChild from "../joinChild/JoinChild"
+import JoinChild from "./joinChild/JoinChild"
+import UserInfo from "./userInfo/UserInfo"
 
 const Profile = () => {
     const [tabIdx, setTabIdx] = useState<number>(0)
-    const profileTabs = ['User Information', "Child's Information"]
+    const profileTabs = ['User Information', "Child's Information", "Your Events"]
 
     return (
-        <div className="flex flex-row">
+        <div className="flex flex-row bg-wonderbg">
             <div className="w-1/4">{profileTabs.map((tab, idx) => (
                 <div key={idx} className={`${idx === tabIdx ? 'active' : ""}`} onClick={() => setTabIdx(idx)}>{tab}</div>
             ))}
             </div>
 
             <div className="w-3/4">
+                {tabIdx === 0 && <UserInfo />}
                 {tabIdx === 1 && <JoinChild />}
             </div>
         </div>

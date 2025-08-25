@@ -7,8 +7,8 @@ export interface ChildPayload {
   lastName: string;
   homeschool?: boolean;
   birthday: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SignupPayload {

@@ -14,7 +14,7 @@ export async function makeApiRequest<T>(
         method = "GET",
         body,
         headers = {},
-        token = localStorage.getItem("token") ?? undefined
+        token = localStorage.getItem("token") ?? undefined,
     } = options;
 
     const finalHeaders: Record<string, string> = {

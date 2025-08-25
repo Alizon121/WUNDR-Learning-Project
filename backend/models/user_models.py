@@ -22,7 +22,7 @@ class User(BaseModel):
     lastName: str = Field(min_length=1, max_length=50)
     email: str = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     role: Role
-    avatar: str
+    avatar: Optional[str] = None
     password: str
 
     city: str = Field(min_length=2, max_length=50)
@@ -39,6 +39,8 @@ class User(BaseModel):
 
     @field_validator("avatar")
     def validate_avatar_extension(cls, v):
+      if v is None:
+         return v
       if not isinstance(v, str):
           raise TypeError("Avatar must be a string URL")
       if not v.lower().endswith((".com", ".png", ".jpg", ".jpeg", ".webp", ".gif")):

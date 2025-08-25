@@ -83,7 +83,15 @@ model Events {
     description   String
     date          DateTime
     image         String
-    participants  Int
+    participants  Int @default(0)
+    limit         Int @default(10)
+    
+    city          String
+    state         String
+    address       String
+    zipCode       Int
+    latitude      Float
+    longitude     Float
 
     childIDs  String[] @db.ObjectId
     children  Children[] @relation(fields: [childIDs], references: [id])
@@ -124,6 +132,7 @@ model Reviews {
 model Notifications {
   id                    String  @id @default(auto()) @map("_id") @db.ObjectId
   description           String
+  Read                  Boolean
 
   user   Users   @relation(fields: [userId], references: [id])
   userId String @db.ObjectId

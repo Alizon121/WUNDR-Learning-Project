@@ -1,10 +1,10 @@
 import { useState } from "react"
-import JoinChild from "./joinChild/JoinChild"
+import JoinChild from "./childInfo/JoinChild"
 import UserInfo from "./userInfo/UserInfo"
 
 const Profile = () => {
     const [tabIdx, setTabIdx] = useState<number>(0)
-    const profileTabs = ['User Information', "Child's Information", "Your Events"]
+    const profileTabs = ['User Information', "Child's Information", "Your Events", "Notifications"]
 
     return (
         <div className="flex flex-row bg-wonderbg">

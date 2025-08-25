@@ -84,7 +84,7 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
             })
             setErrors({})
         } catch (err) {
-            setServerError("A netweork error occurred. Please try again later.")
+            setServerError("A network error occurred. Please try again later.")
         } finally {
             showForm = false
             setSubmitting(false)

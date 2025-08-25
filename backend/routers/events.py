@@ -8,6 +8,9 @@ from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
 from .notifications import send_email_one_user, schedule_reminder, send_email_multiple_users
 
+import json
+import pprint
+
 router = APIRouter()
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -70,12 +73,18 @@ async def create_event(
                 "date": event_data.date,
                 "image": event_data.image,
                 "participants": event_data.participants,
+                "limit": event_data.limit,
+                "city": event_data.city,
+                "state": event_data.state,
+                "address": event_data.address,
+                "zipCode": event_data.zipCode,
+                "latitude": event_data.latitude,
+                "longitude": event_data.longitude,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIds,
                 "childIDs": event_data.childIds,
                 "createdAt": event_data.createdAt,
                 "updatedAt": event_data.updatedAt
-
             }
         )
 
@@ -92,7 +101,6 @@ async def create_event(
             subject,
             contents
         )
-
 
     except Exception as e:
         raise HTTPException(
@@ -207,7 +215,7 @@ async def update_event(
         if len(users) != len(event_data.userIds):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="One mor more user IDs are invalid"
+                detail="One or more user IDs are invalid"
             )
 
     if event_data.childIds:
@@ -243,6 +251,27 @@ async def update_event(
         
     if event_data.participants is not None:
         update_payload["participants"] = event_data.participants
+        
+    if event_data.limit is not None:
+        update_payload["limit"] = event_data.limit
+        
+    if event_data.city is not None:
+        update_payload["city"] = event_data.city
+        
+    if event_data.state is not None:
+        update_payload["state"] = event_data.state
+        
+    if event_data.address is not None:
+        update_payload["address"] = event_data.address
+        
+    if event_data.zipCode is not None:
+        update_payload["zipCode"] = event_data.zipCode
+        
+    if event_data.latitude is not None:
+        update_payload["latitude"] = event_data.latitude
+        
+    if event_data.longitude is not None:
+        update_payload["longitude"] = event_data.longitude
 
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId
@@ -376,7 +405,7 @@ async def add_user_to_event(
 
     # Create notification
     subject = f"Enrollment Confirmation: {event.name}"
-     # ? ADD link to make changes still
+        # ? ADD link to make changes still
     contents = f'This email confirms that you are enrolled for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
 
     background_tasks.add_task(

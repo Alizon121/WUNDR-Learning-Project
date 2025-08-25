@@ -82,7 +82,7 @@ async def get_children(
     children = await db.children.find_many(
         where={
             "parentIDs":{
-              "has": current_user.id
+                "has": current_user.id
             }
         }
     )

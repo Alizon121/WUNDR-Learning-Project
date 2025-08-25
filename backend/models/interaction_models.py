@@ -34,6 +34,14 @@ class Event(BaseModel):
     date: datetime = Field(default_factory=datetime.now(timezone.utc))
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
+    limit: int = Field(default=10)
+    
+    city: str = Field(min_length=1)
+    state: str = Field(min_length=1)
+    address: str = Field(min_length=1)
+    zipCode: int = Field(length=5)
+    latitude: float
+    longitude: float
     
     users: List["User"] = Field(default_factory=list)
     children: List["Child"] = Field(default_factory=list)
@@ -50,6 +58,14 @@ class EventCreate(BaseModel):
     date: datetime = Field(default_factory=datetime.now(timezone.utc))
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
+    limit: int = Field(default=10)
+    
+    city: str = Field(min_length=1)
+    state: str = Field(min_length=1)
+    address: str = Field(min_length=1)
+    zipCode: int = Field(length=5)
+    latitude: float
+    longitude: float
 
     userIds: List[str] = Field(default_factory=list)
     childIds: List[str] = Field(default_factory=list)
@@ -58,14 +74,22 @@ class EventCreate(BaseModel):
     updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 
 class EventUpdate(BaseModel):
-    activityId: Optional[str] = Field(min_length=1)
+    activityId: Optional[str] = Field(default=None)
 
-    name: str = Field(min_length=1)
-    description: str = Field(min_length=1)
-    date: datetime = Field(default_factory=datetime.now(timezone.utc))
+    name: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(default=None)
+    date: Optional[datetime] = Field(default=None)
+    
+    city: Optional[str] = Field(default=None)
+    state: Optional[str] = Field(default=None)
+    address: Optional[str] = Field(default=None)
+    zipCode: Optional[int] = Field(default=None)
+    latitude: Optional[float] = Field(default=None)
+    longitude: Optional[float] = Field(default=None)
 
     image: Optional[str] = Field(default=None)
-    participants: Optional[int] = Field
+    participants: Optional[int] = Field(default=None)
+    limit: Optional[int] = Field(default=None)
     userIds: Optional[List[str]] = Field(default=None)
     childIds: Optional[List[str]] = Field(default=None)
 

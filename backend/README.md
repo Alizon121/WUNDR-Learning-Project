@@ -4,17 +4,17 @@
 
 1. Ensure running from backend directory and:
 
-    - Activate virtual environment for Python 12 inside of the backend directory: 
+    Activate virtual environment for Python 12 inside of the backend directory: 
 
         pyenv install 3.12.7
         pyenv local 3.12.7
 
-    - Create a virtual environment inside the ROOT directory and activate it:
+    Create a virtual environment inside the ROOT directory and activate it:
 
         python -m venv .venv
         source .venv/bin/activate
 
-    - Install dependecies inside the backend directory: 
+    Install dependecies inside the backend directory: 
         
         pip install -r requirements.txt
 
@@ -33,4 +33,4 @@
 
 # Deploy on ...
 
-ADD INSTRUCTIONS FOR HOW WE ARE DELPOYING HERE
+ADD INSTRUCTIONS FOR HOW WE ARE DEPLOYING HERE

@@ -13,7 +13,8 @@ router = APIRouter()
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_event(
     event_data: EventCreate,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
     """
     Create Event
@@ -77,6 +78,22 @@ async def create_event(
 
             }
         )
+
+        # Send the email notification to all users upon event creation
+        users = await db.users.find_many()
+        user_emails = [user.email for user in users]
+
+        subject = f'Check Out Our New Event at Wonderhood: {new_event.name}'
+        contents = f'Hello,\n\n Check out our new event at Wonderhood. We hope to see you there.\n\nBest,\n\nWonderhood Team'
+
+        background_tasks.add_task(
+            send_email_multiple_users,
+            user_emails,
+            subject,
+            contents
+        )
+
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -155,7 +172,8 @@ async def get_event_by_id(event_id: str):
 async def update_event(
     event_id: str,
     event_data: EventUpdate,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks = BackgroundTasks
 ):
 
     """
@@ -242,6 +260,21 @@ async def update_event(
     updated_event = await db.events.update(
         where={"id": event_id},
         data=update_payload
+    )
+
+    # Send email notification for event date update
+    users =  event.users
+    user_emails = [user.email for user in users]
+
+    subject = f'Wonderhood: {event.name} Update'
+    # ? Add link to contents for having a user make changes to their event enrollment.
+    contents = f'Hello,\n\nThe {event.name} has been rescheduled to {event.date}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
+
+    background_tasks.add_task(
+        send_email_multiple_users,
+        user_emails,
+        subject,
+        contents
     )
 
     return {"event": updated_event, "message": "Event updated successfully"}

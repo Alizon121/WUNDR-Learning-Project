@@ -62,22 +62,6 @@ async def create_event(
             status_code=400,
             detail="One or more child IDs are invalid."
         )
-    
-    # # ! DEBUG
-    # pprint.pprint({
-    #     "name": event_data.name,
-    #     "description": event_data.description,
-    #     "date": event_data.date,
-    #     "image": event_data.image,
-    #     "participants": event_data.participants,
-    #     "limit": event_data.limit,
-    #     "location": event_data.location.model_dump(),
-    #     "activityId": event_data.activityId,
-    #     "userIDs": event_data.userIds,
-    #     "childIDs": event_data.childIds,
-    #     "createdAt": event_data.createdAt,
-    #     "updatedAt": event_data.updatedAt
-    # })
 
     # Create the event
     try:
@@ -89,7 +73,12 @@ async def create_event(
                 "image": event_data.image,
                 "participants": event_data.participants,
                 "limit": event_data.limit,
-                "location": json.loads(event_data.location.model_dump_json()),
+                "city": event_data.city,
+                "state": event_data.state,
+                "address": event_data.address,
+                "zipCode": event_data.zipCode,
+                "latitude": event_data.latitude,
+                "longitude": event_data.longitude,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIds,
                 "childIDs": event_data.childIds,
@@ -250,8 +239,23 @@ async def update_event(
     if event_data.limit is not None:
         update_payload["limit"] = event_data.limit
         
-    if event_data.location is not None:
-        update_payload["location"] = event_data.location.model_dump()
+    if event_data.city is not None:
+        update_payload["city"] = event_data.city
+        
+    if event_data.state is not None:
+        update_payload["state"] = event_data.state
+        
+    if event_data.address is not None:
+        update_payload["address"] = event_data.address
+        
+    if event_data.zipCode is not None:
+        update_payload["zipCode"] = event_data.zipCode
+        
+    if event_data.latitude is not None:
+        update_payload["latitude"] = event_data.latitude
+        
+    if event_data.longitude is not None:
+        update_payload["longitude"] = event_data.longitude
 
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId

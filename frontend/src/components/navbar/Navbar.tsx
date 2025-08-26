@@ -9,6 +9,7 @@ import React, { useState, useEffect, useRef, } from "react";
 import { usePathname } from 'next/navigation';
 import { useAuth } from "@/app/context/auth";
 import UserDropdown from "./UserDropdown";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const { setModalContent } = useModal();
@@ -111,6 +112,9 @@ export default function Navbar() {
 
             {/* Auth Buttons */}
             <div className="flex items-center space-x-4 ml-6 border-l border-wonderleaf/30 pl-6">
+            {isLoggedIn && (
+              <NotificationBell />
+            )}
               {!isLoggedIn && (
                 <>
                   <div 

@@ -4,7 +4,11 @@ import { Child } from "@/types/child"
 import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6"
 import { FaPen, FaTrash } from "react-icons/fa"
 import JoinChildForm from "./JoinChildForm"
-import UpdateChildForm from "./updateChild"
+import UpdateChildForm from "./UpdateChild"
+import OpenModalButton from "@/app/context/openModalButton"
+import DeleteChild from "./DeleteChild"
+import { numericFormatDate } from "../../../../utils/formateDate"
+import { calculateAge } from "../../../../utils/calculateAge"
 
 const JoinChild = () => {
     const [children, setChildren] = useState<Child[]>([])
@@ -13,7 +17,7 @@ const JoinChild = () => {
     const [showForm, setShowForm] = useState<boolean>(false)
     const [currChildIdx, setCurrChildIdx] = useState<number>(0)
     const [refreshKey, setRefreshKey] = useState(0)
-    const [isEditing, setIsEditing] = useState(false)
+    const [editingChildId, setEditingChildId] = useState<string | null>(null)
 
     const fetchChildren = useCallback(async () => {
         setLoading(true)
@@ -61,24 +65,6 @@ const JoinChild = () => {
 
     const handleShowForm = () => !showForm ? setShowForm(true) : setShowForm(false)
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
-        return date.toLocaleDateString('en-US', {
-            month: "numeric",
-            day: "numeric",
-            year: "numeric"
-        })
-    }
-
-    const calculateAge = (birthdayDate: string) => {
-        const d = new Date(birthdayDate)
-        let age = new Date().getFullYear() - d.getFullYear()
-        const m = new Date().getMonth() - d.getMonth()
-
-        if (m < 0 || (m === 0 && new Date().getDate() - d.getDate())) age --
-        return age
-    }
-
     return (
         <div>
             <div className="text-center mb-[40px]">
@@ -99,32 +85,37 @@ const JoinChild = () => {
 
                 {visibleChildren.map((child) => (
                     <div key={child.id} className="basis-1/2">
-                        {isEditing ? (
-                            <UpdateChildForm setIsEditing={setIsEditing} currChild={child}/>
+                        {editingChildId === child.id ? (
+                            <UpdateChildForm setEditingChildId={setEditingChildId} currChild={child}/>
                         ) : (
-                            <div className="bg-white rounded-lg p-6">
+                            <div className="bg-white rounded-lg p-6 min-h-[350px]">
                                 <div className="flex justify-between items-center mb-6">
                                     <div className="font-bold text-xl">{child.firstName} {child.lastName}</div>
 
                                     <div className="flex flex-row gap-2">
-                                        <FaPen onClick={() => setIsEditing(true)}/>
-                                        <FaTrash />
+                                        <FaPen onClick={() => setEditingChildId(child.id)}/>
+                                        <OpenModalButton
+                                            buttonText={<FaTrash />}
+                                            modalComponent={<DeleteChild currChild={child} onDeleteSuccess={fetchChildren}/>}
+                                        />
                                     </div>
                                 </div>
 
                                 <div className="mb-4">
                                     <div className="font-bold">BIRTHDAY</div>
                                     <div className="text-black mb-1">
-                                        {child.birthday ? formatDate(child.birthday) + " (" + (calculateAge(child.birthday)) + " years old)" : "—"}
+                                        {child.birthday ? numericFormatDate(child.birthday) + " (" + (calculateAge(child.birthday)) + " years old)" : "—"}
                                     </div>
                                 </div>
 
                                 <div className="mb-4">
                                     <div className="font-bold">HOMESCHOOL PROGRAM</div>
+                                    <div className="text-gray-500 text-sm mt-1">Coming soon...</div>
                                 </div>
 
                                 <div className="mb-4 border-t pt-4">
                                     <div className="font-bold">NOTES/ACCOMMODATIONS</div>
+                                    <div className="text-gray-500 text-sm mt-1">Coming soon...</div>
                                 </div>
                             </div>
                         )}
@@ -138,7 +129,6 @@ const JoinChild = () => {
 
             <JoinChildForm showForm={showForm} onSuccess={handleFormSuccess}/>
         </div>
-
     )
 }
 

@@ -131,4 +131,6 @@ class ChildCreate(BaseModel):
 
 class ChildUpdate(BaseModel):
   firstName: Optional[str] = Field(min_length=1, max_length=50)
-  homeschool: Optional[bool]
+  # lastName: Optional[str] = Field(min_length=1, max_length=50)
+  # birthday: Optional[date] = None
+  # homeschool: Optional[bool] = None

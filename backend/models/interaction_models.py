@@ -43,12 +43,12 @@ class Event(BaseModel):
     latitude: float
     longitude: float
     
-    users: List["User"] = Field(default_factory=list)
-    children: List["Child"] = Field(default_factory=list)
-    reviews: List["Review"] = Field(default_factory=list)
+    # users: List["User"] = Field(default_factory=list)
+    # children: List["Child"] = Field(default_factory=list)
+    # reviews: List["Review"] = Field(default_factory=list)
 
-    createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
-    updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    # createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    # updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 
 class EventCreate(BaseModel):
     activityId: str = Field(min_length=1)
@@ -67,8 +67,8 @@ class EventCreate(BaseModel):
     latitude: float
     longitude: float
 
-    userIds: List[str] = Field(default_factory=list)
-    childIds: List[str] = Field(default_factory=list)
+    userIDs: List[str] = Field(default_factory=list)
+    childIDs: List[str] = Field(default_factory=list)
 
     createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
     updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
@@ -90,8 +90,8 @@ class EventUpdate(BaseModel):
     image: Optional[str] = Field(default=None)
     participants: Optional[int] = Field(default=None)
     limit: Optional[int] = Field(default=None)
-    userIds: Optional[List[str]] = Field(default=None)
-    childIds: Optional[List[str]] = Field(default=None)
+    userIDs: Optional[List[str]] = Field(default=None)
+    childIDs: Optional[List[str]] = Field(default=None)
 
 # ! Reviews
 class Review(BaseModel):
@@ -130,6 +130,7 @@ class Notification(BaseModel):
         min_length = 1,
         max_length = 500,
     )
+    read: bool = Field(default=False)
     userId: str = Field(..., description="User id associated with the notification")
 
     class Config:

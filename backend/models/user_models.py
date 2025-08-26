@@ -30,7 +30,7 @@ class User(BaseModel):
     zipCode: int
 
     children: List["Child"] = Field(default_factory=list)  # Default to empty list
-    enrolledEvents: List["Event"] = Field(default_factory=list)
+    events: List["Event"] = Field(default_factory=list)
 
     createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
     updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))

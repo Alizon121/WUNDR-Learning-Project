@@ -45,20 +45,20 @@ async def create_event(
 
     # Verify that the userIDs and childIDs are valid
     valid_users = await db.users.find_many(
-        where={"id": {"in": event_data.userIds}}
+        where={"id": {"in": event_data.userIDs}}
     )
 
-    if len(valid_users) != len(event_data.userIds):
+    if len(valid_users) != len(event_data.userIDs):
         raise HTTPException(
             status_code=400,
             detail="One or more user IDs are invalid."
         )
 
     valid_children = await db.children.find_many(
-        where={"id": {"in": event_data.childIds}}
+        where={"id": {"in": event_data.childIDs}}
     )
 
-    if len(valid_children) != len(event_data.childIds):
+    if len(valid_children) != len(event_data.childIDs):
         raise HTTPException(
             status_code=400,
             detail="One or more child IDs are invalid."
@@ -81,8 +81,8 @@ async def create_event(
                 "latitude": event_data.latitude,
                 "longitude": event_data.longitude,
                 "activityId": event_data.activityId,
-                "userIDs": event_data.userIds,
-                "childIDs": event_data.childIds,
+                "userIDs": event_data.userIDs,
+                "childIDs": event_data.childIDs,
                 "createdAt": event_data.createdAt,
                 "updatedAt": event_data.updatedAt
             }
@@ -398,14 +398,22 @@ async def add_user_to_event(
         )
 
     # Add the user to the event
+    # updated_event = await db.events.update(
+    #     where={"id": event_id},
+    #     data={"userIDs": event.userIDs + [current_user.id]}
+    # )
+
     updated_event = await db.events.update(
-        where={"id": event_id},
-        data={"userIDs": event.userIDs + [current_user.id]}
+    where={"id": event_id},
+    data={
+        "users": {"connect": {"id": current_user.id}},
+        "participants": {"increment": 1}
+        }
     )
 
     # Create notification
     subject = f"Enrollment Confirmation: {event.name}"
-        # ? ADD link to make changes still
+    #     # ? ADD link to make changes still
     contents = f'This email confirms that you are enrolled for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
 
     background_tasks.add_task(

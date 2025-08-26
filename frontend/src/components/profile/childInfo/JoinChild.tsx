@@ -7,6 +7,8 @@ import JoinChildForm from "./JoinChildForm"
 import UpdateChildForm from "./UpdateChild"
 import OpenModalButton from "@/app/context/openModalButton"
 import DeleteChild from "./DeleteChild"
+import { numericFormatDate } from "../../../../utils/formateDate"
+import { calculateAge } from "../../../../utils/calculateAge"
 
 const JoinChild = () => {
     const [children, setChildren] = useState<Child[]>([])
@@ -63,24 +65,6 @@ const JoinChild = () => {
 
     const handleShowForm = () => !showForm ? setShowForm(true) : setShowForm(false)
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
-        return date.toLocaleDateString('en-US', {
-            month: "numeric",
-            day: "numeric",
-            year: "numeric"
-        })
-    }
-
-    const calculateAge = (birthdayDate: string) => {
-        const d = new Date(birthdayDate)
-        let age = new Date().getFullYear() - d.getFullYear()
-        const m = new Date().getMonth() - d.getMonth()
-
-        if (m < 0 || (m === 0 && new Date().getDate() - d.getDate())) age --
-        return age
-    }
-
     return (
         <div>
             <div className="text-center mb-[40px]">
@@ -120,7 +104,7 @@ const JoinChild = () => {
                                 <div className="mb-4">
                                     <div className="font-bold">BIRTHDAY</div>
                                     <div className="text-black mb-1">
-                                        {child.birthday ? formatDate(child.birthday) + " (" + (calculateAge(child.birthday)) + " years old)" : "—"}
+                                        {child.birthday ? numericFormatDate(child.birthday) + " (" + (calculateAge(child.birthday)) + " years old)" : "—"}
                                     </div>
                                 </div>
 
@@ -145,7 +129,6 @@ const JoinChild = () => {
 
             <JoinChildForm showForm={showForm} onSuccess={handleFormSuccess}/>
         </div>
-
     )
 }
 

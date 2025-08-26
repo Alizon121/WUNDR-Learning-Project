@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { ChildPayload } from "../../../../utils/auth";
 import { makeApiRequest } from "../../../../utils/api";
+import { calculateAge } from "../../../../utils/calculateAge";
 
 type Props = {
     showForm: boolean
@@ -27,15 +28,6 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
             [name]: type === 'checkbox' ? checked : value
         }))
         setServerError(null)
-    }
-
-    const calculateAge = (birthdayDate: string) => {
-        const d = new Date(birthdayDate)
-        let age = new Date().getFullYear() - d.getFullYear()
-        const m = new Date().getMonth() - d.getMonth()
-
-        if (m < 0 || (m === 0 && new Date().getDate() - d.getDate())) age --
-        return age
     }
 
     const validations = () => {

@@ -1,10 +1,10 @@
 "use client"
-import React, { createContext, useRef, useState, ReactNode, useContext, RefObject } from 'react'
+import React, { createContext, useRef, useState, ReactNode, useContext, RefObject, useEffect } from 'react'
 import ReactDOM from "react-dom"
 import "./modal.css"
 
 type ModalContextType = {
-    modalRef: RefObject<HTMLDivElement | null>;
+    modalRef: { current: HTMLElement | null }
     modalContent: ReactNode | null;
     setModalContent: (content: ReactNode | null) => void;
     setOnModalClose: (callback: (() => void) | null) => void;
@@ -19,21 +19,32 @@ const ModalContext = createContext<ModalContextType | undefined>(undefined)
 ModalContext.displayName = "ModalContext"
 
 export function ModalProvider({ children }: ModalProviderProps) {
-    const modalRef = useRef<HTMLDivElement>(null)
+    // const modalRef = useRef<HTMLDivElement>(null)
+    const [modalNode, setModalNode] = useState<HTMLElement | null>(null)
     const [modalContent, setModalContent] = useState<ReactNode | null>(null)
     const [onModalClose, setOnModalClose] = useState<(() => void) | null>(null) //callback function for when modal is closing
+
+    useEffect(() => {
+        const div = document.createElement("div")
+        document.body.appendChild(div)
+        setModalNode(div)
+
+        return () => {
+            document.body.removeChild(div)
+        }
+    }, [])
 
     const closeModal = () => {
         setModalContent(null)
 
         if (typeof onModalClose === "function") {
-            setModalContent(null)
+            // setModalContent(null)
             onModalClose()
         }
     }
 
     const contextValue: ModalContextType = {
-        modalRef, //reference to modal div
+        modalRef: { current: modalNode}, //reference to modal div
         modalContent,
         setModalContent, //function to set the modal contnet
         setOnModalClose,
@@ -45,7 +56,7 @@ export function ModalProvider({ children }: ModalProviderProps) {
             <ModalContext.Provider value={contextValue}>
                 {children}
             </ModalContext.Provider>
-            <div ref={modalRef}></div>
+            {/* <div ref={modalRef}></div> */}
         </>
     )
 }

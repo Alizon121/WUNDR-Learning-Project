@@ -13,11 +13,13 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId }) => {
     const [firstName, setFirstName] = useState<string>("")
     const [lastName, setLastName] = useState<string>("")
     const [birthday, setBirthday] = useState<string>("")
+    const [notes, setNotes] = useState<string>("")
     const [saving, setSaving] = useState(false)
 
     useEffect(() => {
         setFirstName(currChild.firstName ?? "")
         setLastName(currChild.lastName ?? "")
+        setNotes(currChild.notes ?? "")
 
         if (currChild.birthday) {
             const date = new Date(currChild.birthday)
@@ -33,6 +35,7 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId }) => {
     const updateFirstName = (e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)
     const updateLastName = (e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)
     const updateBirthday = (e: React.ChangeEvent<HTMLInputElement>) => setBirthday(e.target.value)
+    const updateNotes = (e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)
 
     const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -41,7 +44,8 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId }) => {
         const payload = {
             firstName: firstName?.trim(),
             lastName: lastName?.trim(),
-            birthday: new Date(birthday).toISOString()
+            birthday: new Date(birthday).toISOString(),
+            notes: notes?.trim()
         }
 
         console.log('look here', payload)
@@ -51,7 +55,7 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId }) => {
             await makeApiRequest(`http://localhost:8000/child/${currChild.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                body: payload
             })
             setEditingChildId(null)
         } catch (err) {
@@ -128,7 +132,12 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId }) => {
 
                 <div className="mb-4 border-t pt-4">
                     <div className="font-bold">NOTES/ACCOMMODATIONS</div>
-                    <div className="text-gray-500 text-sm mt-1">Coming soon...</div>
+                    <textarea
+                        value={notes}
+                        onChange={updateNotes}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wondergreen focus:border-transparent"
+                        disabled={saving}
+                    />
                 </div>
             </form>
         </div>

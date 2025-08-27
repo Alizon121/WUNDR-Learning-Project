@@ -111,7 +111,7 @@ class Child(BaseModel):
 
   parents: Optional[List["User"]] = Field(default_factory=list)
   enrolledEvents: List["Event"] = Field(default_factory=list)
-  
+
   notes: Optional[str] = Field()
 
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
@@ -134,6 +134,10 @@ class ChildCreate(BaseModel):
 class ChildUpdate(BaseModel):
   firstName: Optional[str] = Field(default=None)
   lastName: Optional[str] = Field(default=None)
-  birthday: Optional[date] = Field(default=None)
+  # birthday: Optional[date] = Field(default=None)
+  birthday: Optional[datetime] = Field(
+    default=None,
+    description="Child's date of birth"
+  )
   homeschool: Optional[bool] = Field(default=None)
   notes: Optional[str] = Field(default=None)

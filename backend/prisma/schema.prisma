@@ -53,6 +53,7 @@ model Children {
   lastName              String
   homeschool            Boolean
   birthday              DateTime
+  notes                 String?
 
   parentIDs String[] @db.ObjectId
   parents   Users[]   @relation(fields: [parentIDs], references: [id])

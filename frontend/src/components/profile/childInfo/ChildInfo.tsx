@@ -10,7 +10,7 @@ import DeleteChild from "./DeleteChild"
 import { numericFormatDate } from "../../../../utils/formateDate"
 import { calculateAge } from "../../../../utils/calculateAge"
 
-const JoinChild = () => {
+const ChildInfo = () => {
     const [children, setChildren] = useState<Child[]>([])
     const [loadErrors, setLoadErrors] = useState<string | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
@@ -136,4 +136,4 @@ const JoinChild = () => {
     )
 }
 
-export default JoinChild
+export default ChildInfo

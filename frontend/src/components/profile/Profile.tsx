@@ -1,6 +1,6 @@
 import { useState } from "react"
-import JoinChild from "./childInfo/JoinChild"
 import UserInfo from "./userInfo/UserInfo"
+import ChildInfo from "./childInfo/ChildInfo"
 
 const Profile = () => {
     const [tabIdx, setTabIdx] = useState<number>(0)
@@ -15,7 +15,7 @@ const Profile = () => {
 
             <div className="w-3/4">
                 {tabIdx === 0 && <UserInfo />}
-                {tabIdx === 1 && <JoinChild />}
+                {tabIdx === 1 && <ChildInfo />}
             </div>
         </div>
     )

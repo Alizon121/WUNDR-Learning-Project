@@ -103,7 +103,7 @@ const JoinChild = () => {
 
                                 <div className="mb-4">
                                     <div className="font-bold">BIRTHDAY</div>
-                                    <div className="text-black mb-1">
+                                    <div className="text-black mb-1 ml-2">
                                         {child.birthday ? numericFormatDate(child.birthday) + " (" + (calculateAge(child.birthday)) + " years old)" : "—"}
                                     </div>
                                 </div>
@@ -115,7 +115,7 @@ const JoinChild = () => {
 
                                 <div className="mb-4 border-t pt-4">
                                     <div className="font-bold">NOTES/ACCOMMODATIONS</div>
-                                    <div className="text-gray-500 text-sm mt-1">Coming soon...</div>
+                                    <div className="text-black my-1 ml-2">{child?.notes}</div>
                                 </div>
                             </div>
                         )}

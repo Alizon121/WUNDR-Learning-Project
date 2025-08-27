@@ -3,4 +3,5 @@ export type Child = {
     firstName: string;
     lastName: string;
     birthday: string;
+    notes: string;
 }

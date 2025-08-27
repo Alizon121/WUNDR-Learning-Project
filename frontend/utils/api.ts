@@ -32,6 +32,7 @@ export async function makeApiRequest<T>(
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('erika look here', errorData)
 
         throw new Error(
             `API Error ${response.status}: ${errorData.detail || response.statusText}`

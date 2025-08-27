@@ -3,6 +3,7 @@ import { FormErrors } from "@/types/forms"
 import React, { useState } from "react"
 import { useAuth } from "@/app/context/auth";
 import { handleSignup, SignupPayload } from "../../../utils/auth";
+import { calculateAge } from "../../../utils/calculateAge";
 
 type UserInfo = SignupPayload
 
@@ -131,9 +132,11 @@ const SignupModal = () => {
                     setServerError("Please enter your child's date of birth.");
                     return;
                 }
-                const birthYear = new Date(child.birthday).getFullYear();
-                const currentYear = new Date().getFullYear();
-                const age = currentYear - birthYear;
+
+                const age = calculateAge(child.birthday)
+                // const birthYear = new Date(child.birthday).getFullYear();
+                // const currentYear = new Date().getFullYear();
+                // const age = currentYear - birthYear;
                 if (age < 10 || age > 18) {
                     setServerError("Child's age must be between 10 and 18 years old.");
                     return;

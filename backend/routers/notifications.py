@@ -1,3 +1,8 @@
+from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
+from backend.models.user_models import User
+from .auth.login import get_current_user
+from .auth.utils import enforce_admin, enforce_authentication
+from typing import Annotated
 from backend.db.prisma_client import db
 from datetime import datetime, timedelta, timezone
 import asyncio
@@ -7,6 +12,8 @@ from apscheduler.jobstores.mongodb import MongoDBJobStore
 import os
 import yagmail
 from pymongo import MongoClient
+
+router = APIRouter()
 
 yagmail_app_password = os.getenv("YAGMAIL_APP_PASSWORD")
 yagmail_email = os.getenv("YAGMAIL_EMAIL")
@@ -167,6 +174,47 @@ def start_scheduler():
 # ========================================================
 
 # Have an admin send a blast message on the website and via email
+@router.post("", status_code=status.HTTP_201_CREATED)
+async def spam_notification(
+    subject: str,
+    contents: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
+):
+    """
+    Create a spam message that only admin can send
+    Authenticate and check admin role
+    Message will be sent to all users
+    """
 
+    enforce_authentication(current_user, "create spam message")
+
+    enforce_admin(current_user, "create spam message")
+
+    users = await db.users.find_many()
+    user_emails = [user.email for user in users]
+
+    # Add notification here
+
+    notification_data = [
+    {
+        "description": contents,
+        "userId": user.id,
+        "read": False  # Optional since it defaults to False
+    }
+    for user in users
+]
+    new_notification = await db.notifications.create_many(
+        data=notification_data
+    )
+
+    background_tasks.add_task(
+        send_email_multiple_users,
+        user_emails,
+        subject,
+        contents
+    )
+
+    return {"notifiation": new_notification}
 
 # Have admin send a message to the users of children of an event

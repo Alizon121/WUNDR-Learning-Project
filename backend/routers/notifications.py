@@ -215,6 +215,4 @@ async def spam_notification(
         contents
     )
 
-    return {"notifiation": new_notification}
-
-# Have admin send a message to the users of children of an event
+    return {"notification": new_notification}

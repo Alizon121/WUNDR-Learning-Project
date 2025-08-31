@@ -815,3 +815,88 @@ async def create_review(
 # Add a message on UI noting to look for correspondences from us in their spam folder
 # Should I make a one-to-many rellationship between Jobs and Users
 # Jobs and Children? If a User or child is removed from an event, then the User should not get the reminder
+
+########### * Notification endpoint(s) ###############
+
+# Have admin send a message to the users of children of an event
+
+@router.post("/{event_id}/notification/enrolled_users")
+async def send_message_to_enrolled_users(
+    current_user: Annotated[User, Depends(get_current_user)],
+    event_id:str,
+    subject: str,
+    content: str,
+    background_tasks: BackgroundTasks
+):
+    """
+        Send a message to enrolled users or users of enrolled children
+    """
+
+    # Check for admin
+    enforce_authentication(current_user, "send notification")
+
+    enforce_admin(current_user, "send notification")
+
+    # Query for the parents of children
+    event = await db.events.find_unique(
+        where={"id": event_id},
+        include={"children": {
+                     "include":{
+                        "parents": True
+                        }
+                     }
+                 }
+    )
+
+    if not event:
+        raise HTTPException(status_code=404, detail="Unable to obtain event")
+
+    # Add the parent IDs to a set
+    parent_ids = set()
+    for child in event.children:
+        parent_ids.update(child.parentIDs)
+
+    if not parent_ids:
+        raise HTTPException(status_code=404, detail="Unable to obtain parent IDs")
+
+    # Query for the parents' email(s)
+    parent_emails = list()
+    for id in parent_ids:
+        users = await db.users.find_unique(
+            where={"id": id}
+        )
+        parent_emails.append(users.email)
+
+    if not parent_emails:
+        raise HTTPException(status_code=404, detail="Unable to obtain parent emails")
+    
+    # Creat the notifications for the UI
+    notification_data = [
+        {
+            "description": content,
+            "userId": id,
+        }
+        for id in parent_ids
+    ]
+
+    new_notification = await db.notifications.create_many(
+        data=notification_data
+    )
+
+    print(new_notification)
+
+    # Send the email
+    background_tasks.add_task(
+        send_email_multiple_users,
+        parent_emails,
+        subject,
+        content
+    )
+
+
+    return {
+        "message": "Notification successfully sent to all parents",
+        "notification": new_notification
+            }
+
+# Have admin send a message to the users enrolled in  an event

@@ -175,21 +175,21 @@ def start_scheduler():
 
 # Have an admin send a blast message on the website and via email
 @router.post("", status_code=status.HTTP_201_CREATED)
-async def spam_notification(
+async def blast_notification(
     subject: str,
     contents: str,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):
     """
-    Create a spam message that only admin can send
+    Create a blast message that only admin can send
     Authenticate and check admin role
     Message will be sent to all users
     """
 
-    enforce_authentication(current_user, "create spam message")
+    enforce_authentication(current_user, "create blast message")
 
-    enforce_admin(current_user, "create spam message")
+    enforce_admin(current_user, "create blast message")
 
     users = await db.users.find_many()
     user_emails = [user.email for user in users]

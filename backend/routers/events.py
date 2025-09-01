@@ -820,7 +820,7 @@ async def create_review(
 
 # Have admin send a message to the users of children of an event
 
-@router.post("/{event_id}/notification/enrolled_users")
+@router.post("/{event_id}/notification/enrolled_users", status_code=status.HTTP_200_OK)
 async def send_message_to_enrolled_users(
     current_user: Annotated[User, Depends(get_current_user)],
     event_id:str,
@@ -900,3 +900,58 @@ async def send_message_to_enrolled_users(
             }
 
 # Have admin send a message to the users enrolled in  an event
+@router.post("/{eventId}/notification/enrolled_user", status_code=status.HTTP_200_OK)
+async def send_enrolled_user_notification(
+    eventId: str,
+    subject: str,
+    content: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
+):
+    """
+        Send notifications to all users enrolled in an event
+    """
+
+    enforce_authentication(current_user, "create notification")
+    enforce_admin(current_user, "create notification")
+
+    # Find users enrolled in an event
+    event = await db.events.find_unique(
+        where={"id": eventId}
+    )
+
+    if not event:
+        raise HTTPException(status_code=404, detail="Unable to locate event")
+
+    # Create notification instance
+    notification_data = [
+        {
+            "description": content,
+            "userId": id
+        }
+        for id in event.userIDs
+    ]
+
+    notification = await db.notifications.create_many(
+        data=notification_data
+    )
+
+    # create email notification
+    users_emails = list()
+    for id in event.userIDs:
+        users = await db.users.find_unique(
+            where={"id":id}
+        )
+        users_emails.append(users.email)
+    
+    background_tasks.add_task(
+        send_email_multiple_users,
+        users_emails,
+        subject,
+        content
+    )
+
+    return {
+        "Message": "Notification successfully made",
+        "Notification": notification
+        }

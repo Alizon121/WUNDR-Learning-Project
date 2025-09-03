@@ -28,6 +28,15 @@ interface GroupedEvents {
 export default function EventsPage() {
     const [groupedEvents, setGroupedEvents] = useState<GroupedEvents[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const user = localStorage.getItem("user");
+        if (user) {
+            const userObj = JSON.parse(user);
+            setIsAdmin(userObj.role === "admin");
+        }
+    })
 
     useEffect(() => {
 
@@ -73,6 +82,7 @@ export default function EventsPage() {
                     key={activity}
                     activityName={activity}
                     events={events}
+                    isAdmin={isAdmin}
                 />
                 // </div>
             ))}

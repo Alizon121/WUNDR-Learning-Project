@@ -10,7 +10,8 @@ interface Event {
 }
 
 interface Props {
-    event: Event;
+  event: Event;
+  isAdmin: boolean;
 }
 
 const formatDate = (dateString: string) => {
@@ -23,7 +24,7 @@ const formatDate = (dateString: string) => {
     });
 };
 
-export default function EventCard({ event }: Props) {
+export default function EventCard({ event, isAdmin }: Props) {
     return (
       <div className="flex-shrink-0 w-80 bg-white border rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
         {/* Date Badge */}
@@ -51,26 +52,28 @@ export default function EventCard({ event }: Props) {
             </Link>
           </button>
           {/* Admin Buttons */}
-          <div className="flex justify-between mt-2 gap-x-2">
-            <button className="mt-2 bg-green-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-              <Link href={`/events/${event.id}`}>
-                <strong>EDIT</strong>
-                {/* View Details */}
-              </Link>
-            </button>
-            <button className="mt-2 bg-red-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-              <Link href={`/events/${event.id}`}>
-                <strong>DELETE</strong>
-                {/* View Details */}
-              </Link>
-            </button>
-            <button className="mt-2 bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-              <Link href={`/events/${event.id}`}>
-                <strong>BLAST</strong>
-                {/* View Details */}
-              </Link>
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="flex justify-between mt-2 gap-x-2">
+              <button className="mt-2 bg-green-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
+                <Link href={`/events/${event.id}`}>
+                  <strong>EDIT</strong>
+                  {/* View Details */}
+                </Link>
+              </button>
+              <button className="mt-2 bg-red-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
+                <Link href={`/events/${event.id}`}>
+                  <strong>DELETE</strong>
+                  {/* View Details */}
+                </Link>
+              </button>
+              <button className="mt-2 bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
+                <Link href={`/events/${event.id}`}>
+                  <strong>BLAST</strong>
+                  {/* View Details */}
+                </Link>
+              </button>
+            </div>
+          )}
           {/* End Admin Buttons */}
         </div>
       </div>

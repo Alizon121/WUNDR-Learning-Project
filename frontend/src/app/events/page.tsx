@@ -73,7 +73,7 @@ export default function EventsPage() {
         </p>
         {isAdmin && (
           <button className="mt-2 bg-green-700 text-white px-10 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-            <strong>Add Event</strong>
+            <strong>ADD EVENT</strong>
           </button>
         )}
       </div>

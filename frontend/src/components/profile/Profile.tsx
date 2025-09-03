@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation";
-
-import JoinChild from "./childInfo/JoinChild"
 import UserInfo from "./userInfo/UserInfo"
+import ChildInfo from "./childInfo/ChildInfo"
+import { useRouter, useSearchParams } from "next/navigation";
 import Notifications from "./notifications/NotifInfo"
 
 type TabKey = 'user' | 'child' | 'events' | 'notifications';
@@ -40,7 +39,7 @@ const Profile = () => {
 
             <div className="w-3/4">
                 {tabIdx === 0 && <UserInfo />}
-                {tabIdx === 1 && <JoinChild />}
+                {tabIdx === 1 && <ChildInfo />}
                 {tabIdx === 3 && <Notifications />}
             </div>
         </div>

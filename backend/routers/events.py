@@ -13,7 +13,8 @@ router = APIRouter()
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_event(
     event_data: EventCreate,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
     """
     Create Event
@@ -41,20 +42,20 @@ async def create_event(
 
     # Verify that the userIDs and childIDs are valid
     valid_users = await db.users.find_many(
-        where={"id": {"in": event_data.userIds}}
+        where={"id": {"in": event_data.userIDs}}
     )
 
-    if len(valid_users) != len(event_data.userIds):
+    if len(valid_users) != len(event_data.userIDs):
         raise HTTPException(
             status_code=400,
             detail="One or more user IDs are invalid."
         )
 
     valid_children = await db.children.find_many(
-        where={"id": {"in": event_data.childIds}}
+        where={"id": {"in": event_data.childIDs}}
     )
 
-    if len(valid_children) != len(event_data.childIds):
+    if len(valid_children) != len(event_data.childIDs):
         raise HTTPException(
             status_code=400,
             detail="One or more child IDs are invalid."
@@ -69,14 +70,36 @@ async def create_event(
                 "date": event_data.date,
                 "image": event_data.image,
                 "participants": event_data.participants,
+                "limit": event_data.limit,
+                "city": event_data.city,
+                "state": event_data.state,
+                "address": event_data.address,
+                "zipCode": event_data.zipCode,
+                "latitude": event_data.latitude,
+                "longitude": event_data.longitude,
                 "activityId": event_data.activityId,
-                "userIDs": event_data.userIds,
-                "childIDs": event_data.childIds,
+                "userIDs": event_data.userIDs,
+                "childIDs": event_data.childIDs,
                 "createdAt": event_data.createdAt,
                 "updatedAt": event_data.updatedAt
 
             }
         )
+
+        # Send the email notification to all users upon event creation
+        users = await db.users.find_many()
+        user_emails = [user.email for user in users]
+
+        subject = f'Check Out Our New Event at Wonderhood: {new_event.name}'
+        contents = f'Hello,\n\n Check out our new event at Wonderhood. We hope to see you there.\n\nBest,\n\nWonderhood Team'
+
+        background_tasks.add_task(
+            send_email_multiple_users,
+            user_emails,
+            subject,
+            contents
+        )
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -155,7 +178,8 @@ async def get_event_by_id(event_id: str):
 async def update_event(
     event_id: str,
     event_data: EventUpdate,
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
 ):
 
     """
@@ -185,16 +209,16 @@ async def update_event(
 
     # Validate user, child, and activity IDs
     if event_data.userIds:
-        users = await db.users.find_many(where={"id": {"in": event_data.userIds}})
-        if len(users) != len(event_data.userIds):
+        users = await db.users.find_many(where={"id": {"in": event_data.userIDs}})
+        if len(users) != len(event_data.userIDs):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="One mor more user IDs are invalid"
+                detail="One or more user IDs are invalid"
             )
 
-    if event_data.childIds:
-        children = await db.children.find_many(where={"id": {"in": event_data.childIds}})
-        if len(children) != len(event_data.childIds):
+    if event_data.childIDs:
+        children = await db.children.find_many(where={"id": {"in": event_data.childIDs}})
+        if len(children) != len(event_data.childIDs):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="One or more child IDs is invalid"
@@ -226,22 +250,72 @@ async def update_event(
     if event_data.participants is not None:
         update_payload["participants"] = event_data.participants
 
+    if event_data.limit is not None:
+        update_payload["limit"] = event_data.limit
+        
+    if event_data.city is not None:
+        update_payload["city"] = event_data.city
+        
+    if event_data.state is not None:
+        update_payload["state"] = event_data.state
+        
+    if event_data.address is not None:
+        update_payload["address"] = event_data.address
+        
+    if event_data.zipCode is not None:
+        update_payload["zipCode"] = event_data.zipCode
+        
+    if event_data.latitude is not None:
+        update_payload["latitude"] = event_data.latitude
+        
+    if event_data.longitude is not None:
+        update_payload["longitude"] = event_data.longitude
+
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId
 
-    if event_data.userIds is not None:
-        update_payload["userIDs"] = event_data.userIds
+    if event_data.userIDs is not None:
+        update_payload["userIDs"] = event_data.userIDs
 
-    if event_data.childIds is not None:
-        update_payload["childIDs"] = event_data.childIds
+    if event_data.childIDs is not None:
+        update_payload["childIDs"] = event_data.childIDs
 
     update_payload["updatedAt"] = datetime.utcnow()
 
-    print(event_data.dict(exclude_unset=True))
+    # print(event_data.dict(exclude_unset=True))
 
     updated_event = await db.events.update(
         where={"id": event_id},
         data=update_payload
+    )
+
+    # Send email notification for event date update
+    user_IDs =  event.userIDs
+    users = await db.users.find_many(
+        where={"id": {"in": user_IDs}}
+    )
+
+    user_emails = [user.email for user in users]
+
+    # ? Add link to contents for having a user make changes to their event enrollment.
+    if update_payload.get("name") and update_payload.get("date"):
+        subject = f'Wonderhood: {update_payload["name"]} Update'
+        contents = f'Hello,\n\nThe {update_payload["name"]} has been rescheduled to {update_payload["date"]}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
+    elif update_payload.get("date") and not update_payload.get("name"):
+        subject = f'Wonderhood: {event.name} Update'
+        contents = f'Hello,\n\nThe {event.name} has been rescheduled to {update_payload["date"]}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
+    elif update_payload.get("name") and not update_payload.get("date"):
+        subject = f'Wonderhood: {update_payload["name"]} Update'
+        contents = f'Hello,\n\nThe {update_payload["name"]} has been rescheduled to {event.date}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
+    else:
+        subject = f'Wonderhood: {event.name} Update'
+        contents = f'Hello,\n\nThe {event.name} has been rescheduled to {event.date}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
+
+    background_tasks.add_task(
+        send_email_multiple_users,
+        user_emails,
+        subject,
+        contents
     )
 
     return {"event": updated_event, "message": "Event updated successfully"}
@@ -338,12 +412,15 @@ async def add_user_to_event(
     # Add the user to the event
     updated_event = await db.events.update(
         where={"id": event_id},
-        data={"userIDs": event.userIDs + [current_user.id]}
-    )
+        data={
+            "users": {"connect": {"id": current_user.id}},
+            "participants": {"increment": 1}
+            }
+        )
 
     # Create notification
     subject = f"Enrollment Confirmation: {event.name}"
-     # ? ADD link to make changes still
+    # ? ADD link to make changes still
     contents = f'This email confirms that you are enrolled for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
 
     background_tasks.add_task(
@@ -427,7 +504,10 @@ async def add_child_to_event(
     # Add child to event
     updated_event = await db.events.update(
         where={"id": event_id},
-        data={"childIDs": event.childIDs + [child.id]}
+           data={
+            "children": {"connect": {"id": child_id}},
+            "participants": {"increment": 1}
+            }
     )
 
     # Create notification
@@ -513,7 +593,10 @@ async def remove_user_from_event(
 
     updated_event = await db.events.update(
         where={"id": event_id},
-        data={"userIDs": updated_user_list}
+          data={
+            "userIDs": updated_user_list,
+            "participants": {"decrement":1}  
+            }
     )
 
     return {"event": updated_event, "message": "User removed from event"}
@@ -590,7 +673,10 @@ async def remove_child_from_event(
 
     updated_event = await db.events.update(
         where={"id": event_id},
-        data={"childIDs": updated_child_list}
+         data={
+            "childIDs": updated_child_list,
+            "participants": {"decrement": 1}
+            }
     )
 
     return {"event": updated_event, "message": "Child removed from event"}
@@ -729,3 +815,143 @@ async def create_review(
 # Add a message on UI noting to look for correspondences from us in their spam folder
 # Should I make a one-to-many rellationship between Jobs and Users
 # Jobs and Children? If a User or child is removed from an event, then the User should not get the reminder
+
+########### * Notification endpoint(s) ###############
+
+# Have admin send a message to the users of children of an event
+
+@router.post("/{event_id}/notification/enrolled_users", status_code=status.HTTP_200_OK)
+async def send_message_to_enrolled_users(
+    current_user: Annotated[User, Depends(get_current_user)],
+    event_id:str,
+    subject: str,
+    content: str,
+    background_tasks: BackgroundTasks
+):
+    """
+        Send a message to enrolled users or users of enrolled children
+    """
+
+    # Check for admin
+    enforce_authentication(current_user, "send notification")
+
+    enforce_admin(current_user, "send notification")
+
+    # Query for the parents of children
+    event = await db.events.find_unique(
+        where={"id": event_id},
+        include={"children": {
+                     "include":{
+                        "parents": True
+                        }
+                     }
+                 }
+    )
+
+    if not event:
+        raise HTTPException(status_code=404, detail="Unable to obtain event")
+
+    # Add the parent IDs to a set
+    parent_ids = set()
+    for child in event.children:
+        parent_ids.update(child.parentIDs)
+
+    if not parent_ids:
+        raise HTTPException(status_code=404, detail="Unable to obtain parent IDs")
+
+    # Query for the parents' email(s)
+    parent_emails = list()
+    for id in parent_ids:
+        users = await db.users.find_unique(
+            where={"id": id}
+        )
+        parent_emails.append(users.email)
+
+    if not parent_emails:
+        raise HTTPException(status_code=404, detail="Unable to obtain parent emails")
+    
+    # Creat the notifications for the UI
+    notification_data = [
+        {
+            "description": content,
+            "userId": id,
+        }
+        for id in parent_ids
+    ]
+
+    new_notification = await db.notifications.create_many(
+        data=notification_data
+    )
+
+    print(new_notification)
+
+    # Send the email
+    background_tasks.add_task(
+        send_email_multiple_users,
+        parent_emails,
+        subject,
+        content
+    )
+
+
+    return {
+        "message": "Notification successfully sent to all parents",
+        "notification": new_notification
+            }
+
+# Have admin send a message to the users enrolled in  an event
+@router.post("/{eventId}/notification/enrolled_user", status_code=status.HTTP_200_OK)
+async def send_enrolled_user_notification(
+    eventId: str,
+    subject: str,
+    content: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks
+):
+    """
+        Send notifications to all users enrolled in an event
+    """
+
+    enforce_authentication(current_user, "create notification")
+    enforce_admin(current_user, "create notification")
+
+    # Find users enrolled in an event
+    event = await db.events.find_unique(
+        where={"id": eventId}
+    )
+
+    if not event:
+        raise HTTPException(status_code=404, detail="Unable to locate event")
+
+    # Create notification instance
+    notification_data = [
+        {
+            "description": content,
+            "userId": id
+        }
+        for id in event.userIDs
+    ]
+
+    notification = await db.notifications.create_many(
+        data=notification_data
+    )
+
+    # create email notification
+    users_emails = list()
+    for id in event.userIDs:
+        users = await db.users.find_unique(
+            where={"id":id}
+        )
+        users_emails.append(users.email)
+    
+    background_tasks.add_task(
+        send_email_multiple_users,
+        users_emails,
+        subject,
+        content
+    )
+
+    return {
+        "Message": "Notification successfully made",
+        "Notification": notification
+        }

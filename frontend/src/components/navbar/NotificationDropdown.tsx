@@ -8,25 +8,28 @@ interface Props {
 
 export default function NotificationDropdown({ onClose }: Props) {
   // TODO: Получать с API
-  const notifications = [
-    {
-      id: 1,
-      title: 'Event Reminder',
-      text: 'Mountain Hiking starts tomorrow at 9:00 AM',
-      time: 'Today 18:00',
-      isRead: false,
-      icon: '📅'
-    },
-    {
-      id: 2,
-      title: 'Event Reminder', 
-      text: 'Art Workshop starts tomorrow at 2:00 PM',
-      time: 'Today 18:00',
-      isRead: false,
-      icon: '🎨'
-    },
-    // ...
-  ];
+  // const notifications = [
+  //   {
+  //     id: 1,
+  //     title: 'Event Reminder',
+  //     text: 'Mountain Hiking starts tomorrow at 9:00 AM',
+  //     time: 'Today 18:00',
+  //     isRead: false,
+  //     icon: '📅'
+  //   },
+  //   {
+  //     id: 2,
+  //     title: 'Event Reminder', 
+  //     text: 'Art Workshop starts tomorrow at 2:00 PM',
+  //     time: 'Today 18:00',
+  //     isRead: false,
+  //     icon: '🎨'
+  //   },
+  //   // ...
+  // ];
+
+  // Fetch the notifications here:
+  const notifications = 
 
   return (
     <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-wonderleaf/20 rounded-xl shadow-xl z-50">
@@ -50,9 +53,8 @@ export default function NotificationDropdown({ onClose }: Props) {
           notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`px-4 py-3 border-b border-gray-100 hover:bg-wondergreen/5 cursor-pointer transition-colors ${
-                !notification.isRead ? 'bg-wondergreen/5 border-l-2 border-l-wondergreen' : ''
-              }`}
+              className={`px-4 py-3 border-b border-gray-100 hover:bg-wondergreen/5 cursor-pointer transition-colors ${!notification.read ? 'bg-wondergreen/5 border-l-2 border-l-wondergreen' : ''
+                }`}
             >
               <div className="flex gap-3">
                 <div className="text-lg">{notification.icon}</div>

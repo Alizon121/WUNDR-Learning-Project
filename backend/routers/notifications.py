@@ -171,13 +171,13 @@ def start_scheduler():
     scheduler.start()
 
 
-# ========================================================
-
-# Have an admin send a blast message on the website and via email
+# =======================================================
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def blast_notification(
     subject: str,
     contents: str,
+    time: str,
+    # icon: str,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):
@@ -198,9 +198,12 @@ async def blast_notification(
 
     notification_data = [
     {
+        "title": subject,
         "description": contents,
         "userId": user.id,
-        "read": False  # Optional since it defaults to False
+        "isRead": False,
+        "time": time,
+        # "icon": icon
     }
     for user in users
 ]
@@ -216,3 +219,27 @@ async def blast_notification(
     )
 
     return {"notification": new_notification}
+
+# =======================================================
+@router.get("/", status_code=status.HTTP_200_OK)
+async def get_user_notifications(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+    Get all notifications of a user
+    Authenticate user
+    """
+
+    enforce_authentication(current_user, "retireve notifications")
+
+    notifications = await db.notifications.find_many(
+        where={"userId": current_user.id}
+    )
+
+    if not notifications:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Unable to obtain notifications"
+        )
+    
+    return {"Notifications": notifications}

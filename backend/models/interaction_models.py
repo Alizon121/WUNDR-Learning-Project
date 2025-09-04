@@ -130,7 +130,11 @@ class Notification(BaseModel):
         min_length = 1,
         max_length = 500,
     )
-    read: bool = Field(default=False)
+    title: str = Field(
+        min_length = 2,
+        max_length=80,
+    )
+    isRead: bool = Field(default=False)
     userId: str = Field(..., description="User id associated with the notification")
 
     class Config:

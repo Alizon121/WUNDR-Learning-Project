@@ -378,6 +378,7 @@ async def delete_event_by_id(
 async def add_user_to_event(
     event_id: str,
     current_user: Annotated[User, Depends(get_current_user)],
+    # icon: str,
     background_tasks: BackgroundTasks
 ):
 
@@ -432,8 +433,12 @@ async def add_user_to_event(
 
     await db.notifications.create(
         data={
+            "title": subject,
             "description": f"Confirmation for event {event.name}",
-            "userId": current_user.id
+            "userId": current_user.id,
+            "isRead": False,
+            "time": event.date,
+            # "icon": icon
         }
     )
 
@@ -451,6 +456,7 @@ async def add_user_to_event(
 async def add_child_to_event(
     event_id: str,
     child_id: str,
+    # icon: str,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):
@@ -523,8 +529,12 @@ async def add_child_to_event(
 
     await db.notifications.create(
         data= {
+            "title": subject,
             "description": f"Confirmation for event {event.name}",
-            "userId": current_user.id
+            "userId": current_user.id,
+            "isRead": False,
+            "time": event.date,
+            # "icon": icon
         }
     )
 
@@ -577,6 +587,8 @@ async def remove_user_from_event(
             detail="User is not enrolled"
         )
     
+    # ! Create logic for deleting the previous notification?
+    
     # Send notification to User that they have been removed from event
     subject = f'Unenrollment Confirmation: {event.name}'
     content = f'Hello,\n\nThis email confirms that you have been unenrolled from the {event.name} event at Wonderhood on {event.date}. Please find more events at our website.\n\nBest,\n\nWonderhood Team'
@@ -602,7 +614,7 @@ async def remove_user_from_event(
     return {"event": updated_event, "message": "User removed from event"}
 
 
-#! Change this endpoint to PUT instead of DELETE?
+
 @router.patch("/{event_id}/unenroll", status_code=status.HTTP_200_OK)
 async def remove_child_from_event(
     event_id: str,
@@ -667,6 +679,8 @@ async def remove_child_from_event(
         subject,
         content
     )
+
+    # ! Add logic to delete notification?
 
     # Remove child from event
     updated_child_list = [id for id in event.childIDs if id != child.id]
@@ -817,15 +831,14 @@ async def create_review(
 # Jobs and Children? If a User or child is removed from an event, then the User should not get the reminder
 
 ########### * Notification endpoint(s) ###############
-
 # Have admin send a message to the users of children of an event
-
-@router.post("/{event_id}/notification/enrolled_users", status_code=status.HTTP_200_OK)
-async def send_message_to_enrolled_users(
+@router.post("/{event_id}/notification/enrolled_users_child", status_code=status.HTTP_200_OK)
+async def send_message_to_enrolled_users_of_child(
     current_user: Annotated[User, Depends(get_current_user)],
     event_id:str,
     subject: str,
     content: str,
+    # icon: str,
     background_tasks: BackgroundTasks
 ):
     """
@@ -873,8 +886,12 @@ async def send_message_to_enrolled_users(
     # Creat the notifications for the UI
     notification_data = [
         {
-            "description": content,
-            "userId": id,
+        "title": subject,
+        "description": content,
+        "userId": id,
+        "isRead": False,
+        "time": event.date,
+        # "icon": icon
         }
         for id in parent_ids
     ]
@@ -882,8 +899,6 @@ async def send_message_to_enrolled_users(
     new_notification = await db.notifications.create_many(
         data=notification_data
     )
-
-    print(new_notification)
 
     # Send the email
     background_tasks.add_task(
@@ -905,6 +920,7 @@ async def send_enrolled_user_notification(
     eventId: str,
     subject: str,
     content: str,
+    # icon: str,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):
@@ -926,8 +942,12 @@ async def send_enrolled_user_notification(
     # Create notification instance
     notification_data = [
         {
-            "description": content,
-            "userId": id
+        "title": subject,
+        "description": content,
+        "userId": id,
+        "isRead": False,
+        "time": event.date,
+        # "icon": icon
         }
         for id in event.userIDs
     ]

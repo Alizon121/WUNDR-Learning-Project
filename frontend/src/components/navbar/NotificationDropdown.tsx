@@ -41,9 +41,9 @@ export default function NotificationDropdown({ onClose }: Props) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-wonderleaf/10 flex justify-between items-center">
         <h3 className="font-semibold text-wondergreen">Notifications</h3>
-        <button className="text-xs text-wonderleaf hover:underline">
+        {/* <button className="text-xs text-wonderleaf hover:underline">
           Mark all as read
-        </button>
+        </button> */}
       </div>
 
       {/* Notifications List */}

@@ -106,17 +106,49 @@ export default function Notifications() {
     }
   }, [items, tab]);
 
-  const markAsRead = (id: string) =>
-    setItems(prev =>
-      prev.map(notification =>
-        notification.id === id
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    );
+  const markAsRead = async (id: string) => {
+    try {
+      await makeApiRequest(`http://localhost:8000/notifications/${id}`, {
+        method: "PATCH",
+        body: { isRead: true }  // This gets JSON.stringify'd automatically
+      });
+      setItems(prev =>
+        prev.map(notification =>
+          notification.id === id
+            ? { ...notification, isRead: true }
+            : notification
+        )
+      );
+    } catch (e) {
+      console.error("Failed to update notification", e)
+    }
+  }
 
-  const markAllRead = () =>
-    setItems(prev => prev.map(i => ({ ...i, isRead: true })));
+  const markAllRead = async () => {
+    try {
+      const unreadNotifications = items.filter(item => !item.isRead);
+
+      // Make API calls for each unread notification
+      const updatePromises = unreadNotifications.map(notification =>
+        makeApiRequest(`http://localhost:8000/notifications/${notification.id}`, {
+          method: "PATCH",
+          body: { isRead: true }
+        })
+      );
+
+      // Wait for all API calls to complete
+      await Promise.all(updatePromises);
+
+      setItems(prev => prev.map(i =>
+        ({ ...i, isRead: true })
+      ))
+    } catch (e) {
+      if (e instanceof Error) {
+        setLoadErrors(e.message)
+      }
+    }
+  }
+
 
   return (
     <div className="space-y-6">
@@ -215,7 +247,7 @@ export default function Notifications() {
                     onClick={() => markAsRead(n?.id)}
                     className="text-sm text-gray-400 hover:text-wonderleaf"
                   >
-                    Mark as read
+                    {n.isRead === false ? "Mark as read" : ""}
                   </button>
                 </div>
               </div>

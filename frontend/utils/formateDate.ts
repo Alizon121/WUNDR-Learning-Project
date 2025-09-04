@@ -6,3 +6,29 @@ export const numericFormatDate = (dateString: string) => {
         year: "numeric"
     })
 }
+
+export const formatNotificationTime = (timeString: string): string => {
+    const date = new Date(timeString);
+    
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${month}-${day}-${year} ${hours}:${minutes}`;
+  };
+
+  export function formatWhen(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  
+    const timeHHMM = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+    if (diffDays === 0) return `Today ${timeHHMM}`;
+    if (diffDays === 1) return `Yesterday ${timeHHMM}`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return d.toLocaleDateString();
+  }

@@ -137,7 +137,6 @@ model Notifications {
   description           String
   isRead                Boolean @default(false)
   time                  DateTime
-  // icon                  String?
   createdAt             DateTime @default(now())
 
   user   Users   @relation(fields: [userId], references: [id])

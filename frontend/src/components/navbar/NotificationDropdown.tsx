@@ -4,36 +4,16 @@ import Link from 'next/link';
 import { makeApiRequest } from '../../../utils/api';
 import { useState, useCallback, useEffect } from 'react';
 import { Notification, NotificationsResponse } from '@/types/notification';
+import { formatNotificationTime } from '../../../utils/formateDate';
 
 interface Props {
   onClose: () => void;
 }
 
 export default function NotificationDropdown({ onClose }: Props) {
-  // TODO: Получать с API
   const [loading, setLoading] = useState<boolean>(false)
   const [loadErrors, setLoadErrors] = useState<string | null>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
-  // const [notifications, setNotifications] = useState<string[]>()
-  // const notifications = [
-  //   {
-  //     id: 1,
-  //     title: 'Event Reminder',
-  //     text: 'Mountain Hiking starts tomorrow at 9:00 AM',
-  //     time: 'Today 18:00',
-  //     isRead: false,
-  //     icon: '📅'
-  //   },
-  //   {
-  //     id: 2,
-  //     title: 'Event Reminder',
-  //     text: 'Art Workshop starts tomorrow at 2:00 PM',
-  //     time: 'Today 18:00',
-  //     isRead: false,
-  //     icon: '🎨'
-  //   },
-  //   // ...
-  // ];
 
   // Fetch the notifications here:
   const fetchNotifications = useCallback(async () => {
@@ -41,7 +21,7 @@ export default function NotificationDropdown({ onClose }: Props) {
 
     try {
       const response: NotificationsResponse = await makeApiRequest("http://localhost:8000/notifications/")
-      setNotifications(response.Notifications)
+      setNotifications(response?.Notifications)
       setLoadErrors(null)
     } catch (e) {
       if (e instanceof Error) {
@@ -68,25 +48,25 @@ export default function NotificationDropdown({ onClose }: Props) {
 
       {/* Notifications List */}
       <div className="max-h-80 overflow-y-auto">
-        {notifications.length === 0 ? (
+        {notifications?.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <div className="text-3xl mb-2">✨</div>
             <div className="font-medium mb-1">You're all caught up!</div>
             <div className="text-sm">No new notifications right now.</div>
           </div>
         ) : (
-          notifications.map((notification) => (
+          notifications?.map((notification) => (
             <div
-              key={notification.id}
+              key={notification?.id}
               className={`px-4 py-3 border-b border-gray-100 hover:bg-wondergreen/5 cursor-pointer transition-colors ${!notification.isRead ? 'bg-wondergreen/5 border-l-2 border-l-wondergreen' : ''
                 }`}
             >
               <div className="flex gap-3">
                 {/* <div className="text-lg">{notification.icon}</div> */}
                 <div className="flex-1">
-                  <div className="font-medium text-sm text-gray-900">{notification.title}</div>
-                  <div className="text-xs text-gray-600 mt-1">{notification.description}</div>
-                  {/* <div className="text-xs text-gray-400 mt-1">{notification.time}</div> */}
+                  <div className="font-medium text-sm text-gray-900">{notification?.title}</div>
+                  <div className="text-xs text-gray-600 mt-1">{notification?.description}</div>
+                  <div className="text-xs text-gray-400 mt-1">{formatNotificationTime(notification?.time)}</div>
                 </div>
               </div>
             </div>

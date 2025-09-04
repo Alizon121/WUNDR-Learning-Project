@@ -140,6 +140,12 @@ class Notification(BaseModel):
     class Config:
         form_attributes = True
 
+class NotificationUpdate(BaseModel):
+    description: Optional[str] = Field(default=None)
+    title: Optional[str] = Field(default=None)
+    isRead: Optional[bool] = Field(default=None)
+    userId: Optional[str] = Field(default=None)
+
 #! Jobs
 class Jobs(BaseModel):
     id: str

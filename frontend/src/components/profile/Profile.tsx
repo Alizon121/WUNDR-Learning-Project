@@ -14,14 +14,12 @@ const idxToKey = (idx: number): TabKey =>
   (['user', 'child', 'events', 'notifications'] as TabKey[])[idx];
 
 const Profile = () => {
-    // const [tabIdx, setTabIdx] = useState<number>(0)
     const router = useRouter();
-    // const profileTabs = ['User Information', "Child's Information", "Your Events", "Notifications"]
     const searchParams = useSearchParams();
-
     const initialKey = (searchParams.get('tab') ?? 'user') as TabKey;
     const [tabIdx, setTabIdx] = useState<number>(() => keyToIdx[initialKey] ?? 0);
 
+    //ana don't forget to invoke this!
     const openTab = (idx: number) => {
         setTabIdx(idx);
         router.replace(`/profile?tab=${idxToKey(idx)}`);

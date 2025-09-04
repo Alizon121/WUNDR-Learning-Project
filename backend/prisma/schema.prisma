@@ -16,6 +16,7 @@ model Users {
   firstName         String
   lastName          String
   email             String          @unique
+  phoneNumber       String?
   role              Roles
   avatar            String?
   password          String
@@ -86,7 +87,7 @@ model Events {
     image         String
     participants  Int @default(0)
     limit         Int @default(10)
-    
+
     city          String
     state         String
     address       String

@@ -15,6 +15,7 @@ export interface SignupPayload {
     firstName: string;
     lastName: string;
     email: string;
+    phoneNumber: string;
     password: string;
     role: "parent" | "admin" | "instructor";
     avatar: string;
@@ -44,35 +45,35 @@ export async function handleSignup(payload: SignupPayload) {
 
 // & Example Body for handleSignup:
 
-const payload: SignupPayload = {
-  firstName: "Jane",
-  lastName: "Doe",
-  email: "jane.doe@example.com",
-  password: "securePassword123",
-  role: "parent",
-  avatar: "https://example.com/avatar.jpg",
-  city: "Austin",
-  state: "TX",
-  zipCode: 78701,
-  children: [
-    {
-      firstName: "Ella",
-      lastName: "Doe",
-      homeschool: false,
-      birthday: new Date("2015-06-15").toISOString(), // "2015-06-15T00:00:00.000Z",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      firstName: "Max",
-      lastName: "Doe",
-      homeschool: true,
-      birthday: new Date("2018-09-22").toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-};
+// const payload: SignupPayload = {
+//   firstName: "Jane",
+//   lastName: "Doe",
+//   email: "jane.doe@example.com",
+//   password: "securePassword123",
+//   role: "parent",
+//   avatar: "https://example.com/avatar.jpg",
+//   city: "Austin",
+//   state: "TX",
+//   zipCode: 78701,
+//   children: [
+//     {
+//       firstName: "Ella",
+//       lastName: "Doe",
+//       homeschool: false,
+//       birthday: new Date("2015-06-15").toISOString(), // "2015-06-15T00:00:00.000Z",
+//       createdAt: new Date().toISOString(),
+//       updatedAt: new Date().toISOString(),
+//     },
+//     {
+//       firstName: "Max",
+//       lastName: "Doe",
+//       homeschool: true,
+//       birthday: new Date("2018-09-22").toISOString(),
+//       createdAt: new Date().toISOString(),
+//       updatedAt: new Date().toISOString(),
+//     },
+//   ],
+// };
 
 // & Example function call:
 

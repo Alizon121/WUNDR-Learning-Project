@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react"
 import { makeApiRequest } from "../../../../utils/api"
 import { User } from "@/types/user"
@@ -5,6 +7,7 @@ import { FaPen } from "react-icons/fa"
 import UpdateUserForm from "./UpdateUserForm"
 import OpenModalButton from "@/app/context/openModalButton"
 import DeleteUser from "./DeleteUser"
+import { e164toUS } from "../../../../utils/formatPhoneNumber";
 
 
 const UserInfo = () => {
@@ -33,6 +36,7 @@ const UserInfo = () => {
     }, [fetchUser, refreshKey])
 
     const handleEditing = () => !editing ? setEditing(true) : setEditing(false)
+    const bumpRefresh = () => setRefreshKey(k => k + 1)
 
     return (
         <div>
@@ -45,22 +49,42 @@ const UserInfo = () => {
             </div>
 
             {editing ? (
-                <UpdateUserForm setEditing={setEditing} currUser={user}/>
+                <UpdateUserForm
+                    currUser={user}
+                    onSaved={() => {
+                        bumpRefresh()
+                        setEditing(false)
+                    }}
+                />
             ) : (
                 <div className="bg-white shadow rounded-lg max-w-md mx-auto p-10">
                     <div className="space-y-2">
                         <div className="flex flex-row justify-around">
-                            {user?.avatar ? (
-                                <img className='h-24 w-24 rounded-full object-cover' src={user.avatar} alt={`Profile Image of ${user.firstName}`}/>
-                            ): (
-                                <img className='h-24 w-24' src="./profile-picture.png" alt="Default profile"/>
-                            )}
+                            <div className="flex flex-col">
+                                {user?.avatar ? (
+                                    <img className='h-24 w-24 rounded-full object-cover' src={user.avatar} alt={`Profile Image of ${user.firstName}`}/>
+                                ): (
+                                    <img className='h-24 w-24' src="./profile-picture.png" alt="Default profile"/>
+                                )}
+                                <button>Change Avatar</button>
+                            </div>
 
                             <div className="flex flex-col text-center">
                                 <div className="mb-2">{user?.firstName} {user?.lastName}</div>
                                 <div className="mb-2">{user?.email}</div>
+                                <div className="mb-2">{e164toUS(user?.phoneNumber)}</div>
                                 <div>{user?.city}, {user?.state}</div>
                                 <div>{user?.zipCode}</div>
+                                <div>Children</div>
+                                {user?.children?.length ? (
+                                    <ul className="list-disc pl-5">
+                                        {user.children.map(child => (
+                                            <li key={child.id}>{child.firstName} {child.lastName}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-gray-500">No children yet.</p>
+                                )}
                             </div>
                         </div>
 

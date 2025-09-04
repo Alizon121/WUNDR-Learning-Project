@@ -76,7 +76,7 @@ async def create_child(
 async def get_children(
     current_user: Annotated[User, Depends(get_current_user)]
 ):
-    print("current_user:", getattr(current_user, "id", None))
+    # print("current_user:", getattr(current_user, "id", None))
 
     enforce_authentication(current_user, "view your children.")
 
@@ -141,7 +141,7 @@ async def get_children_of_event(
     # Check if admin
     enforce_admin(current_user)
 
-    try: 
+    try:
         # Query for all children of event
         children = await db.children.find_many(
             where= {
@@ -154,7 +154,7 @@ async def get_children_of_event(
             status_code=400,
             detail="Children not found"
         )
-    
+
     return children
 
 

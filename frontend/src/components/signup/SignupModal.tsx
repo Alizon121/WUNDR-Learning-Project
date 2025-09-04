@@ -10,7 +10,6 @@ type UserInfo = SignupPayload
 const SignupModal = () => {
     // Modal and Auth actions
     const { closeModal } = useModal()
-    const { loginWithToken } = useAuth();
 
     // State for errors, step, roles, child info, etc.
     const [errors, setErrors] = useState<FormErrors>({})
@@ -28,6 +27,7 @@ const SignupModal = () => {
         firstName: '',
         lastName: '',
         email: '',
+        phoneNumber: '',
         password: '',
         confirmPassword: ''
     })
@@ -134,9 +134,6 @@ const SignupModal = () => {
                 }
 
                 const age = calculateAge(child.birthday)
-                // const birthYear = new Date(child.birthday).getFullYear();
-                // const currentYear = new Date().getFullYear();
-                // const age = currentYear - birthYear;
                 if (age < 10 || age > 18) {
                     setServerError("Child's age must be between 10 and 18 years old.");
                     return;
@@ -154,6 +151,7 @@ const SignupModal = () => {
             firstName: form1.firstName,
             lastName: form1.lastName,
             email: form1.email,
+            phoneNumber: form1.phoneNumber,
             password: form1.password,
             role: selectedRole as "parent" | "admin" | "instructor",
             avatar: "",
@@ -163,7 +161,7 @@ const SignupModal = () => {
             children: filteredChildren
         };
 
-        console.log("userInfo before signup:", userInfo);
+        // console.log("userInfo before signup:", userInfo);
 
         try {
             await handleSignup(userInfo)
@@ -272,6 +270,15 @@ const SignupModal = () => {
                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 required
                                 maxLength={100}
+                            />
+
+                            <input
+                                type="tel"
+                                inputMode="tel"
+                                autoComplete="tel"
+                                value={form1.phoneNumber}
+                                onChange={handleChange}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
 
                             <div className="relative">

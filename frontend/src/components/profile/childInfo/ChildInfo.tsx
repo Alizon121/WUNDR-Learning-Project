@@ -7,7 +7,7 @@ import JoinChildForm from "./JoinChildForm"
 import UpdateChildForm from "./UpdateChild"
 import OpenModalButton from "@/app/context/openModalButton"
 import DeleteChild from "./DeleteChild"
-import { numericFormatDate } from "../../../../utils/formateDate"
+import { numericFormatDate } from "../../../../utils/formatDate"
 import { calculateAge } from "../../../../utils/calculateAge"
 
 const ChildInfo = () => {

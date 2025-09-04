@@ -384,7 +384,8 @@ async def add_user_to_event(
 
     """
     Add the current user to an existing event
-
+    like a volunteer
+    
     Verify authentication
     Fetch the event
     Check if user is already enrolled
@@ -833,7 +834,7 @@ async def create_review(
 ########### * Notification endpoint(s) ###############
 # Have admin send a message to the users of children of an event
 @router.post("/{event_id}/notification/enrolled_users_child", status_code=status.HTTP_200_OK)
-async def send_message_to_enrolled_users_of_child(
+async def send_message_to_users_of_enrolled_child(
     current_user: Annotated[User, Depends(get_current_user)],
     event_id:str,
     subject: str,
@@ -842,7 +843,8 @@ async def send_message_to_enrolled_users_of_child(
     background_tasks: BackgroundTasks
 ):
     """
-        Send a message to enrolled users or users of enrolled children
+        Send a message to users of enrolled children
+        Authentication and Admin Role Required
     """
 
     # Check for admin

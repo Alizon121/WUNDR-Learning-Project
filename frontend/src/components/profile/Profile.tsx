@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import UserInfo from "./userInfo/UserInfo"
 import ChildInfo from "./childInfo/ChildInfo"
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,7 +19,16 @@ const Profile = () => {
     const initialKey = (searchParams.get('tab') ?? 'user') as TabKey;
     const [tabIdx, setTabIdx] = useState<number>(() => keyToIdx[initialKey] ?? 0);
 
-    //ana don't forget to invoke this!
+    const tabFromUrl = useMemo(
+        () => (searchParams.get('tab') ?? 'user') as TabKey,
+        [searchParams]
+    );
+
+    useEffect(() => {
+        const next = keyToIdx[tabFromUrl] ?? 0;
+        setTabIdx(next);
+    }, [tabFromUrl]);
+
     const openTab = (idx: number) => {
         setTabIdx(idx);
         router.replace(`/profile?tab=${idxToKey(idx)}`);
@@ -31,7 +40,13 @@ const Profile = () => {
             {/* Left menu */}
             <div className="w-1/4">
             {profileTabs.map((tab, idx) => (
-                <div key={idx} className={`${idx === tabIdx ? 'active' : ""}`} onClick={() => setTabIdx(idx)}>{tab}</div>
+                <button
+                 key={idx}
+                 className={`${idx === tabIdx ? 'active' : ""}`}
+                 onClick={() => openTab(idx)}
+                >
+                {tab}
+                </button>
             ))}
             </div>
 

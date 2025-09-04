@@ -1,10 +1,9 @@
 'use client'
 
-import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation";
-
-import JoinChild from "./childInfo/JoinChild"
+import { useState, useMemo, useEffect } from "react"
 import UserInfo from "./userInfo/UserInfo"
+import ChildInfo from "./childInfo/ChildInfo"
+import { useRouter, useSearchParams } from "next/navigation";
 import Notifications from "./notifications/NotifInfo"
 
 type TabKey = 'user' | 'child' | 'events' | 'notifications';
@@ -15,13 +14,21 @@ const idxToKey = (idx: number): TabKey =>
   (['user', 'child', 'events', 'notifications'] as TabKey[])[idx];
 
 const Profile = () => {
-    // const [tabIdx, setTabIdx] = useState<number>(0)
     const router = useRouter();
-    // const profileTabs = ['User Information', "Child's Information", "Your Events", "Notifications"]
     const searchParams = useSearchParams();
 
     const initialKey = (searchParams.get('tab') ?? 'user') as TabKey;
     const [tabIdx, setTabIdx] = useState<number>(() => keyToIdx[initialKey] ?? 0);
+
+    const tabFromUrl = useMemo(
+        () => (searchParams.get('tab') ?? 'user') as TabKey,
+        [searchParams]
+    );
+
+    useEffect(() => {
+        const next = keyToIdx[tabFromUrl] ?? 0;
+        setTabIdx(next);
+    }, [tabFromUrl]);
 
     const openTab = (idx: number) => {
         setTabIdx(idx);
@@ -34,13 +41,19 @@ const Profile = () => {
             {/* Left menu */}
             <div className="w-1/4">
             {profileTabs.map((tab, idx) => (
-                <div key={idx} className={`${idx === tabIdx ? 'active' : ""}`} onClick={() => setTabIdx(idx)}>{tab}</div>
+                <button
+                 key={idx} 
+                 className={`${idx === tabIdx ? 'active' : ""}`} 
+                 onClick={() => openTab(idx)}
+                >
+                {tab}
+                </button>
             ))}
             </div>
 
             <div className="w-3/4">
                 {tabIdx === 0 && <UserInfo />}
-                {tabIdx === 1 && <JoinChild />}
+                {tabIdx === 1 && <ChildInfo />}
                 {tabIdx === 3 && <Notifications />}
             </div>
         </div>

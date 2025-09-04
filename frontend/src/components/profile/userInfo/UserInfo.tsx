@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useState } from "react"
 import { makeApiRequest } from "../../../../utils/api"
 import { User } from "@/types/user"
+import { FaPen } from "react-icons/fa"
+import UpdateUserForm from "./UpdateUserForm"
+import OpenModalButton from "@/app/context/openModalButton"
+import DeleteUser from "./DeleteUser"
 
 
 const UserInfo = () => {
     const [loading, setLoading] = useState(true)
     const [loadErrors, setLoadErrors] = useState<string | null>(null)
     const [refreshKey, setRefreshKey] = useState(0)
+    const [editing, setEditing] = useState(false)
     const [user, setUser] = useState<User | null>(null)
 
     const fetchUser = useCallback(async () => {
@@ -27,27 +32,47 @@ const UserInfo = () => {
         fetchUser()
     }, [fetchUser, refreshKey])
 
+    const handleEditing = () => !editing ? setEditing(true) : setEditing(false)
 
     return (
         <div>
-            <div className="text-center mb-[40px]">
+            <div className="text-center mb-[35px]">
                 <h1 className="text-4xl font-bold text-wondergreen mb-4">Your Account Information</h1>
-                <h2 className="max-w-2xl mx-auto text-lg text-wondergreen">Manage your profile</h2>
-            </div>
-
-            <div className="bg-white shadow rounded-lg max-w-md mx-auto p-6">
-                <div className="space-y-2">
-                    <div><span className="font-medium">First name:</span> {user?.firstName}</div>
-                    <div><span className="font-medium">Last name:</span> {user?.lastName}</div>
-                    <div><span className="font-medium">Email:</span> {user?.email}</div>
-                    {/* <div><span className="font-medium">Avatar:</span> {user?.avatar}</div> */}
-                    <div><span className="font-medium">City:</span> {user?.city}</div>
-                    <div><span className="font-medium">State:</span> {user?.state}</div>
-                    <div><span className="font-medium">Zip Code:</span> {user?.zipCode}</div>
+                <div className="flex flex-row gap-2 max-w-2xl justify-center mx-auto">
+                    <h2 className="text-lg text-wondergreen">Manage your profile</h2>
+                    <FaPen onClick={handleEditing}/>
                 </div>
             </div>
 
+            {editing ? (
+                <UpdateUserForm setEditing={setEditing} currUser={user}/>
+            ) : (
+                <div className="bg-white shadow rounded-lg max-w-md mx-auto p-10">
+                    <div className="space-y-2">
+                        <div className="flex flex-row justify-around">
+                            {user?.avatar ? (
+                                <img className='h-24 w-24 rounded-full object-cover' src={user.avatar} alt={`Profile Image of ${user.firstName}`}/>
+                            ): (
+                                <img className='h-24 w-24' src="./profile-picture.png" alt="Default profile"/>
+                            )}
 
+                            <div className="flex flex-col text-center">
+                                <div className="mb-2">{user?.firstName} {user?.lastName}</div>
+                                <div className="mb-2">{user?.email}</div>
+                                <div>{user?.city}, {user?.state}</div>
+                                <div>{user?.zipCode}</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+            <OpenModalButton
+                buttonText="DELETE ACCOUNT"
+                className="block mx-auto mt-[100px] border rounded-lg py-3 px-5 bg-red-400 hover:bg-red-500 text-white"
+                modalComponent={<DeleteUser currUser={user} />}
+            />
         </div>
     )
 }

@@ -94,8 +94,6 @@ const SignupModal = () => {
             return
         }
 
-        console.log('zipppp', typeof(zip))
-
         // Prepare user data
         const userInfo: UserInfo = {
             firstName: form1.firstName.trim(),
@@ -109,7 +107,6 @@ const SignupModal = () => {
             state: form2.state.trim().toUpperCase(),
             zipCode: zip
         };
-
         // console.log("userInfo before signup:", userInfo);
 
         try {
@@ -302,9 +299,7 @@ const SignupModal = () => {
                                 </button>
                             </div>
 
-                            {passwordError && passwordTouched && (
-                                <div className="text-red-500 text-sm mt-1">{passwordError}</div>
-                            )}
+                            { passwordError && passwordTouched && (<div className="text-red-500 text-sm mt-1">{passwordError}</div>) }
 
                             <button
                                 type="button"

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
@@ -62,11 +63,11 @@ export default function GetInvolved() {
                 <li className="flex items-center gap-2 text-gray-700"><span className="text-wondergreen">✔</span> Help with outdoor activities</li>
                 <li className="flex items-center gap-2 text-gray-700"><span className="text-wondergreen">✔</span> Support administrative tasks</li>
               </ul>
-              <a href="/volunteer" className="w-full">
+              <Link href="/volunteer" className="w-full">
                 <button className="w-full py-2 rounded-full text-lg font-bold text-white bg-gradient-to-r from-wondergreen to-wonderleaf shadow hover:from-wonderleaf hover:to-wondergreen transition-colors">
                   Become a Volunteer
                 </button>
-              </a>
+              </Link>
             </div>
             {/* Partnership */}
             <div className="group relative bg-white rounded-2xl shadow-xl p-8 flex flex-col items-start transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] cursor-pointer overflow-hidden w-full">

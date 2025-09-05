@@ -1,4 +1,6 @@
+import { Role } from "@/types/user";
 import { makeApiRequest } from "./api";
+import { useRouter } from "next/navigation";
 
 // * Signup ===================================================
 
@@ -15,14 +17,15 @@ export interface SignupPayload {
     firstName: string;
     lastName: string;
     email: string;
-    phoneNumber: string;
     password: string;
-    role: "parent" | "admin" | "instructor";
-    avatar: string;
+    phoneNumber: string;
+    avatar?: string;
+    address: string
     city: string;
     state: string;
-    zipCode: number;
-    children?: ChildPayload[];
+    zipCode: string;
+    // children?: ChildPayload[];
+    role: Role;
 }
 
 export async function handleSignup(payload: SignupPayload) {
@@ -37,7 +40,7 @@ export async function handleSignup(payload: SignupPayload) {
 
   if (response.token) {
     localStorage.setItem("token", response.token);
-    console.log("✅ Token stored after signup");
+    // console.log("✅ Token stored after signup");
   }
 
   return response;
@@ -129,6 +132,9 @@ export async function handleLogin(email: string, password: string) {
 // * Logout ===================================================
 
 export function handleLogout() {
+  const router = useRouter()
+
   localStorage.removeItem("token");
   console.log("👋 Logged out");
+  router.push('/')
 }

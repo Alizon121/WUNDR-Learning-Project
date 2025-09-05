@@ -16,14 +16,15 @@ model Users {
   firstName         String
   lastName          String
   email             String          @unique
-  phoneNumber       String?
+  phoneNumber       String
   role              Roles
   avatar            String?
   password          String
 
+  address           String
   city              String
   state             String
-  zipCode           Int
+  zipCode           String
 
   // m-to-n
   childIDs String[]   @db.ObjectId
@@ -52,9 +53,14 @@ model Children {
   id                    String  @id @default(auto()) @map("_id") @db.ObjectId
   firstName             String
   lastName              String
+  preferredName         String?
   homeschool            Boolean
+  homeschoolProgram     String?
+  grade                 Int?
   birthday              DateTime
+  allergiesMedical      String?
   notes                 String?
+  photoConsent          Boolean
 
   parentIDs String[] @db.ObjectId
   parents   Users[]   @relation(fields: [parentIDs], references: [id])

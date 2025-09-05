@@ -16,6 +16,7 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved }) => {
     const [lastName, setLastName] = useState<string>("")
     const [email, setEmail] = useState<string>("")
     const [phoneNumber, setPhoneNumber] = useState<string>("")
+    const [address, setAddress] = useState<string>("")
     const [city, setCity] = useState<string>("")
     const [state, setState] = useState<string>("")
     const [zipCode, setZipCode] = useState<string>("")
@@ -27,6 +28,7 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved }) => {
         setLastName(currUser?.lastName ?? "")
         setEmail(currUser?.email ?? "")
         setPhoneNumber(e164toUS(currUser?.phoneNumber) ?? "")
+        setAddress(currUser?.address ?? "")
         setCity(currUser?.city ?? "")
         setState(currUser?.state ?? "")
         setZipCode(currUser?.zipCode != null ? String(currUser.zipCode).padStart(5, "0") : "")
@@ -37,18 +39,20 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved }) => {
             !!firstName?.trim() &&
             !!lastName?.trim() &&
             !!email?.trim() &&
+            !!address?.trim() &&
             !!city?.trim() &&
             !!state?.trim() &&
             zipCode?.length === 5
 
         return ok
-    }, [firstName, lastName, email, city, state])
+    }, [firstName, lastName, email, address, city, state])
 
     // const updateAvatar
     const updateFirstName = (e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)
     const updateLastName = (e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)
     const updateEmail = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)
     const updatePhoneNumber = (e: React.ChangeEvent<HTMLInputElement>) => setPhoneNumber(formatUs(e.target.value))
+    const updateAddress = (e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)
     const updateCity = (e: React.ChangeEvent<HTMLInputElement>) => setCity(e.target.value)
     const updateState = (e: React.ChangeEvent<HTMLInputElement>) => setState(e.target.value)
     const updateZipCode = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +72,7 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved }) => {
             lastName: lastName.trim(),
             email: email.trim(),
             phoneNumber: phoneE164,
+            address: address.trim(),
             city: city.trim(),
             state: state.trim(),
             zipCode: parseInt(zipCode, 10)
@@ -138,6 +143,14 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved }) => {
                                 disabled={saving}
                             />
                         </div>
+
+                        <input
+                            type="text"
+                            value={address}
+                            onChange={updateAddress}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wondergreen focus:border-transparent"
+                            disabled={saving}
+                        />
 
                         <div className="flex flex-row">
                             <input

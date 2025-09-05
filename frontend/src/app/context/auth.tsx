@@ -1,72 +1,80 @@
 "use client"
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-
-type User = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: 'parent' | 'volunteer' | 'admin' | 'instructor';
-  city: string;
-  state: string;
-  zipCode: number;
-} | null;
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { makeApiRequest } from "../../../utils/api";
+import { User } from "@/types/user";
 
 type AuthContextType = {
-  user: User;
-  setUser: (user: User) => void;
-  isLoggedIn: boolean;
-  logout: () => void;
-  loginWithToken: (token: string, user?: User) => void;
+  user: User | null;
   token: string | null;
+  isLoggedIn: boolean;
+  setUser: (user: User | null) => void;
+  loginWithToken: (token: string, user?: User) => Promise<void>;
+  logout: () => void;
+  refreshUser: () => Promise<void>
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const isLoggedIn = !!token
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const storedUser = localStorage.getItem("user");
     if (storedToken) setToken(storedToken);
+    if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
   //save user
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("user");
-    }
+    if (user) localStorage.setItem("user", JSON.stringify(user));
+    else localStorage.removeItem("user");
   }, [user]);
 
   //save token
   useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
-    }
+    if (token) localStorage.setItem("token", token);
+    else localStorage.removeItem("token");
   }, [token]);
 
-   const loginWithToken = (token: string, user?: User) => {
-    setToken(token);
-    if (user) {
-      setUser(user);
-    }
-    // Если backend не возвращает user — можешь декодировать токен и вытянуть инфу о пользователе
-  };
+  const refreshUser = useCallback(async () => {
+    if (!token) return
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-  };
+    try {
+      const me = await makeApiRequest<User>("http://localhost:8000/user/me", { token })
+      setUser(me)
+    } catch {
+      setToken(null)
+      setUser(null)
+    }
+  }, [token])
+
+  useEffect(() => {
+    if (token && !user) {
+      void refreshUser()
+    }
+  }, [token, user, refreshUser])
+
+  const loginWithToken = useCallback(
+    async (token: string, user?: User) => {
+      setToken(token);
+      if (user) {
+        setUser(user);
+      } else {
+        await refreshUser()
+      }
+      // Если backend не возвращает user — можешь декодировать токен и вытянуть инфу о пользователе
+  }, [refreshUser])
+
+  const logout = useCallback(() => {
+      setUser(null);
+      setToken(null);
+  }, [])
 
     return (
-    <AuthContext.Provider value={{ user, setUser, isLoggedIn: !!user, logout, loginWithToken, token }}>
+    <AuthContext.Provider value={{ user, setUser, isLoggedIn, logout, loginWithToken, token, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -48,7 +48,8 @@ class UserSignup(BaseModel):
     # Address Fields
     city: str = Field(min_length=2, max_length=50)
     state: str = Field(min_length=2, max_length=50)
-    zipCode: int
+    zipCode: str = Field(pattern=r'^\d{5}(-\d{4})?$')
+
 
     # Children
     children: List[ChildCreate] = Field(default_factory=list)

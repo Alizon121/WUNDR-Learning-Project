@@ -73,6 +73,7 @@ const UserInfo = () => {
                                 <div className="mb-2">{user?.firstName} {user?.lastName}</div>
                                 <div className="mb-2">{user?.email}</div>
                                 <div className="mb-2">{e164toUS(user?.phoneNumber)}</div>
+                                <div>{user?.address}</div>
                                 <div>{user?.city}, {user?.state}</div>
                                 <div>{user?.zipCode}</div>
                                 <div>Children</div>

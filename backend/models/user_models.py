@@ -26,9 +26,10 @@ class User(BaseModel):
     avatar: Optional[str] = None
     password: str
 
+    address: str = Field(min_length=3, max_length=200)
     city: str = Field(min_length=2, max_length=50)
     state: str = Field(min_length=2, max_length=50)
-    zipCode: int
+    zipCode: str = Field(pattern=r'^\d{5}(-\d{4})?$')
 
     children: List["Child"] = Field(default_factory=list)  # Default to empty list
     events: List["Event"] = Field(default_factory=list)
@@ -58,9 +59,10 @@ class UserUpdateRequest(BaseModel):
     avatar: Optional[str] = Field(None, description="Avatar URL as string")
     password: Optional[str] = None
 
+    address: str = Field(min_length=3, max_length=200)
     city: Optional[str] = Field(None, min_length=2, max_length=50)
     state: Optional[str] = Field(None, min_length=2, max_length=50)
-    zipCode: Optional[int] = None
+    zipCode: Optional[str] = Field(pattern=r'^\d{5}(-\d{4})?$')
 
 
 class UserResponse(BaseModel):
@@ -71,9 +73,10 @@ class UserResponse(BaseModel):
     phoneNumber: str
     role: Role
     avatar: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    zipCode: Optional[int] = None
+    address: str = Field(min_length=3, max_length=200)
+    city: str = Field(None, min_length=2, max_length=50)
+    state: str = Field(None, min_length=2, max_length=50)
+    zipCode: str = Field(pattern=r'^\d{5}(-\d{4})?$')
     children: List["Child"] = Field(default_factory=list)
     enrolledEvents: List["Event"] = Field(default_factory=list)
     reviews:List["Review"] = Field(default_factory=list)
@@ -109,38 +112,63 @@ class Child(BaseModel):
   id: str = Field(..., min_length=1, description="Child identifier")
   firstName: str = Field(min_length=1, max_length=50)
   lastName: str = Field(min_length=1, max_length=50)
-  homeschool: bool = Field(default_factory=False)
+  preferredName: Optional[str] = Field(default=None, max_length=50)
   birthday: datetime = Field(default_factory=..., description="Child's birthday")
+
+  homeschool: bool = Field(default_factory=False)
+  homeschoolProgram: Optional[str] = Field(default=None, max_length=50)
+  grade: Optional[int] = Field(default=None, ge=-1, le=12)
 
   parents: Optional[List["User"]] = Field(default_factory=list)
   enrolledEvents: List["Event"] = Field(default_factory=list)
 
-  notes: Optional[str] = Field()
+  allergiesMedical: Optional[str] = Field(default=None, max_length=1000)
+  notes: Optional[str] = Field(default=None, max_length=1000)
+
+  photoConsent: bool = False
 
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 
+
 class ChildCreate(BaseModel):
   firstName: str = Field(min_length=1, max_length=50)
   lastName: str = Field(min_length=1, max_length=50)
-  homeschool: bool = False
+  preferredName: Optional[str] = Field(default=None, max_length=50)
   birthday: datetime = Field(
       description="Child's date of birth",
       default_factory=lambda: datetime.now(timezone.utc).replace(
         hour=0, minute=0, second=0, microsecond=0
       )
     )
-  notes: Optional[str] = Field()
+
+  homeschool: bool = False
+  homeschoolProgram: Optional[str] = Field(default=None, max_length=50)
+  grade: Optional[int] = Field(default=None, ge=-1, le=12)
+
+  allergiesMedical: Optional[str] = Field(default=None, max_length=1000)
+  notes: Optional[str] = Field(default=None, max_length=1000)
+
+  photoConsent: bool = False
+
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+
 
 class ChildUpdate(BaseModel):
   firstName: Optional[str] = Field(default=None)
   lastName: Optional[str] = Field(default=None)
-  # birthday: Optional[date] = Field(default=None)
+  preferredName: Optional[str] = Field(default=None, max_length=50)
   birthday: Optional[datetime] = Field(
     default=None,
     description="Child's date of birth"
   )
+
   homeschool: Optional[bool] = Field(default=None)
-  notes: Optional[str] = Field(default=None)
+  homeschoolProgram: Optional[str] = Field(default=None, max_length=50)
+  grade: Optional[int] = Field(default=None, ge=-1, le=12)
+
+  allergiesMedical: Optional[str] = Field(default=None, max_length=1000)
+  notes: Optional[str] = Field(default=None, max_length=1000)
+
+  photoConsent: bool = False

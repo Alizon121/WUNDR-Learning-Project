@@ -54,12 +54,12 @@ class UserUpdateRequest(BaseModel):
     firstName: Optional[str] = Field(None, min_length=1, max_length=50)
     lastName: Optional[str] = Field(None, min_length=1, max_length=50)
     email: Optional[str] = Field(None, pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-    phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$', description="Phone number in E.164 format (+12025550123)")
+    phoneNumber: Optional[str] = Field(pattern=r'^\+[1-9]\d{1,14}$', description="Phone number in E.164 format (+12025550123)")
     # role: Optional[Role] = None
     avatar: Optional[str] = Field(None, description="Avatar URL as string")
     password: Optional[str] = None
 
-    address: str = Field(min_length=3, max_length=200)
+    address: Optional[str] = Field(min_length=3, max_length=200)
     city: Optional[str] = Field(None, min_length=2, max_length=50)
     state: Optional[str] = Field(None, min_length=2, max_length=50)
     zipCode: Optional[str] = Field(pattern=r'^\d{5}(-\d{4})?$')

@@ -17,17 +17,16 @@ export async function makeApiRequest<T>(
         token = localStorage.getItem("token") ?? undefined,
     } = options;
 
-    const finalHeaders: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...headers,
-    };
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData
 
+    const finalHeaders: Record<string, string> = { ...headers };
+    if (!FormData) finalHeaders["Content-Type"] = "application/json"
     if (token) finalHeaders["Authorization"] = `Bearer ${token}`;
 
     const response = await fetch(endpoint, {
         method,
         headers: finalHeaders,
-        body: body ? JSON.stringify(body) : undefined,
+        body: isFormData ? body : body ? JSON.stringify(body) : undefined,
     });
 
     if (!response.ok) {

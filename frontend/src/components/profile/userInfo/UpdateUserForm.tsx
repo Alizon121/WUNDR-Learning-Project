@@ -8,9 +8,10 @@ import { e164toUS, formatUs, onlyDigitals, toE164US } from "../../../../utils/fo
 type Props = {
     currUser: User | null
     onSaved: () => void
+    onCancel: () => void
 }
 
-const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved }) => {
+const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved, onCancel }) => {
     const [avatar, setAvatar] = useState<string>("")
     const [firstName, setFirstName] = useState<string>("")
     const [lastName, setLastName] = useState<string>("")
@@ -97,11 +98,11 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved }) => {
         <div className="bg-white shadow rounded-lg max-w-md mx-auto p-10">
             <form onSubmit={handleUpdate}>
                 <div className="flex flex-row justify-around space-y-2">
-                    {currUser?.avatar ? (
+                    {/* {currUser?.avatar ? (
                         <img className='h-24 w-24 rounded-full object-cover' src={currUser.avatar} alt={`Profile Image of ${currUser.firstName}`}/>
                     ): (
                         <img className='h-24 w-24' src="./profile-picture.png" alt="Default profile"/>
-                    )}
+                    )} */}
 
                     <div className="flex flex-col text-center">
                         <div className="flex flex-row mb-2">
@@ -201,6 +202,13 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved }) => {
                             className="p-2 text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed"
                         >
                             Save
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            className="text-red-600 hover:text-red-700"
+                        >
+                            Cancel
                         </button>
                     </div>
                 </div>

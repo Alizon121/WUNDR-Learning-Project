@@ -1,16 +1,14 @@
 "use client"
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { makeApiRequest } from "../../../utils/api";
 import { User } from "@/types/user";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 type AuthContextType = {
   user: User | null;
   token: string | null;
   isLoggedIn: boolean;
   setUser: (user: User | null) => void;
-  loginWithToken: (token: string, user?: User) => Promise<void>;
+  loginWithToken: (token: string, user?: User) => void;
   logout: () => void;
-  refreshUser: () => Promise<void>
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,10 +19,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = !!token
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
-    if (storedToken) setToken(storedToken);
+    const storedToken = localStorage.getItem("token");
     if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedToken) setToken(storedToken);
   }, []);
 
   //save user
@@ -39,42 +37,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     else localStorage.removeItem("token");
   }, [token]);
 
-  const refreshUser = useCallback(async () => {
-    if (!token) return
-
-    try {
-      const me = await makeApiRequest<User>("http://localhost:8000/user/me", { token })
-      setUser(me)
-    } catch {
-      setToken(null)
-      setUser(null)
+   const loginWithToken = (token: string, user?: User) => {
+    setToken(token);
+    if (user) {
+      setUser(user);
     }
-  }, [token])
+    // Если backend не возвращает user — можешь декодировать токен и вытянуть инфу о пользователе
+  };
 
-  useEffect(() => {
-    if (token && !user) {
-      void refreshUser()
-    }
-  }, [token, user, refreshUser])
-
-  const loginWithToken = useCallback(
-    async (token: string, user?: User) => {
-      setToken(token);
-      if (user) {
-        setUser(user);
-      } else {
-        await refreshUser()
-      }
-      // Если backend не возвращает user — можешь декодировать токен и вытянуть инфу о пользователе
-  }, [refreshUser])
-
-  const logout = useCallback(() => {
-      setUser(null);
-      setToken(null);
-  }, [])
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+  };
 
     return (
-    <AuthContext.Provider value={{ user, setUser, isLoggedIn, logout, loginWithToken, token, refreshUser }}>
+    <AuthContext.Provider value={{ user, setUser, isLoggedIn, logout, loginWithToken, token }}>
       {children}
     </AuthContext.Provider>
   );

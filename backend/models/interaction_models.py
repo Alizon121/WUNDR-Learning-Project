@@ -162,11 +162,10 @@ class Jobs(BaseModel):
 
 #! Emergency Contact
 class EmergencyContactCreate(BaseModel):
-    id: str = Field(..., min_length=1, description="Emergency contact identifier")
     firstName: str = Field(min_length=1, max_length=100)
     lastName: str = Field(min_length=1, max_length=100)
     relationship: str = Field(min_length=1, max_length=200)
-    phoneNumber: str = Field(..., regex=r'^\+?[\d\s\-\(\)]+$')
+    phoneNumber: str = Field()
     priority: int = Field(ge=1, le=3)
 
 class EmergencyContactResponse(EmergencyContactCreate):

@@ -34,6 +34,8 @@ async def create_child(
                 "lastName": child_data.lastName,
                 "homeschool": child_data.homeschool,
                 "birthday": child_data.birthday,
+                "notes": child_data.notes,
+                "waiver": child_data.waiver,
                 "parentIDs": [current_user.id], # Add the current user's ID to parentIDs
                 "eventIDs": [], # Create activityIDs array so we can easily add to it later
                 "createdAt": child_data.createdAt,
@@ -262,7 +264,7 @@ async def ping():
 
 # Emergency Contact Routes =================================================
 
-@router.post("/{child_id}", status_code=status.HTTP_201_CREATED)
+@router.post("/{child_id}/emergency_contact", status_code=status.HTTP_201_CREATED)
 async def create_emergency_contact(
     child_id: str,
     emergency_contact_data: EmergencyContactCreate,
@@ -297,7 +299,8 @@ async def create_emergency_contact(
             detail="You are not authorized to create emergency contacts for this child"
         )
 
-    # Validate priority range (assuming 1-10 is acceptable range)
+
+    # Validate priority range (assuming 1-3 is acceptable range)
     if not (1 <= emergency_contact_data.priority <= 3):
         raise HTTPException(
             status_code=400,
@@ -307,7 +310,9 @@ async def create_emergency_contact(
     # Check for priority conflicts (if you want unique priorities per child)
     existing_priority = await db.emergencycontact.find_first(
         where={
-            "childId": child_id,
+            "childIDs": {
+                "has": child_id
+            },
             "priority": emergency_contact_data.priority
         }
     )
@@ -318,7 +323,6 @@ async def create_emergency_contact(
         )
 
     try:
-
         existing_contact = await db.emergencycontact.find_first(
             where={
                 "firstName": emergency_contact_data.firstName,
@@ -326,34 +330,24 @@ async def create_emergency_contact(
                 "phoneNumber": emergency_contact_data.phoneNumber,
             }
         )
-        
         if existing_contact:
-            # Check if this emergency contact is already linked to this child
-            existing_relationship = await db.emergencycontact.find_first(
-                where={
-                    "childId": child_id,
-                    "contactId": existing_contact.id
-                }
-            )
-            
-            if existing_relationship:
+            if child_id in existing_contact.childIDs:
                 raise HTTPException(
                     status_code=409,
                     detail="This emergency contact already exists for this child"
                 )
             
-            # Create the relationship with existing contact
-            relationship = await db.emergencycontact.create(
+            # Update existing contact to add this child
+            updated_contact = await db.emergencycontact.update(
+                where={"id": existing_contact.id},
                 data={
-                    "childId": child_id,
-                    "contactId": existing_contact.id,
-                    "priority": emergency_contact_data.priority
+                    "childIDs": existing_contact.childIDs + [child_id],
+                    "priority": emergency_contact_data.priority  # Update priority for this relationship
                 }
             )
-
+        
             return {
-                "emergencyContact": existing_contact,
-                "relationship": relationship,
+                "emergencyContact": updated_contact,
                 "message": "Linked existing emergency contact to child"
             }
             
@@ -364,12 +358,12 @@ async def create_emergency_contact(
                     "lastName": emergency_contact_data.lastName,
                     "phoneNumber": emergency_contact_data.phoneNumber,
                     "relationship": emergency_contact_data.relationship,
-                    "priority": emergency_contact_data.priority
+                    "priority": emergency_contact_data.priority,
+                    "childIDs": [child_id]
                     }
             )
             return {
                     "emergencyContact": new_contact,
-                    "relationship": relationship,
                     "message": "Created new emergency contact for child"
                     }
     except HTTPException:

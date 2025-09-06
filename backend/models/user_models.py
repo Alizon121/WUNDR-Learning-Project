@@ -128,6 +128,7 @@ class ChildCreate(BaseModel):
       )
     )
   notes: Optional[str] = Field()
+  waiver: bool = False
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 

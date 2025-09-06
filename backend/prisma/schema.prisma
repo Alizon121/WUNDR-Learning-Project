@@ -63,7 +63,8 @@ model Children {
   eventIDs              String[] @db.ObjectId
   events                Events[] @relation(fields: [eventIDs], references: [id])
 
-  emergencyContacts     EmergencyContact[]
+  emergencyContactIDs   String[] @db.ObjectId
+  emergencyContacts     EmergencyContact[] @relation(fields: [emergencyContactIDs], references: [id])
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime? @updatedAt
@@ -82,7 +83,7 @@ model EmergencyContact{
   updatedAt             DateTime? @updatedAt
 
   childIDs              String[] @db.ObjectId
-  child                 Children @relation(fields: [childIDs], references: [id], onDelete: Cascade)
+  child                 Children[] @relation(fields: [childIDs], references: [id])
 }
 
 // ! Activities     =============================================================================

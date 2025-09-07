@@ -17,6 +17,8 @@ const UserInfo = () => {
     const [editing, setEditing] = useState(false)
     const [user, setUser] = useState<User | null>(null)
 
+
+    console.log("look here", user)
     const fetchUser = useCallback(async () => {
         setLoading(true)
 

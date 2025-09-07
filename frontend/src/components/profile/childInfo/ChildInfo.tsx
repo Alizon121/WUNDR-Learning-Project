@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react"
 import { makeApiRequest } from "../../../../utils/api"
 import { Child } from "@/types/child"
-import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6"
-import { FaPen, FaTrash } from "react-icons/fa"
+import { FaCircleChevronLeft, FaCircleChevronRight, FaX } from "react-icons/fa6"
+import { FaCheck, FaPen, FaTrash } from "react-icons/fa"
 import JoinChildForm from "./JoinChildForm"
 import UpdateChildForm from "./UpdateChild"
 import OpenModalButton from "@/app/context/openModalButton"
@@ -55,6 +55,8 @@ const ChildInfo = () => {
         return children[idx]
     })
 
+    console.log('visible children', visibleChildren)
+
     const handleNext = () => {
         if (children.length > 0) setCurrChildIdx((prevIdx) => (((prevIdx + 1) % children.length) + children.length) % children.length)
     }
@@ -90,7 +92,7 @@ const ChildInfo = () => {
                         ) : (
                             <div className="bg-white rounded-lg p-6 min-h-[350px]">
                                 <div className="flex justify-between items-center mb-6">
-                                    <div className="font-bold text-xl">{child.firstName} {child.lastName}</div>
+                                    <div className="font-bold text-xl">{child.firstName} {child?.preferredName ? `"${child?.preferredName}"` : ""} {child.lastName}</div>
 
                                     <div className="flex flex-row gap-2">
                                         <FaPen onClick={() => setEditingChildId(child.id)}/>
@@ -103,23 +105,39 @@ const ChildInfo = () => {
 
                                 <div className="mb-4">
                                     <div className="font-bold">BIRTHDAY</div>
-                                    <div className="text-black mb-1 ml-2">
+                                    <div className="text-gray-500 text-sm my-1 ml-2">
                                         {child.birthday ? numericFormatDate(child.birthday) + " (" + (calculateAge(child.birthday)) + " years old)" : "—"}
                                     </div>
                                 </div>
 
                                 <div className="mb-4">
+                                    <div className="font-bold">PARENT/GUARDIANS</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.parents.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}</div>
+                                </div>
+
+                                <div className="mb-4">
                                     <div className="font-bold">HOMESCHOOL PROGRAM</div>
-                                    <div className="text-gray-500 text-sm mt-1">Coming soon...</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">Coming soon...</div>
+                                </div>
+
+                                <div className="mb-4">
+                                    <div className="font-bold">GRADE</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.grade ? child.grade : "N/A"}</div>
+                                </div>
+
+                                <div className="flex flex-row gap-3 mb-4">
+                                    <div className="font-bold">PHOTO CONSENT </div>
+                                    <div className="text-gray-500 text-sm mt-1">{child.photoConsent ? <FaCheck/> : <FaX/>}</div>
                                 </div>
 
                                 <div className="mb-4 border-t pt-4">
-                                    <div className="font-bold">NOTES/ACCOMMODATIONS</div>
-                                    { child?.notes ? (
-                                        <div className="text-black my-1 ml-2">{child.notes}</div>
-                                    ) : (
-                                        <div className="text-gray-500 text-sm mt-1">List any allergies or accommodations for the instructor</div>
-                                    )}
+                                    <div className="font-bold">MEDICAL ACCOMMODATIONS</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.allergiesMedical ? child.allergiesMedical : "List any allergies or medical accommodations"}</div>
+                                </div>
+
+                                <div className="mb-4 border-t pt-4">
+                                    <div className="font-bold">ADDITIONAL NOTES</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.notes ? child.notes : "Optional: Please note any information that would be beneficial for instructor"}</div>
                                 </div>
                             </div>
                         )}

@@ -85,7 +85,9 @@ async def get_children(
             "parentIDs":{
                 "has": current_user.id
             }
-        }
+        },
+        include={"parents": True}
+
     )
     return children
 

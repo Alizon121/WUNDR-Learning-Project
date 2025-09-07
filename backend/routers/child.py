@@ -487,3 +487,58 @@ async def update_emergency_contact(
             detail="Failed to update emergency contact"
         )
     
+@router.delete("/{child_id}/emergency_contact/{emergency_contact_id}", status_code=status.HTTP_200_OK)
+async def delete_emergency_contact(
+    emergency_contact_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    child_id: str,
+):
+    
+    """
+        Authenticate and validate user
+        Delete an emergency contact for a child with an emergency contact
+    """
+
+
+    # Verify user
+    enforce_authentication(current_user)
+
+    child = await db.children.find_unique(
+        where={"id": child_id}
+    )
+
+    if current_user.id not in child.parentIDs:
+        raise HTTPException(
+            status_code=500,
+            detail="User is not authorized to delete an emergency contact"
+        )
+    
+    # Delete the emergency contact
+    contact = await db.emergencycontact.find_unique(
+        where={"id": emergency_contact_id}
+    )
+
+    if child_id not in contact.childIDs:
+        raise HTTPException(
+            status_code=404,
+            detail="Child does not have the selected emergency contact"
+        )
+    
+    # * Remove the child from the emergency contacts child IDs list
+    try:
+        updated_child_ids = [id for id in contact.childIDs if id != child_id]
+        
+        deleted_child = await db.emergencycontact.update(
+            where={"id": emergency_contact_id},
+            data={
+                "childIDs": updated_child_ids
+            }
+        )
+
+        return {"Deleted Emergency Contact": deleted_child}
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to delete emergency contact {e}"
+        )

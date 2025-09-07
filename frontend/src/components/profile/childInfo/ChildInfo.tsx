@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback, useRef } from "react"
 import { makeApiRequest } from "../../../../utils/api"
 import { Child } from "@/types/child"
 import { FaCircleChevronLeft, FaCircleChevronRight, FaX } from "react-icons/fa6"
@@ -9,6 +9,7 @@ import OpenModalButton from "@/app/context/openModalButton"
 import DeleteChild from "./DeleteChild"
 import { numericFormatDate } from "../../../../utils/formatDate"
 import { calculateAge } from "../../../../utils/calculateAge"
+import { displayGrade } from "../../../../utils/displayGrade"
 
 const ChildInfo = () => {
     const [children, setChildren] = useState<Child[]>([])
@@ -18,6 +19,7 @@ const ChildInfo = () => {
     const [currChildIdx, setCurrChildIdx] = useState<number>(0)
     const [refreshKey, setRefreshKey] = useState(0)
     const [editingChildId, setEditingChildId] = useState<string | null>(null)
+    const formAnchorRef = useRef<HTMLDivElement | null>(null)
 
     const fetchChildren = useCallback(async () => {
         setLoading(true)
@@ -55,8 +57,6 @@ const ChildInfo = () => {
         return children[idx]
     })
 
-    console.log('visible children', visibleChildren)
-
     const handleNext = () => {
         if (children.length > 0) setCurrChildIdx((prevIdx) => (((prevIdx + 1) % children.length) + children.length) % children.length)
     }
@@ -66,6 +66,17 @@ const ChildInfo = () => {
     }
 
     const handleShowForm = () => !showForm ? setShowForm(true) : setShowForm(false)
+
+    useEffect(() => {
+        if (showForm) {
+            requestAnimationFrame(() => {
+                formAnchorRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                })
+            })
+        }
+    }, [showForm])
 
     return (
         <div>
@@ -82,13 +93,17 @@ const ChildInfo = () => {
 
             <div className="flex flex-row gap-6 my-10">
                 {children.length > 2 && (
-                    <FaCircleChevronLeft className="w-[50px] h-50px cursor-pointer my-auto" onClick={handlePrev}/>
+                    <FaCircleChevronLeft className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handlePrev}/>
                 )}
 
                 {visibleChildren.map((child) => (
                     <div key={child.id} className="basis-1/2">
                         {editingChildId === child.id ? (
-                            <UpdateChildForm setEditingChildId={setEditingChildId} currChild={child}/>
+                            <UpdateChildForm
+                                setEditingChildId={setEditingChildId}
+                                currChild={child}
+                                refreshChildren={fetchChildren}
+                            />
                         ) : (
                             <div className="bg-white rounded-lg p-6 min-h-[350px]">
                                 <div className="flex justify-between items-center mb-6">
@@ -112,7 +127,7 @@ const ChildInfo = () => {
 
                                 <div className="mb-4">
                                     <div className="font-bold">PARENT/GUARDIANS</div>
-                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.parents.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{(child?.parents ?? []).map((p) => `${p.firstName} ${p.lastName}`).join(", ") || ""}</div>
                                 </div>
 
                                 <div className="mb-4">
@@ -122,7 +137,7 @@ const ChildInfo = () => {
 
                                 <div className="mb-4">
                                     <div className="font-bold">GRADE</div>
-                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.grade ? child.grade : "N/A"}</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.grade ? displayGrade(child.grade) : "N/A"}</div>
                                 </div>
 
                                 <div className="flex flex-row gap-3 mb-4">
@@ -145,10 +160,11 @@ const ChildInfo = () => {
                 ))}
 
                 {children.length > 2 && (
-                    <FaCircleChevronRight className="w-[50px] h-50px cursor-pointer my-auto" onClick={handleNext}/>
+                    <FaCircleChevronRight className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handleNext}/>
                 )}
             </div>
 
+            <div ref={formAnchorRef} className="scroll-mt-24 aria-hidden" />
             <JoinChildForm showForm={showForm} onSuccess={handleFormSuccess}/>
         </div>
     )

@@ -10,7 +10,7 @@ export type Child = {
     grade?: number | null;
     birthday: string;
     allergiesMedical?: string | null
-    notes: string | null;
+    notes?: string | null;
     photoConsent: boolean
     parents: User[]
 }

@@ -7,8 +7,14 @@ import { useRouter } from "next/navigation";
 export interface ChildPayload {
   firstName: string;
   lastName: string;
+  preferredName?: string | null
   homeschool?: boolean;
+  homeschoolProgram?: string | null
+  grade?: number | null
   birthday: string;
+  allergiesMedical?: string | null
+  notes?: string | null
+  photoConsent: boolean
   createdAt?: string;
   updatedAt?: string;
 }

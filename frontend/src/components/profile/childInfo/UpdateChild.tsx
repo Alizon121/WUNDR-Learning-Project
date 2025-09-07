@@ -3,22 +3,15 @@ import React, { useEffect, useMemo, useState } from "react"
 import { makeApiRequest } from "../../../../utils/api"
 import { FaCheck } from "react-icons/fa"
 import { FaX } from "react-icons/fa6"
+import { gradeOptions } from "../../../../utils/displayGrade"
 
 type Props = {
     currChild: Child
     setEditingChildId: (id: string | null) => void
+    refreshChildren: () => Promise<void>
 }
 
-const gradeOptions = [
-    { value: -1, label: "Pre-K" },
-    { value: 0,  label: "Kindergarten" },
-    ...Array.from({ length: 12 }, (_, i) => {
-        const g = i + 1;
-        return { value: g, label: g };
-    }),
-]
-
-const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId }) => {
+const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refreshChildren }) => {
     const [firstName, setFirstName] = useState<string>("")
     const [preferredName, setPreferredName] = useState<string>("")
     const [lastName, setLastName] = useState<string>("")
@@ -73,7 +66,8 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId }) => {
             grade,
             photoConsent,
             allergiesMedical: allergiesMedical === "" ? null : allergiesMedical?.trim(),
-            notes: notes === "" ? null : notes?.trim()
+            notes: notes === "" ? null : notes?.trim(),
+            updatedAt: new Date().toISOString()
         }
 
         console.log('look here', payload)
@@ -84,7 +78,8 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId }) => {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: payload
-            })
+            }) as Child
+            await refreshChildren()
             setEditingChildId(null)
         } catch (err) {
             console.error("update failed", err)

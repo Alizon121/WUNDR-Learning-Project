@@ -31,8 +31,14 @@ async def create_child(
             data={
                 "firstName": child_data.firstName,
                 "lastName": child_data.lastName,
+                "preferredName": child_data.preferredName,
                 "homeschool": child_data.homeschool,
+                "homeschoolProgram": child_data.homeschoolProgram,
+                "grade": child_data.grade,
                 "birthday": child_data.birthday,
+                "allergiesMedical": child_data.allergiesMedical,
+                "notes": child_data.notes,
+                "photoConsent": child_data.photoConsent,
                 "parentIDs": [current_user.id], # Add the current user's ID to parentIDs
                 "eventIDs": [], # Create activityIDs array so we can easily add to it later
                 "createdAt": child_data.createdAt,

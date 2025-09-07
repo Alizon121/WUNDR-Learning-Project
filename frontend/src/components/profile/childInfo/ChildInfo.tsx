@@ -12,6 +12,7 @@ import { calculateAge } from "../../../../utils/calculateAge"
 import { displayGrade } from "../../../../utils/displayGrade"
 
 const ChildInfo = () => {
+    const formAnchorRef = useRef<HTMLDivElement | null>(null)
     const [children, setChildren] = useState<Child[]>([])
     const [loadErrors, setLoadErrors] = useState<string | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
@@ -19,7 +20,6 @@ const ChildInfo = () => {
     const [currChildIdx, setCurrChildIdx] = useState<number>(0)
     const [refreshKey, setRefreshKey] = useState(0)
     const [editingChildId, setEditingChildId] = useState<string | null>(null)
-    const formAnchorRef = useRef<HTMLDivElement | null>(null)
 
     const fetchChildren = useCallback(async () => {
         setLoading(true)
@@ -29,8 +29,7 @@ const ChildInfo = () => {
             const allChildren: Child[] = response as Child[]
             setChildren(allChildren)
             setLoadErrors(null)
-            setCurrChildIdx(prev => (allChildren.length ? Math.min(prev, allChildren.length - 1) : 0));
-
+            setCurrChildIdx(prev => (allChildren.length ? Math.min(prev, allChildren.length - 1) : 0))
         } catch (e) {
             if (e instanceof Error) setLoadErrors(e.message)
         } finally {
@@ -41,6 +40,17 @@ const ChildInfo = () => {
     useEffect(() => {
         fetchChildren()
     }, [fetchChildren, refreshKey])
+
+    useEffect(() => {
+        if (showForm) {
+            requestAnimationFrame(() => {
+                formAnchorRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                })
+            })
+        }
+    }, [showForm])
 
     const handleFormSuccess = (createdChild?: Child) => {
         setShowForm(false)
@@ -66,17 +76,6 @@ const ChildInfo = () => {
     }
 
     const handleShowForm = () => !showForm ? setShowForm(true) : setShowForm(false)
-
-    useEffect(() => {
-        if (showForm) {
-            requestAnimationFrame(() => {
-                formAnchorRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                })
-            })
-        }
-    }, [showForm])
 
     return (
         <div>

@@ -7,4 +7,3 @@ from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 
 router = APIRouter()
-

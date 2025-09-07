@@ -168,6 +168,13 @@ class EmergencyContactCreate(BaseModel):
     phoneNumber: str = Field()
     priority: int = Field(ge=1, le=3)
 
+class EmergencyContactUpdate(BaseModel):
+    firstName: Optional[str] = Field(default=None)
+    lastName: Optional[str] = Field(default=None)
+    relationship: Optional[str] = Field(default=None)
+    phoneNumber: Optional[str] = Field(default=None)
+    priority: Optional[int] = Field(default=None)
+
 class EmergencyContactResponse(EmergencyContactCreate):
     id: str
     childId: str

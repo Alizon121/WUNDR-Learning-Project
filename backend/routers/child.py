@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from backend.db.prisma_client import db
 from typing import Annotated
 from backend.models.user_models import User, ChildCreate, ChildUpdate
-from backend.models.interaction_models import EmergencyContactCreate
+from backend.models.interaction_models import EmergencyContactCreate, EmergencyContactUpdate
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from .auth.login import get_current_user
@@ -385,7 +385,7 @@ async def get_child_emergency_contacts(
         Authenticate the user
         Enforce admin
 
-        Get the child's emergency contacts
+        Get a child's emergency contacts
     """
 
     # User validations
@@ -409,3 +409,81 @@ async def get_child_emergency_contacts(
         )
     
     return {"Contact": contact}
+
+@router.patch("/{child_id}/emergency_contact/{contact_id}", status_code=status.HTTP_200_OK)
+async def update_emergency_contact(
+    child_id: str,
+    contact_id: str,
+    emergency_contact_data: EmergencyContactUpdate,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+        Authenticate user and validate user can make an update
+        
+        Update child's emergency contact
+    """
+
+    # Authenticate user
+    enforce_authentication(current_user)
+
+    # Verify that user is a parent of child to make update
+    child = await db.children.find_unique(
+        where={"id": child_id}
+ 
+    )
+
+    if current_user.id not in child.parentIDs:
+        raise HTTPException(
+            status_code=500,
+            detail="User is not approved to make update"
+        )
+    
+    # Ensure the emergecy contact exists
+    contact = await db.emergencycontact.find_unique(
+        where={
+            "id": contact_id,
+            "childIDs": {
+                    "has": child_id
+                        }
+        }
+    )
+
+    if not contact:
+        raise HTTPException(
+            status_code=404,
+            detail="Emergency contact not found"
+        )
+    
+    # Make the update
+    try:
+
+        update_payload = {}
+
+        if emergency_contact_data.firstName is not None:
+            update_payload["firstName"] = emergency_contact_data.firstName
+        
+        if emergency_contact_data.lastName is not None:
+            update_payload["lastName"] = emergency_contact_data.lastName
+        
+        if emergency_contact_data.relationship is not None:
+            update_payload["relaltionship"] = emergency_contact_data.relationship
+
+        if emergency_contact_data.phoneNumber is not None:
+            update_payload["phoneNumber"] = emergency_contact_data.phoneNumber
+
+        if emergency_contact_data.priority is not None:
+            update_payload["priority"] = emergency_contact_data.priority
+
+        updated_contact = await db.emergencycontact.update(
+            where={"id": contact_id},
+            data= update_payload
+        )
+
+        return {"Updated Emergency Contact": updated_contact}
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update emergency contact"
+        )
+    

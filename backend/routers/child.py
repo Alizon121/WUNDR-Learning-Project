@@ -308,19 +308,19 @@ async def create_emergency_contact(
         )
     
     # Check for priority conflicts (if you want unique priorities per child)
-    existing_priority = await db.emergencycontact.find_first(
-        where={
-            "childIDs": {
-                "has": child_id
-            },
-            "priority": emergency_contact_data.priority
-        }
-    )
-    if existing_priority:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Priority {emergency_contact_data.priority} is already assigned to another emergency contact for this child"
-        )
+    # existing_priority = await db.emergencycontact.find_first(
+    #     where={
+    #         "childIDs": {
+    #             "has": child_id
+    #         },
+    #         "priority": emergency_contact_data.priority
+    #     }
+    # )
+    # if existing_priority:
+    #     raise HTTPException(
+    #         status_code=409,
+    #         detail=f"Priority {emergency_contact_data.priority} is already assigned to another emergency contact for this child"
+    #     )
 
     try:
         existing_contact = await db.emergencycontact.find_first(
@@ -373,3 +373,39 @@ async def create_emergency_contact(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f'Failed to create emergency contact'
         )
+    
+# * =================================================
+
+@router.get("/{child_id}/emergency_contact")
+async def get_child_emergency_contacts(
+    child_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+        Authenticate the user
+        Enforce admin
+
+        Get the child's emergency contacts
+    """
+
+    # User validations
+    enforce_authentication(current_user)
+    
+    enforce_admin(current_user)
+
+    # Query for the child's emergency contacts
+    contact = await db.emergencycontact.find_many(
+        where={
+            "childIDs": {
+                "has": child_id
+            }
+        }
+    )
+
+    if not contact:
+        raise HTTPException(
+            status_code=404,
+            detail="Unable to locate emergency contact"
+        )
+    
+    return {"Contact": contact}

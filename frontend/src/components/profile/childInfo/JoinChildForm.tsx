@@ -20,7 +20,7 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
         lastName: '',
         preferredName: "",
         homeschool: true,
-        homeschoolProgram: "",
+        // homeschoolProgram: "",
         grade: null,
         birthday: '',
         allergiesMedical: "",
@@ -74,7 +74,7 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
             lastName: child.lastName?.trim(),
             preferredName: child.preferredName === "" ? null : child.preferredName?.trim(),
             homeschool: child.homeschool,
-            homeschoolProgram: child.homeschoolProgram === "" ? null : child.homeschoolProgram?.trim(),
+            // homeschoolProgram: child.homeschoolProgram === "" ? null : child.homeschoolProgram?.trim(),
             grade: child.grade,
             birthday: new Date(child.birthday).toISOString(),
             allergiesMedical: child.allergiesMedical === "" ? null : child.allergiesMedical?.trim(),
@@ -100,7 +100,7 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                 lastName: "",
                 preferredName: "",
                 homeschool: true,
-                homeschoolProgram: "",
+                // homeschoolProgram: "",
                 grade: null,
                 birthday: "",
                 allergiesMedical: "",
@@ -192,7 +192,7 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                         <span>Homeschool?</span>
                 </label>
 
-                <input
+                {/* <input
                     name="homeschoolProgram"
                     placeholder="Homeschool Program"
                     value={child.homeschoolProgram ?? ""}
@@ -200,7 +200,7 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     maxLength={50}
                     required
-                />
+                /> */}
 
                 <div className="font-bold mb-2">GRADE (OPTIONAL)</div>
                 <select

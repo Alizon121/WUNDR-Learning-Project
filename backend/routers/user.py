@@ -83,7 +83,7 @@ async def get_current_user(
             )
 
 
-@router.put("/", response_model=UserUpdateResponse)
+@router.patch("/", response_model=UserUpdateResponse)
 async def update_user(
     update_data: UserUpdateRequest,
     current_user = Depends(get_current_active_user_by_email)
@@ -178,7 +178,7 @@ async def delete_user(
 ):
 
     enforce_authentication(current_user, "delete your profile")
-    
+
     try:
         deleted_user = await db.users.delete(
                 where={"id": current_user.id}

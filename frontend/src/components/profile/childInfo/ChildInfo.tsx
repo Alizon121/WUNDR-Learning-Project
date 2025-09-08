@@ -124,7 +124,7 @@ const ChildInfo = () => {
                                     </div>
                                 </div>
 
-                                <div className="mb-4">
+                                {/* <div className="mb-4">
                                     <div className="font-bold">PARENT/GUARDIANS</div>
                                     <div className="text-gray-500 text-sm my-1 ml-2">{(child?.parents ?? []).map((p) => `${p.firstName} ${p.lastName}`).join(", ") || ""}</div>
                                 </div>
@@ -132,7 +132,7 @@ const ChildInfo = () => {
                                 <div className="mb-4">
                                     <div className="font-bold">HOMESCHOOL PROGRAM</div>
                                     <div className="text-gray-500 text-sm my-1 ml-2">Coming soon...</div>
-                                </div>
+                                </div> */}
 
                                 <div className="mb-4">
                                     <div className="font-bold">GRADE</div>

@@ -76,13 +76,15 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved, onCancel }) => {
             address: address.trim(),
             city: city.trim(),
             state: state.trim(),
-            zipCode: parseInt(zipCode, 10)
+            zipCode: String(zipCode).trim()
         }
+
+        console.log('payload', payload)
 
         try {
             setSaving(true)
             await makeApiRequest(`http://localhost:8000/user`, {
-                method: "PUT",
+                method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: payload
             })

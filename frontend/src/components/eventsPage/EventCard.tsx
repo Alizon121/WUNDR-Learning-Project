@@ -1,13 +1,7 @@
+import OpenModalButton from "@/app/context/openModalButton";
 import Link from "next/link";
-
-interface Event {
-    id: string;
-    name: string;
-    date: string;
-    description: string;
-    image: string;
-    participants: number;
-}
+import DeleteEventModal from "./DeleteEventModal";
+import Event from "@/types/event";
 
 interface Props {
   event: Event;
@@ -50,19 +44,20 @@ export default function EventCard({ event, isAdmin }: Props) {
               <button className="mt-2 bg-green-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
                 <Link href={`/events/${event.id}`}>
                   <strong>EDIT</strong>
-                  {/* View Details */}
                 </Link>
               </button>
-              <button className="mt-2 bg-red-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
+              <OpenModalButton 
+                buttonText="DELETE"
+                modalComponent={<DeleteEventModal event={event}/>}
+              />
+              {/* <button className="mt-2 bg-red-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
                 <Link href={`/events/${event.id}`}>
                   <strong>DELETE</strong>
-                  {/* View Details */}
                 </Link>
-              </button>
+              </button> */}
               <button className="mt-2 bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
                 <Link href={`/events/${event.id}`}>
                   <strong>BLAST</strong>
-                  {/* View Details */}
                 </Link>
               </button>
             </div>

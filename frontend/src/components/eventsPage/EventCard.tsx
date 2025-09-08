@@ -46,9 +46,10 @@ export default function EventCard({ event, isAdmin }: Props) {
                   <strong>EDIT</strong>
                 </Link>
               </button>
-              <OpenModalButton 
+              <OpenModalButton
+                className="mt-2 bg-red-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors"
                 buttonText="DELETE"
-                modalComponent={<DeleteEventModal event={event}/>}
+                modalComponent={<DeleteEventModal event={event} />}
               />
               {/* <button className="mt-2 bg-red-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
                 <Link href={`/events/${event.id}`}>

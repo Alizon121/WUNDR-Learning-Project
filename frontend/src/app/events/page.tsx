@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 import ActivityBlock from "@/components/eventsPage/ActivityBlock";
 import { makeApiRequest } from "../../../utils/api";
-
-interface Event {
-  id: string;
-  name: string;
-  description: string;
-  date: string;
-  image: string;
-  participants: number;
-}
+import Event from "@/types/event";
 
 interface Activity {
   id: string;
@@ -32,6 +24,7 @@ export default function EventsPage() {
 
   useEffect(() => {
     const user = localStorage.getItem("user");
+    console.log("THIS IS THE USER:", user);
     if (user) {
       const userObj = JSON.parse(user);
       setIsAdmin(userObj.role === "admin");

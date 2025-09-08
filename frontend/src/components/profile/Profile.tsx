@@ -39,11 +39,11 @@ const Profile = () => {
     return (
         <div className="flex flex-row bg-wonderbg">
             {/* Left menu */}
-            <div className="w-1/4">
+            <div className="flex flex-col w-1/4">
             {profileTabs.map((tab, idx) => (
                 <button
-                 key={idx} 
-                 className={`${idx === tabIdx ? 'active' : ""}`} 
+                 key={idx}
+                 className={`${idx === tabIdx ? 'active' : ""}`}
                  onClick={() => openTab(idx)}
                 >
                 {tab}

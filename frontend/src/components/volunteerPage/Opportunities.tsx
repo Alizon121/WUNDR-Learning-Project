@@ -1,4 +1,3 @@
-// src/components/volunteer/Opportunities.tsx
 'use client';
 
 import { useMemo, useState } from 'react';

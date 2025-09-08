@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { formatWhen } from '../../../../utils/formateDate';
+import { formatWhen } from '../../../../utils/formatDate';
 import { Notification, NotificationsResponse } from '@/types/notification';
 import { makeApiRequest } from '../../../../utils/api';
 // type NotifType = 'event' | 'message';

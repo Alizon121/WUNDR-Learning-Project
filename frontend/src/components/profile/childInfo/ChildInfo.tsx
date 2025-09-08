@@ -1,16 +1,18 @@
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback, useRef } from "react"
 import { makeApiRequest } from "../../../../utils/api"
 import { Child } from "@/types/child"
-import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6"
-import { FaPen, FaTrash } from "react-icons/fa"
+import { FaCircleChevronLeft, FaCircleChevronRight, FaX } from "react-icons/fa6"
+import { FaCheck, FaPen, FaTrash } from "react-icons/fa"
 import JoinChildForm from "./JoinChildForm"
 import UpdateChildForm from "./UpdateChild"
 import OpenModalButton from "@/app/context/openModalButton"
 import DeleteChild from "./DeleteChild"
-import { numericFormatDate } from "../../../../utils/formateDate"
+import { numericFormatDate } from "../../../../utils/formatDate"
 import { calculateAge } from "../../../../utils/calculateAge"
+import { displayGrade } from "../../../../utils/displayGrade"
 
 const ChildInfo = () => {
+    const formAnchorRef = useRef<HTMLDivElement | null>(null)
     const [children, setChildren] = useState<Child[]>([])
     const [loadErrors, setLoadErrors] = useState<string | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
@@ -27,8 +29,7 @@ const ChildInfo = () => {
             const allChildren: Child[] = response as Child[]
             setChildren(allChildren)
             setLoadErrors(null)
-            setCurrChildIdx(prev => (allChildren.length ? Math.min(prev, allChildren.length - 1) : 0));
-
+            setCurrChildIdx(prev => (allChildren.length ? Math.min(prev, allChildren.length - 1) : 0))
         } catch (e) {
             if (e instanceof Error) setLoadErrors(e.message)
         } finally {
@@ -39,6 +40,17 @@ const ChildInfo = () => {
     useEffect(() => {
         fetchChildren()
     }, [fetchChildren, refreshKey])
+
+    useEffect(() => {
+        if (showForm) {
+            requestAnimationFrame(() => {
+                formAnchorRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                })
+            })
+        }
+    }, [showForm])
 
     const handleFormSuccess = (createdChild?: Child) => {
         setShowForm(false)
@@ -80,17 +92,21 @@ const ChildInfo = () => {
 
             <div className="flex flex-row gap-6 my-10">
                 {children.length > 2 && (
-                    <FaCircleChevronLeft className="w-[50px] h-50px cursor-pointer my-auto" onClick={handlePrev}/>
+                    <FaCircleChevronLeft className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handlePrev}/>
                 )}
 
                 {visibleChildren.map((child) => (
                     <div key={child.id} className="basis-1/2">
                         {editingChildId === child.id ? (
-                            <UpdateChildForm setEditingChildId={setEditingChildId} currChild={child}/>
+                            <UpdateChildForm
+                                setEditingChildId={setEditingChildId}
+                                currChild={child}
+                                refreshChildren={fetchChildren}
+                            />
                         ) : (
                             <div className="bg-white rounded-lg p-6 min-h-[350px]">
                                 <div className="flex justify-between items-center mb-6">
-                                    <div className="font-bold text-xl">{child.firstName} {child.lastName}</div>
+                                    <div className="font-bold text-xl">{child.firstName} {child?.preferredName ? `"${child?.preferredName}"` : ""} {child.lastName}</div>
 
                                     <div className="flex flex-row gap-2">
                                         <FaPen onClick={() => setEditingChildId(child.id)}/>
@@ -103,23 +119,39 @@ const ChildInfo = () => {
 
                                 <div className="mb-4">
                                     <div className="font-bold">BIRTHDAY</div>
-                                    <div className="text-black mb-1 ml-2">
+                                    <div className="text-gray-500 text-sm my-1 ml-2">
                                         {child.birthday ? numericFormatDate(child.birthday) + " (" + (calculateAge(child.birthday)) + " years old)" : "—"}
                                     </div>
                                 </div>
 
+                                {/* <div className="mb-4">
+                                    <div className="font-bold">PARENT/GUARDIANS</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{(child?.parents ?? []).map((p) => `${p.firstName} ${p.lastName}`).join(", ") || ""}</div>
+                                </div>
+
                                 <div className="mb-4">
                                     <div className="font-bold">HOMESCHOOL PROGRAM</div>
-                                    <div className="text-gray-500 text-sm mt-1">Coming soon...</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">Coming soon...</div>
+                                </div> */}
+
+                                <div className="mb-4">
+                                    <div className="font-bold">GRADE</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.grade ? displayGrade(child.grade) : "N/A"}</div>
+                                </div>
+
+                                <div className="flex flex-row gap-3 mb-4">
+                                    <div className="font-bold">PHOTO CONSENT </div>
+                                    <div className="text-gray-500 text-sm mt-1">{child.photoConsent ? <FaCheck/> : <FaX/>}</div>
                                 </div>
 
                                 <div className="mb-4 border-t pt-4">
-                                    <div className="font-bold">NOTES/ACCOMMODATIONS</div>
-                                    { child?.notes ? (
-                                        <div className="text-black my-1 ml-2">{child.notes}</div>
-                                    ) : (
-                                        <div className="text-gray-500 text-sm mt-1">List any allergies or accommodations for the instructor</div>
-                                    )}
+                                    <div className="font-bold">MEDICAL ACCOMMODATIONS</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.allergiesMedical ? child.allergiesMedical : "List any allergies or medical accommodations"}</div>
+                                </div>
+
+                                <div className="mb-4 border-t pt-4">
+                                    <div className="font-bold">ADDITIONAL NOTES</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">{child.notes ? child.notes : "Optional: Please note any information that would be beneficial for instructor"}</div>
                                 </div>
                             </div>
                         )}
@@ -127,10 +159,11 @@ const ChildInfo = () => {
                 ))}
 
                 {children.length > 2 && (
-                    <FaCircleChevronRight className="w-[50px] h-50px cursor-pointer my-auto" onClick={handleNext}/>
+                    <FaCircleChevronRight className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handleNext}/>
                 )}
             </div>
 
+            <div ref={formAnchorRef} className="scroll-mt-24 aria-hidden" />
             <JoinChildForm showForm={showForm} onSuccess={handleFormSuccess}/>
         </div>
     )

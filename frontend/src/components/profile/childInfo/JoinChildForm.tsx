@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { ChildPayload } from "../../../../utils/auth";
 import { makeApiRequest } from "../../../../utils/api";
 import { calculateAge } from "../../../../utils/calculateAge";
+import { gradeOptions } from "../../../../utils/displayGrade";
 
 type Props = {
     showForm: boolean
@@ -17,16 +18,34 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
     const [child, setChild] = useState<ChildPayload>({
         firstName: '',
         lastName: '',
+        preferredName: "",
         homeschool: true,
-        birthday: ''
+        // homeschoolProgram: "",
+        grade: null,
+        birthday: '',
+        allergiesMedical: "",
+        notes: "",
+        photoConsent: false
     })
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, childIndex: number | null = null) => {
-        const { name, value, type, checked } = e.target
-        setChild(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }))
+    const handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement> = (e) => {
+        const { name } = e.currentTarget
+        const value = e.currentTarget.value
+
+        if ((e.currentTarget as HTMLInputElement).type === "checkbox") {
+            const checked = (e.currentTarget as HTMLInputElement).checked
+            setChild(prev => ({ ...prev, [name]: checked }))
+            setServerError(null)
+            return
+        }
+
+        if (name === "grade") {
+            setChild(prev => ({ ...prev, grade: value === "" ? null : Number(value) }))
+            setServerError(null)
+            return
+        }
+
+        setChild(prev => ({ ...prev, [name]: value }))
         setServerError(null)
     }
 
@@ -51,13 +70,21 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
         if (!validations()) return
 
         const payload: ChildPayload = {
-            firstName: child.firstName,
-            lastName: child.lastName,
-            homeschool: true,
+            firstName: child.firstName?.trim(),
+            lastName: child.lastName?.trim(),
+            preferredName: child.preferredName === "" ? null : child.preferredName?.trim(),
+            homeschool: child.homeschool,
+            // homeschoolProgram: child.homeschoolProgram === "" ? null : child.homeschoolProgram?.trim(),
+            grade: child.grade,
             birthday: new Date(child.birthday).toISOString(),
+            allergiesMedical: child.allergiesMedical === "" ? null : child.allergiesMedical?.trim(),
+            notes: child.notes === "" ? null : child.notes?.trim(),
+            photoConsent: child.photoConsent,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         }
+
+        console.log('PAYLOAD', payload)
 
         try {
             setSubmitting(true)
@@ -71,8 +98,14 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
             setChild({
                 firstName: "",
                 lastName: "",
+                preferredName: "",
                 homeschool: true,
-                birthday: ""
+                // homeschoolProgram: "",
+                grade: null,
+                birthday: "",
+                allergiesMedical: "",
+                notes: "",
+                photoConsent: false,
             })
             setErrors({})
         } catch (err) {
@@ -97,33 +130,46 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                 <div className="flex flex-row gap-3 w-full">
                     <div>
                         <input
-                        name="firstName"
-                        placeholder="First Name"
-                        value={child.firstName}
-                        onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        maxLength={50}
-                        required
+                            name="firstName"
+                            placeholder="Legal First Name"
+                            value={child.firstName}
+                            onChange={handleChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            maxLength={50}
+                            required
                         />
                             {errors.firstName && <p className="text-sm text-red-600 mt-1">{String(errors.firstName)}</p>}
                     </div>
 
                     <div>
                         <input
-                        name="lastName"
-                        placeholder="Last Name"
-                        value={child.lastName}
-                        onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        maxLength={50}
-                        required
+                            name="lastName"
+                            placeholder="Legal Last Name"
+                            value={child.lastName}
+                            onChange={handleChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            maxLength={50}
+                            required
                         />
                             {errors.lastName && <p className="text-sm text-red-600 mt-1">{String(errors.lastName)}</p>}
                     </div>
                 </div>
 
-                    <div>
-                        <input
+                <div>
+                    <input
+                        name="preferredName"
+                        placeholder="Preferred Name"
+                        value={child.preferredName ?? ""}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        maxLength={50}
+                        required
+                    />
+                </div>
+
+                <div>
+                    <div className="font-bold mb-2">BIRTHDAY</div>
+                    <input
                         type="date"
                         name="birthday"
                         value={child.birthday}
@@ -131,21 +177,69 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                         onChange={handleChange}
                         className="w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent mx-auto"
                         required
-                        />
-                            {errors.birthday && <p className="text-sm text-red-600 mt-1">{String(errors.birthday)}</p>}
-                    </div>
+                    />
+                        {errors.birthday && <p className="text-sm text-red-600 mt-1">{String(errors.birthday)}</p>}
+                </div>
 
-                    <label className="inline-flex items-center gap-2">
-                        <input
-                        type="checkbox"
-                        name="homeschool"
-                        checked={child.homeschool ?? false}
-                        onChange={handleChange}
-                        className="h-4 w-4"
-                        />
-                            <span>Homeschool program</span>
-                    </label>
+                <label className="inline-flex items-center gap-2">
+                    <input
+                    type="checkbox"
+                    name="homeschool"
+                    checked={child.homeschool ?? false}
+                    onChange={handleChange}
+                    className="h-4 w-4"
+                    />
+                        <span>Homeschool?</span>
+                </label>
 
+                {/* <input
+                    name="homeschoolProgram"
+                    placeholder="Homeschool Program"
+                    value={child.homeschoolProgram ?? ""}
+                    onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    maxLength={50}
+                    required
+                /> */}
+
+                <div className="font-bold mb-2">GRADE (OPTIONAL)</div>
+                <select
+                    name="grade"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wondergreen focus:border-transparent"
+                    value={child.grade ?? ""}
+                    onChange={handleChange}
+                >
+                    <option value="">N/A</option>
+                    {gradeOptions.map(o => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                </select>
+
+                <div className="font-bold mb-2">PHOTO CONSENT</div>
+                <input
+                    name="photoConsent"
+                    type="checkbox"
+                    checked={child.photoConsent}
+                    onChange={handleChange}
+                />
+
+                <div className="font-bold">MEDICAL ACCOMMODATIONS</div>
+                <textarea
+                    name="allergiesMedical"
+                    value={child.allergiesMedical ?? ""}
+                    onChange={handleChange}
+                    placeholder="List any allergies or medical accommodations"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wondergreen focus:border-transparent"
+                />
+
+                <div className="font-bold">ADDITIONAL NOTES</div>
+                <textarea
+                    name="notes"
+                    value={child.notes ?? ""}
+                    onChange={handleChange}
+                    placeholder="Optional: Please note any information that would be beneficial for instructor"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wondergreen focus:border-transparent"
+                />
             </div>
 
             <div className="mt-6">

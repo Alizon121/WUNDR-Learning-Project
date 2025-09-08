@@ -16,7 +16,6 @@ const idxToKey = (idx: number): TabKey =>
 const Profile = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
-
     const initialKey = (searchParams.get('tab') ?? 'user') as TabKey;
     const [tabIdx, setTabIdx] = useState<number>(() => keyToIdx[initialKey] ?? 0);
 

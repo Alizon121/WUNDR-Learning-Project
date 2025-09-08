@@ -1,7 +1,16 @@
+import { User } from "./user";
+
 export type Child = {
     id: string;
     firstName: string;
     lastName: string;
+    preferredName?: string | null
+    homeschool: boolean
+    // homeschoolProgram?: string | null
+    grade?: number | null;
     birthday: string;
-    notes: string;
+    allergiesMedical?: string | null
+    notes?: string | null;
+    photoConsent: boolean
+    parents: User[]
 }

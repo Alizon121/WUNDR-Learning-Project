@@ -22,14 +22,16 @@ class UserSignup(BaseModel):
     firstName: str = Field(min_length=1, max_length=50)
     lastName: str = Field(min_length=1, max_length=50)
     email: str = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-    password: str = Field(min_length=6)
+    phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$', description="Phone number in E.164 format (+12025550123)")
     role: Role
+    password: str = Field(min_length=6)
     # avatar: HttpUrl
 
     # Address Fields
+    address: str = Field(min_length=3, max_length=200)
     city: str = Field(min_length=2, max_length=50)
     state: str = Field(min_length=2, max_length=50)
-    zipCode: int
+    zipCode: str = Field(pattern=r'^\d{5}(-\d{4})?$')
 
     # Children
     children: List[ChildCreate] = Field(default_factory=list)
@@ -58,9 +60,11 @@ async def signup(user: UserSignup):
             "firstName": user.firstName,
             "lastName": user.lastName,
             "email": user.email,
+            "phoneNumber": user.phoneNumber,
             "role": user.role.lower(),
             # "avatar": str(user.avatar),
             "password": hashed_password,
+            "address": user.address,
             "city": user.city,
             "state": user.state,
             "zipCode": user.zipCode,

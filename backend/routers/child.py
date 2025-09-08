@@ -32,10 +32,15 @@ async def create_child(
             data={
                 "firstName": child_data.firstName,
                 "lastName": child_data.lastName,
+                "preferredName": child_data.preferredName,
                 "homeschool": child_data.homeschool,
+                # "homeschoolProgram": child_data.homeschoolProgram,
+                "grade": child_data.grade,
                 "birthday": child_data.birthday,
+                "allergiesMedical": child_data.allergiesMedical,
                 "notes": child_data.notes,
                 "waiver": child_data.waiver,
+                "photoConsent": child_data.photoConsent,
                 "parentIDs": [current_user.id], # Add the current user's ID to parentIDs
                 "eventIDs": [], # Create activityIDs array so we can easily add to it later
                 "createdAt": child_data.createdAt,
@@ -79,7 +84,7 @@ async def create_child(
 async def get_children(
     current_user: Annotated[User, Depends(get_current_user)]
 ):
-    print("current_user:", getattr(current_user, "id", None))
+    # print("current_user:", getattr(current_user, "id", None))
 
     enforce_authentication(current_user, "view your children.")
 
@@ -88,7 +93,9 @@ async def get_children(
             "parentIDs":{
                 "has": current_user.id
             }
-        }
+        },
+        include={"parents": True}
+
     )
     return children
 
@@ -144,7 +151,7 @@ async def get_children_of_event(
     # Check if admin
     enforce_admin(current_user)
 
-    try: 
+    try:
         # Query for all children of event
         children = await db.children.find_many(
             where= {
@@ -157,7 +164,7 @@ async def get_children_of_event(
             status_code=400,
             detail="Children not found"
         )
-    
+
     return children
 
 
@@ -290,7 +297,7 @@ async def create_emergency_contact(
             status_code=404,
             detail="Child not found"
         )
-    
+
     # Check if current user is a guardian/parent of this child
     user_is_guardian = any(parent.id == current_user.id for parent in child.parents)
     if not user_is_guardian:
@@ -306,7 +313,7 @@ async def create_emergency_contact(
             status_code=400,
             detail="Priority must be between 1 and 3"
         )
-    
+
     # Check for priority conflicts (if you want unique priorities per child)
     # existing_priority = await db.emergencycontact.find_first(
     #     where={
@@ -336,7 +343,7 @@ async def create_emergency_contact(
                     status_code=409,
                     detail="This emergency contact already exists for this child"
                 )
-            
+
             # Update existing contact to add this child
             updated_contact = await db.emergencycontact.update(
                 where={"id": existing_contact.id},
@@ -345,12 +352,12 @@ async def create_emergency_contact(
                     "priority": emergency_contact_data.priority  # Update priority for this relationship
                 }
             )
-        
+
             return {
                 "emergencyContact": updated_contact,
                 "message": "Linked existing emergency contact to child"
             }
-            
+
         else:
             new_contact = await db.emergencycontact.create(
                 data={
@@ -373,7 +380,7 @@ async def create_emergency_contact(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f'Failed to create emergency contact'
         )
-    
+
 # * =================================================
 
 @router.get("/{child_id}/emergency_contact")
@@ -390,7 +397,7 @@ async def get_child_emergency_contacts(
 
     # User validations
     enforce_authentication(current_user)
-    
+
     enforce_admin(current_user)
 
     # Query for the child's emergency contacts
@@ -407,7 +414,7 @@ async def get_child_emergency_contacts(
             status_code=404,
             detail="Unable to locate emergency contact"
         )
-    
+
     return {"Contact": contact}
 
 @router.patch("/{child_id}/emergency_contact/{contact_id}", status_code=status.HTTP_200_OK)
@@ -419,7 +426,7 @@ async def update_emergency_contact(
 ):
     """
         Authenticate user and validate user can make an update
-        
+
         Update child's emergency contact
     """
 
@@ -429,7 +436,7 @@ async def update_emergency_contact(
     # Verify that user is a parent of child to make update
     child = await db.children.find_unique(
         where={"id": child_id}
- 
+
     )
 
     if current_user.id not in child.parentIDs:
@@ -437,7 +444,7 @@ async def update_emergency_contact(
             status_code=500,
             detail="User is not approved to make update"
         )
-    
+
     # Ensure the emergecy contact exists
     contact = await db.emergencycontact.find_unique(
         where={
@@ -453,7 +460,7 @@ async def update_emergency_contact(
             status_code=404,
             detail="Emergency contact not found"
         )
-    
+
     # Make the update
     try:
 
@@ -461,10 +468,10 @@ async def update_emergency_contact(
 
         if emergency_contact_data.firstName is not None:
             update_payload["firstName"] = emergency_contact_data.firstName
-        
+
         if emergency_contact_data.lastName is not None:
             update_payload["lastName"] = emergency_contact_data.lastName
-        
+
         if emergency_contact_data.relationship is not None:
             update_payload["relaltionship"] = emergency_contact_data.relationship
 
@@ -480,20 +487,20 @@ async def update_emergency_contact(
         )
 
         return {"Updated Emergency Contact": updated_contact}
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update emergency contact"
         )
-    
+
 @router.delete("/{child_id}/emergency_contact/{emergency_contact_id}", status_code=status.HTTP_200_OK)
 async def delete_emergency_contact(
     emergency_contact_id: str,
     current_user: Annotated[User, Depends(get_current_user)],
     child_id: str,
 ):
-    
+
     """
         Authenticate and validate user
         Delete an emergency contact for a child with an emergency contact
@@ -512,7 +519,7 @@ async def delete_emergency_contact(
             status_code=500,
             detail="User is not authorized to delete an emergency contact"
         )
-    
+
     # Delete the emergency contact
     contact = await db.emergencycontact.find_unique(
         where={"id": emergency_contact_id}
@@ -523,11 +530,11 @@ async def delete_emergency_contact(
             status_code=404,
             detail="Child does not have the selected emergency contact"
         )
-    
+
     # * Remove the child from the emergency contacts child IDs list
     try:
         updated_child_ids = [id for id in contact.childIDs if id != child_id]
-        
+
         deleted_child = await db.emergencycontact.update(
             where={"id": emergency_contact_id},
             data={
@@ -536,7 +543,7 @@ async def delete_emergency_contact(
         )
 
         return {"Deleted Emergency Contact": deleted_child}
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=500,

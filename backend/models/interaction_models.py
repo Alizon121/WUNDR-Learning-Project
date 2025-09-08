@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 
 if TYPE_CHECKING:
-    from models.user_models import User, Child
+    from models.user_models import User
 
 
 # ! Activities

@@ -45,12 +45,12 @@ export default function EventCard({ event, isAdmin }: Props) {
           <span className="text-xs text-gray-500 mb-2">
             {event.participants} participant(s) enrolled
           </span>
-          <button className="mt-2 bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-            <Link href={`/events/${event.id}`}>
+            <Link
+              href={`/events/${event.id}`}
+              className="mt-2 bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
               <strong>View Details</strong>
               {/* View Details */}
             </Link>
-          </button>
           {/* Admin Buttons */}
           {isAdmin && (
             <div className="flex justify-between mt-2 gap-x-2">

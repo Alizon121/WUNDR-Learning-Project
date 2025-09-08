@@ -116,7 +116,6 @@ class Child(BaseModel):
   birthday: datetime = Field(default_factory=..., description="Child's birthday")
 
   homeschool: bool = Field(default_factory=False)
-  homeschoolProgram: Optional[str] = Field(default=None, max_length=50)
   grade: Optional[int] = Field(default=None, ge=-1, le=12)
 
   parents: Optional[List["User"]] = Field(default_factory=list)
@@ -126,6 +125,7 @@ class Child(BaseModel):
   notes: Optional[str] = Field(default=None, max_length=1000)
 
   photoConsent: bool = False
+  waiver: bool = False
 
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
@@ -142,14 +142,14 @@ class ChildCreate(BaseModel):
       )
     )
 
-  homeschool: bool = False
-  homeschoolProgram: Optional[str] = Field(default=None, max_length=50)
+  homeschool: bool = Field(default_factory=False)
   grade: Optional[int] = Field(default=None, ge=-1, le=12)
 
   allergiesMedical: Optional[str] = Field(default=None, max_length=1000)
   notes: Optional[str] = Field(default=None, max_length=1000)
 
   photoConsent: bool = False
+  waiver: bool = False
 
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
@@ -165,10 +165,10 @@ class ChildUpdate(BaseModel):
   )
 
   homeschool: Optional[bool] = Field(default=None)
-  homeschoolProgram: Optional[str] = Field(default=None, max_length=50)
   grade: Optional[int] = Field(default=None, ge=-1, le=12)
 
   allergiesMedical: Optional[str] = Field(default=None, max_length=1000)
   notes: Optional[str] = Field(default=None, max_length=1000)
 
   photoConsent: bool = False
+  waiver: bool = False

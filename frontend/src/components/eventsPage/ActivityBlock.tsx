@@ -3,6 +3,7 @@ import EventCard from "./EventCard";
 interface Props {
     activityName: string;
     events: any[];
+    isAdmin: boolean;
 }
 
 const getActivityIcon = (activityName: string) => {
@@ -44,7 +45,7 @@ const getActivityColor = (activityName: string) => {
     }
 }
 
-export default function ActivityBlock({ activityName, events }: Props) {
+export default function ActivityBlock({ activityName, events, isAdmin }: Props) {
     return (
         <section className="mb-12">
 
@@ -61,7 +62,7 @@ export default function ActivityBlock({ activityName, events }: Props) {
                 <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-thin scrollbar-thumb-gray-300">
                     {events.length > 0 ? (
                         events.map((event) => (
-                            <EventCard key={event.id} event={event} />
+                            <EventCard key={event.id} event={event} isAdmin={isAdmin} />
                         ))
                     ) : (
                         <div className="flex-shrink-0 w-80 p-8 text-center text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">

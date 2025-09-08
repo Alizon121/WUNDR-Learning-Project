@@ -9,6 +9,7 @@ import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.mongodb import MongoDBJobStore
+from backend.models.interaction_models import NotificationUpdate
 import os
 import yagmail
 from pymongo import MongoClient
@@ -171,13 +172,13 @@ def start_scheduler():
     scheduler.start()
 
 
-# ========================================================
-
-# Have an admin send a blast message on the website and via email
+# =======================================================
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def blast_notification(
     subject: str,
     contents: str,
+    time: str,
+    # icon: str,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):
@@ -198,9 +199,12 @@ async def blast_notification(
 
     notification_data = [
     {
+        "title": subject,
         "description": contents,
         "userId": user.id,
-        "read": False  # Optional since it defaults to False
+        "isRead": False,
+        "time": time,
+        # "icon": icon
     }
     for user in users
 ]
@@ -216,3 +220,70 @@ async def blast_notification(
     )
 
     return {"notification": new_notification}
+
+# =======================================================
+@router.get("/", status_code=status.HTTP_200_OK)
+async def get_user_notifications(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+    Get all notifications of a user
+    Authenticate user
+    """
+
+    enforce_authentication(current_user, "retireve notifications")
+
+    notifications = await db.notifications.find_many(
+        where={"userId": current_user.id}
+    )
+
+    if not notifications:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Unable to obtain notifications"
+        )
+    
+    return {"Notifications": notifications}
+
+@router.patch("/{notification_id}", status_code=status.HTTP_200_OK)
+async def update_notification(
+    notification_id: str,
+    notification_data: NotificationUpdate,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+        Update a notification
+        Verify user is authenticated and admin
+    """
+
+    # Authenticate User
+    enforce_authentication(current_user)
+    enforce_admin(current_user)
+
+    # find the notification
+    notification = await db.notifications.find_unique(where={"id": notification_id})
+
+    if not notification:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notificaation not found"
+        )
+    
+    update_payload = {}
+
+    if notification_data.title is not None:
+        update_payload["title"] = notification_data.title
+    if notification_data.description is not None:
+        update_payload["description"] = notification_data.description
+    if notification_data.isRead is not None:
+        update_payload["isRead"] = notification_data.isRead
+    
+    updated_notification = await db.notifications.update(
+        where={"id": notification_id},
+        data=update_payload
+    )
+
+    return {
+        "notification": updated_notification,
+        "message": "Notification updated successfully"
+        }

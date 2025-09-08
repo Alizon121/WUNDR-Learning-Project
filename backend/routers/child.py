@@ -2,6 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from backend.db.prisma_client import db
 from typing import Annotated
 from backend.models.user_models import User, ChildCreate, ChildUpdate
+from backend.models.interaction_models import EmergencyContactCreate, EmergencyContactUpdate
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from .auth.login import get_current_user
@@ -33,11 +34,12 @@ async def create_child(
                 "lastName": child_data.lastName,
                 "preferredName": child_data.preferredName,
                 "homeschool": child_data.homeschool,
-                "homeschoolProgram": child_data.homeschoolProgram,
+                # "homeschoolProgram": child_data.homeschoolProgram,
                 "grade": child_data.grade,
                 "birthday": child_data.birthday,
                 "allergiesMedical": child_data.allergiesMedical,
                 "notes": child_data.notes,
+                "waiver": child_data.waiver,
                 "photoConsent": child_data.photoConsent,
                 "parentIDs": [current_user.id], # Add the current user's ID to parentIDs
                 "eventIDs": [], # Create activityIDs array so we can easily add to it later
@@ -266,3 +268,284 @@ async def delete_child(
 async def ping():
     print("PING /child/__ping")
     return {"ok": True}
+
+# Emergency Contact Routes =================================================
+
+@router.post("/{child_id}/emergency_contact", status_code=status.HTTP_201_CREATED)
+async def create_emergency_contact(
+    child_id: str,
+    emergency_contact_data: EmergencyContactCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+        Authenticate the user
+        Create Emergency Contact for Child
+    """
+
+
+    # User validations
+    enforce_authentication(current_user, "Create emergency contact")
+
+    # Verify that the child exists
+    child = await db.children.find_unique(
+        where={"id": child_id},
+        include={"parents": True}
+    )
+
+    if not child:
+        raise HTTPException(
+            status_code=404,
+            detail="Child not found"
+        )
+
+    # Check if current user is a guardian/parent of this child
+    user_is_guardian = any(parent.id == current_user.id for parent in child.parents)
+    if not user_is_guardian:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not authorized to create emergency contacts for this child"
+        )
+
+
+    # Validate priority range (assuming 1-3 is acceptable range)
+    if not (1 <= emergency_contact_data.priority <= 3):
+        raise HTTPException(
+            status_code=400,
+            detail="Priority must be between 1 and 3"
+        )
+
+    # Check for priority conflicts (if you want unique priorities per child)
+    # existing_priority = await db.emergencycontact.find_first(
+    #     where={
+    #         "childIDs": {
+    #             "has": child_id
+    #         },
+    #         "priority": emergency_contact_data.priority
+    #     }
+    # )
+    # if existing_priority:
+    #     raise HTTPException(
+    #         status_code=409,
+    #         detail=f"Priority {emergency_contact_data.priority} is already assigned to another emergency contact for this child"
+    #     )
+
+    try:
+        existing_contact = await db.emergencycontact.find_first(
+            where={
+                "firstName": emergency_contact_data.firstName,
+                "lastName": emergency_contact_data.lastName,
+                "phoneNumber": emergency_contact_data.phoneNumber,
+            }
+        )
+        if existing_contact:
+            if child_id in existing_contact.childIDs:
+                raise HTTPException(
+                    status_code=409,
+                    detail="This emergency contact already exists for this child"
+                )
+
+            # Update existing contact to add this child
+            updated_contact = await db.emergencycontact.update(
+                where={"id": existing_contact.id},
+                data={
+                    "childIDs": existing_contact.childIDs + [child_id],
+                    "priority": emergency_contact_data.priority  # Update priority for this relationship
+                }
+            )
+
+            return {
+                "emergencyContact": updated_contact,
+                "message": "Linked existing emergency contact to child"
+            }
+
+        else:
+            new_contact = await db.emergencycontact.create(
+                data={
+                    "firstName": emergency_contact_data.firstName,
+                    "lastName": emergency_contact_data.lastName,
+                    "phoneNumber": emergency_contact_data.phoneNumber,
+                    "relationship": emergency_contact_data.relationship,
+                    "priority": emergency_contact_data.priority,
+                    "childIDs": [child_id]
+                    }
+            )
+            return {
+                    "emergencyContact": new_contact,
+                    "message": "Created new emergency contact for child"
+                    }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f'Failed to create emergency contact'
+        )
+
+# * =================================================
+
+@router.get("/{child_id}/emergency_contact")
+async def get_child_emergency_contacts(
+    child_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+        Authenticate the user
+        Enforce admin
+
+        Get a child's emergency contacts
+    """
+
+    # User validations
+    enforce_authentication(current_user)
+
+    enforce_admin(current_user)
+
+    # Query for the child's emergency contacts
+    contact = await db.emergencycontact.find_many(
+        where={
+            "childIDs": {
+                "has": child_id
+            }
+        }
+    )
+
+    if not contact:
+        raise HTTPException(
+            status_code=404,
+            detail="Unable to locate emergency contact"
+        )
+
+    return {"Contact": contact}
+
+@router.patch("/{child_id}/emergency_contact/{contact_id}", status_code=status.HTTP_200_OK)
+async def update_emergency_contact(
+    child_id: str,
+    contact_id: str,
+    emergency_contact_data: EmergencyContactUpdate,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+        Authenticate user and validate user can make an update
+
+        Update child's emergency contact
+    """
+
+    # Authenticate user
+    enforce_authentication(current_user)
+
+    # Verify that user is a parent of child to make update
+    child = await db.children.find_unique(
+        where={"id": child_id}
+
+    )
+
+    if current_user.id not in child.parentIDs:
+        raise HTTPException(
+            status_code=500,
+            detail="User is not approved to make update"
+        )
+
+    # Ensure the emergecy contact exists
+    contact = await db.emergencycontact.find_unique(
+        where={
+            "id": contact_id,
+            "childIDs": {
+                    "has": child_id
+                        }
+        }
+    )
+
+    if not contact:
+        raise HTTPException(
+            status_code=404,
+            detail="Emergency contact not found"
+        )
+
+    # Make the update
+    try:
+
+        update_payload = {}
+
+        if emergency_contact_data.firstName is not None:
+            update_payload["firstName"] = emergency_contact_data.firstName
+
+        if emergency_contact_data.lastName is not None:
+            update_payload["lastName"] = emergency_contact_data.lastName
+
+        if emergency_contact_data.relationship is not None:
+            update_payload["relaltionship"] = emergency_contact_data.relationship
+
+        if emergency_contact_data.phoneNumber is not None:
+            update_payload["phoneNumber"] = emergency_contact_data.phoneNumber
+
+        if emergency_contact_data.priority is not None:
+            update_payload["priority"] = emergency_contact_data.priority
+
+        updated_contact = await db.emergencycontact.update(
+            where={"id": contact_id},
+            data= update_payload
+        )
+
+        return {"Updated Emergency Contact": updated_contact}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update emergency contact"
+        )
+
+@router.delete("/{child_id}/emergency_contact/{emergency_contact_id}", status_code=status.HTTP_200_OK)
+async def delete_emergency_contact(
+    emergency_contact_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    child_id: str,
+):
+
+    """
+        Authenticate and validate user
+        Delete an emergency contact for a child with an emergency contact
+    """
+
+
+    # Verify user
+    enforce_authentication(current_user)
+
+    child = await db.children.find_unique(
+        where={"id": child_id}
+    )
+
+    if current_user.id not in child.parentIDs:
+        raise HTTPException(
+            status_code=500,
+            detail="User is not authorized to delete an emergency contact"
+        )
+
+    # Delete the emergency contact
+    contact = await db.emergencycontact.find_unique(
+        where={"id": emergency_contact_id}
+    )
+
+    if child_id not in contact.childIDs:
+        raise HTTPException(
+            status_code=404,
+            detail="Child does not have the selected emergency contact"
+        )
+
+    # * Remove the child from the emergency contacts child IDs list
+    try:
+        updated_child_ids = [id for id in contact.childIDs if id != child_id]
+
+        deleted_child = await db.emergencycontact.update(
+            where={"id": emergency_contact_id},
+            data={
+                "childIDs": updated_child_ids
+            }
+        )
+
+        return {"Deleted Emergency Contact": deleted_child}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to delete emergency contact {e}"
+        )

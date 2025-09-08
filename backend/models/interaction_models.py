@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 
 if TYPE_CHECKING:
-    from models.user_models import User, Child
+    from models.user_models import User
 
 
 # ! Activities
@@ -130,11 +130,21 @@ class Notification(BaseModel):
         min_length = 1,
         max_length = 500,
     )
-    read: bool = Field(default=False)
+    title: str = Field(
+        min_length = 2,
+        max_length=80,
+    )
+    isRead: bool = Field(default=False)
     userId: str = Field(..., description="User id associated with the notification")
 
     class Config:
         form_attributes = True
+
+class NotificationUpdate(BaseModel):
+    description: Optional[str] = Field(default=None)
+    title: Optional[str] = Field(default=None)
+    isRead: Optional[bool] = Field(default=None)
+    userId: Optional[str] = Field(default=None)
 
 #! Jobs
 class Jobs(BaseModel):
@@ -149,4 +159,24 @@ class Jobs(BaseModel):
 
     class Config:
         form_attributes = True
-    
+
+#! Emergency Contact
+class EmergencyContactCreate(BaseModel):
+    firstName: str = Field(min_length=1, max_length=100)
+    lastName: str = Field(min_length=1, max_length=100)
+    relationship: str = Field(min_length=1, max_length=200)
+    phoneNumber: str = Field()
+    priority: int = Field(ge=1, le=3)
+
+class EmergencyContactUpdate(BaseModel):
+    firstName: Optional[str] = Field(default=None)
+    lastName: Optional[str] = Field(default=None)
+    relationship: Optional[str] = Field(default=None)
+    phoneNumber: Optional[str] = Field(default=None)
+    priority: Optional[int] = Field(default=None)
+
+class EmergencyContactResponse(EmergencyContactCreate):
+    id: str
+    childId: str
+    createdAt: datetime
+    updatedAt: datetime

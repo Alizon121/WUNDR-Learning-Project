@@ -9,7 +9,7 @@ export interface ChildPayload {
   lastName: string;
   preferredName?: string | null
   homeschool?: boolean;
-  homeschoolProgram?: string | null
+  // homeschoolProgram?: string | null
   grade?: number | null
   birthday: string;
   allergiesMedical?: string | null

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { makeApiRequest } from '../../../utils/api';
 import { useState, useCallback, useEffect } from 'react';
 import { Notification, NotificationsResponse } from '@/types/notification';
-import { formatNotificationTime } from '../../../utils/formateDate';
+import { formatNotificationTime } from '../../../utils/formatDate';
 
 interface Props {
   onClose: () => void;

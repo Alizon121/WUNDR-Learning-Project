@@ -78,7 +78,6 @@ const SignupModal = () => {
 
     const createAccount = async (parentNext?: ParentNext) => {
         if (creating) return
-        setCreating(true)
         setErrors({});
         setServerError(null);
 
@@ -93,6 +92,7 @@ const SignupModal = () => {
             setServerError("Please enter a valid 5-digit ZIP")
             return
         }
+        setCreating(true)
 
         // Prepare user data
         const userInfo: UserInfo = {
@@ -107,7 +107,7 @@ const SignupModal = () => {
             state: form2.state.trim().toUpperCase(),
             zipCode: zip
         };
-        // console.log("userInfo before signup:", userInfo);
+        console.log("userInfo before signup:", userInfo);
 
         try {
             const response = await handleSignup(userInfo)

@@ -5,6 +5,7 @@ export interface ApiRequestOptions {
     token?: string;
 }
 
+
 export async function makeApiRequest<T>(
     endpoint: string,
     options: ApiRequestOptions = {}
@@ -17,21 +18,22 @@ export async function makeApiRequest<T>(
         token = localStorage.getItem("token") ?? undefined,
     } = options;
 
-    const isFormData = typeof FormData !== "undefined" && body instanceof FormData
+    const finalHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...headers,
+    };
 
-    const finalHeaders: Record<string, string> = { ...headers };
-    if (!FormData) finalHeaders["Content-Type"] = "application/json"
     if (token) finalHeaders["Authorization"] = `Bearer ${token}`;
 
     const response = await fetch(endpoint, {
         method,
         headers: finalHeaders,
-        body: isFormData ? body : body ? JSON.stringify(body) : undefined,
+        body: body ? JSON.stringify(body) : undefined,
     });
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('erika look here', errorData)
+        // console.error('erika look here', errorData)
 
         throw new Error(
             `API Error ${response.status}: ${errorData.detail || response.statusText}`

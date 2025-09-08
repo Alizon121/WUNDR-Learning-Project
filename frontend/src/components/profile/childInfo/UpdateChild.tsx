@@ -156,15 +156,15 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
                     />
                 </div>
 
-                <div className="mb-4">
+                {/* <div className="mb-4">
                     <div className="font-bold">PARENT/GUARDIANS</div>
                     <div className="text-gray-500 text-sm mt-1 ml-2">{currChild.parents.map((p) => `${p.firstName} ${p.lastName}`)}</div>
-                </div>
+                </div> */}
 
-                <div className="mb-4">
+                {/* <div className="mb-4">
                     <div className="font-bold">HOMESCHOOL PROGRAM</div>
                     <div className="text-gray-500 text-sm mt-1 ml-2">Coming soon...</div>
-                </div>
+                </div> */}
 
                 <div className="flex flex-row justify-between mb-4">
                     <div>

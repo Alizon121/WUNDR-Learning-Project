@@ -533,16 +533,24 @@ async def delete_emergency_contact(
 
     # * Remove the child from the emergency contacts child IDs list
     try:
-        updated_child_ids = [id for id in contact.childIDs if id != child_id]
+        if len(contact.childIDs) <= 1:
+            deleted_contact = await db.emergencycontact.delete(
+                where={"id": emergency_contact_id}
+            )
 
-        deleted_child = await db.emergencycontact.update(
-            where={"id": emergency_contact_id},
-            data={
-                "childIDs": updated_child_ids
-            }
-        )
+            return {"Deleted Contact": deleted_contact}
+        
+        else:
+            updated_child_ids = [id for id in contact.childIDs if id != child_id]
 
-        return {"Deleted Emergency Contact": deleted_child}
+            deleted_child = await db.emergencycontact.update(
+                where={"id": emergency_contact_id},
+                data={
+                    "childIDs": updated_child_ids
+                }
+            )
+
+            return {"Deleted Emergency Contact": deleted_child}
 
     except Exception as e:
         raise HTTPException(

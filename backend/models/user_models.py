@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict, model_validator
+from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
 # from models.interaction_models import Review, Notification, Activity, Event
 from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from models.interaction_models import Notification, Event, Review
 
 
-# * User models
+# * User models =================================================
 class Role(str, Enum):
   PARENT = "parent"
   ADMIN = "admin"
@@ -97,7 +97,88 @@ class UserUpdateResponse(BaseModel):
     message: str
     user: UserResponse
 
-# * Password Reset models
+# * Volunteer models ==========================================
+class AvailabilityDays(str, Enum):
+    WEEKDAYS = "Weekdays"
+    WEEKENDS = "Weekends"
+
+class AvailabilityTimes(str, Enum):
+    MORNING = "Morning"
+    AFTERNOON = "Afternoon"
+    EVENING = "Evening"
+
+class Availability(BaseModel):
+    days: Optional[List[AvailabilityDays]] = None
+    times: Optional[List[AvailabilityTimes]] = None
+    
+    @field_validator('days', 'times', mode="before")
+    def validate_availability(cls, v):
+        if v is None or v == []:
+            return None
+        return v
+
+class Volunteer(BaseModel):
+  id: str = Field(..., min_length=1, description="Volunteer identifier")
+  firstName: str = Field(min_length=1, max_length=50)
+  lastName: str = Field(min_length=1, max_length=50)
+  email: Optional[str] = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+  phoneNumber: Optional[str]
+  cities: List[str] = Field(default_factory=list)
+  availability: Optional[Availability]
+  skills: List[str] = Field(default_factory=list)
+  bio: Optional[str] = Field(min_length=5, max_length=500)
+  photoConsent: bool = Field(default=False)
+  backgroundCheckConsent: bool = Field(default=False)
+
+  createdAt: datetime
+  updatedAt: Optional[datetime]
+
+  model_config = {
+    "from_attributes":True,
+    "json_encoders":{
+      datetime: lambda v: v.isoformat()
+    }
+  }
+  
+
+class VolunteerCreate(BaseModel):
+  firstName: str = Field(..., min_length=1, max_length=100, description="First Name")
+  lastName: str = Field(..., min_length=1, max_length=100, description="Last Name")
+  email: Optional[EmailStr] = Field(None, description="Email")
+  phoneNumber: Optional[str] = Field(None, min_length = 10, max_length= 20, description="Phone number")
+  cities: Optional[List[str]] = Field(default_factory=list, description="Cities to volunteer in")
+  availability: Optional[Availability] = Field(None, description="Availability schedule")
+  skills: Optional[List[str]] = Field(default_factory=list, description="Volunteer skills")
+  bio: Optional[str] = Field(None, min_length=5, max_length=500, description="Volunteer bio")
+  photoConsent: bool = Field(..., description="Must consent to photo usage")
+  backgroundCheckConsent: bool = Field(..., description="Must consent to background check")
+  # userId: str = Field(..., description="Associated user ID")
+
+  @field_validator("cities", "skills", mode="before")
+  def clean_lists(cls, v):
+    if v is None:
+       return []
+    return [item.strip() for item in v if item and item.strip()]
+  
+class VolunteerUpdate(BaseModel):
+  firstName: Optional[str] = None
+  lastName: Optional[str] = None
+  email: Optional[str] = None
+  phoneNumber: Optional[str] = None
+  cities: Optional[List[str]] = None
+  availability: Optional[Availability] = None
+  skills: Optional[List[str]] = None
+  bio: Optional[str] = Field(None, min_length=5, max_length=500)
+  photoConsent: Optional[bool] = None
+  backgroundCheckConsent: Optional[bool] = None
+
+  @field_validator("cities", "skills", mode="before")
+  def clean_lists(cls, v):
+     if v is None:
+      return None
+     return [item.strip() for item in v if item and item.strip()]
+
+# * Password Reset models ============================================
 
 class PasswordResetRequest(BaseModel):
    email: EmailStr
@@ -107,7 +188,7 @@ class PasswordResetPayload(BaseModel):
    new_password: str = Field(min_length=8, description="New Account Password")
 
 
-# * Child models
+# * Child models ====================================================
 class Child(BaseModel):
   id: str = Field(..., min_length=1, description="Child identifier")
   firstName: str = Field(min_length=1, max_length=50)

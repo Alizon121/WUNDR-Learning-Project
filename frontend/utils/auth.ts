@@ -1,6 +1,7 @@
 import { Role } from "@/types/user";
 import { makeApiRequest } from "./api";
 import { useRouter } from "next/navigation";
+import { EmergencyContact } from "@/types/emergencyContact";
 
 // * Signup ===================================================
 
@@ -15,8 +16,10 @@ export interface ChildPayload {
   allergiesMedical?: string | null
   notes?: string | null
   photoConsent: boolean
+  waiver: boolean
   createdAt?: string;
   updatedAt?: string;
+  emergencyContacts: EmergencyContact[]
 }
 
 export interface SignupPayload {

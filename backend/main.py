@@ -22,13 +22,13 @@ async def lifespan(app:FastAPI):
 
     # Start APScheduler here:
     start_scheduler()
-
     yield
+
 # @asynccontextmanager
 # async def shutdown(app:FastAPI):
 #     # Shutdown APScheduler:
-    scheduler.shutdown(wait=False)
 
+    scheduler.shutdown(wait=False)
     await db.disconnect()
 
 
@@ -52,21 +52,12 @@ def read_root():
 
 # Routers
 app.include_router(auth_router, prefix="/auth")
-
 app.include_router(user_router, prefix="/user")
-
 app.include_router(child_router, prefix="/child")
-
 app.include_router(activity_router, prefix="/activity")
-
 app.include_router(event_router, prefix="/event")
-
 app.include_router(review_router, prefix="/review")
-
 app.include_router(password_reset_router, prefix="/password_reset")
-
 app.include_router(notifications_router, prefix="/notifications")
-
 app.include_router(emergency_contact_router, prefix="/emergency_contact")
-
 app.include_router(volunteer_router, prefix="/volunteer")

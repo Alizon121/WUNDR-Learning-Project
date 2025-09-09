@@ -17,8 +17,6 @@ const UserInfo = () => {
     const [editing, setEditing] = useState(false)
     const [user, setUser] = useState<User | null>(null)
 
-
-    console.log("look here", user)
     const fetchUser = useCallback(async () => {
         setLoading(true)
 
@@ -39,6 +37,7 @@ const UserInfo = () => {
 
     const handleEditing = () => !editing ? setEditing(true) : setEditing(false)
     const bumpRefresh = () => setRefreshKey(k => k + 1)
+    if (loading) return <></>
 
     return (
         <div>

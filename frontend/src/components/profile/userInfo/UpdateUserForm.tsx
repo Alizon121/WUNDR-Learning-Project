@@ -79,8 +79,6 @@ const UpdateUserForm: React.FC<Props> = ({ currUser, onSaved, onCancel }) => {
             zipCode: String(zipCode).trim()
         }
 
-        console.log('payload', payload)
-
         try {
             setSaving(true)
             await makeApiRequest(`http://localhost:8000/user`, {

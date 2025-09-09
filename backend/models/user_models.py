@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict, model_validator
+from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
 # from models.interaction_models import Review, Notification, Activity, Event
 from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
@@ -96,6 +96,93 @@ class UserUpdateResponse(BaseModel):
     """Response model for successful user update"""
     message: str
     user: UserResponse
+
+# * Volunteer models
+class AvailabilityDays(str, Enum):
+    WEEKDAYS = "Weekdays"
+    WEEKENDS = "Weekends"
+
+class AvailabilityTimes(str, Enum):
+    MORNING = "Morning"
+    AFTERNOON = "Afternoon"
+    EVENING = "Evening"
+
+class Availability(BaseModel):
+    days: Optional[List[AvailabilityDays]] = None
+    times: Optional[List[AvailabilityTimes]] = None
+    
+    @field_validator('days', 'times', mode="before")
+    def validate_availability(cls, v):
+        if v is None or v == []:
+            return None
+        return v
+    
+    @field_validator('times', pre=True, always=True)
+    def validate_times(cls, v):
+        if v is None or v == []:
+            return None
+        if isinstance(v, list):
+            # Validate each time value
+            valid_times = [time.value for time in AvailabilityTimes]
+            for time in v:
+                if time not in valid_times:
+                    raise ValueError(f"Invalid time: {time}. Must be one of {valid_times}")
+        return v
+    
+
+class Volunteer(BaseModel):
+  id: str = Field(..., min_length=1, description="Volunteer identifier")
+  firstName: str = Field(min_length=1, max_length=50)
+  lastName: str = Field(min_length=1, max_length=50)
+  email: Optional[str] = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+  phoneNumber: Optional[str]
+  cities: List[str] = Field(default_factory=list)
+  availability: Optional[Availability]
+  skills: List[str] = Field(default_factory=list)
+  bio: Optional[str] = Field(min_length=5, max_length=500)
+  photoConsent: bool = Field(default=False)
+  backgroundCheckConsent: bool = Field(default=False)
+
+  createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+  updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+  
+
+class VolunteerCreate(BaseModel):
+  firstName: str = Field(..., min_length=1, max_length=100, description="First Name")
+  lastName: str = Field(..., min_length=1, max_length=100, description="Last Name")
+  email: Optional[EmailStr] = Field(None, description="Email")
+  phoneNumber: Optional[str] = Field(None, min_length = 10, max_length= 20, description="Phone number")
+  cities: Optional[List[str]] = Field(default_factory=list, description="Cities to volunteer in")
+  availability: Optional[Availability] = Field(None, description="Availability schedule")
+  skills: Optional[List[str]] = Field(default_factory=list, description="Volunteer skills")
+  bio: Optional[str] = Field(None, min_length=5, max_length=500, description="Volunteer bio")
+  photoConsent: bool = Field(..., description="Must consent to photo usage")
+  backgroundCheckConsent: bool = Field(..., description="Must consent to background check")
+  userId: str = Field(..., description="Associated user ID")
+
+  @field_validator("cities", "skills", mode="before")
+  def clean_lists(cls, v):
+    if v is None:
+       return []
+    return [item.strip() for item in v if item and item.strip()]
+  
+class VolunteerUpdate(BaseModel):
+  firstName: Optional[str] = None
+  lastName: Optional[str] = None
+  email: Optional[str] = None
+  phoneNumber: Optional[str] = None
+  cities: Optional[List[str]] = None
+  availability: Optional[Availability] = None
+  skills: Optional[List[str]] = None
+  bio: Optional[str] = Field(None, min_length=5, max_length=500)
+  photoConsent: Optional[bool] = None
+  backgroundCheckConsent: Optional[bool] = None
+
+  @field_validator("cities", "skills", mode="before")
+  def clean_lists(cls, v):
+     if v is None:
+      return None
+     return [item.strip() for item in v if item and item.strip()]
 
 # * Password Reset models
 

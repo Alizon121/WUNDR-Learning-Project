@@ -63,8 +63,8 @@ const SignupModal = () => {
         setForm1(prev => ({ ...prev, phoneNumber: formatUs(value) }))
     }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, childIndex: number | null = null) => {
-        const { name, value, type, checked } = e.target
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
 
         if (name in form1) {
             setForm1(prev => ({ ...prev, [name]: value}))
@@ -107,7 +107,6 @@ const SignupModal = () => {
             state: form2.state.trim().toUpperCase(),
             zipCode: zip
         };
-        console.log("userInfo before signup:", userInfo);
 
         try {
             const response = await handleSignup(userInfo)

@@ -168,12 +168,12 @@ class Jobs(BaseModel):
 #     phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$')
 #     # priority: int = Field(ge=1, le=3)
 
-# class EmergencyContactUpdate(BaseModel):
-#     firstName: str = Field(default=None)
-#     lastName: str = Field(default=None)
-#     relationship: str = Field(default=None)
-#     phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$')
-#     # priority: int = Field(default=None)
+class EmergencyContactUpdate(BaseModel):
+    firstName: Optional[str] = Field(default=None)
+    lastName: Optional[str] = Field(default=None)
+    relationship: Optional[str] = Field(default=None)
+    phoneNumber: Optional[str] = Field(default=None)
+    priority: Optional[int] = Field(default=None)
 
 # class EmergencyContactResponse(EmergencyContactCreate):
 #     id: str

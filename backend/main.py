@@ -9,6 +9,7 @@ from backend.routers.reviews import router as review_router
 from backend.routers.password_reset import router as password_reset_router
 from backend.routers.notifications import router as notifications_router
 from backend.routers.emergency_contact import router as emergency_contact_router
+from backend.routers.volunteer import router as volunteer_router
 from backend.db.prisma_client import db
 from backend.routers.notifications import start_scheduler, scheduler
 from contextlib import asynccontextmanager
@@ -68,3 +69,4 @@ app.include_router(notifications_router, prefix="/notifications")
 
 app.include_router(emergency_contact_router, prefix="/emergency_contact")
 
+app.include_router(volunteer_router, prefix="/volunteer")

@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from models.interaction_models import Notification, Event, Review
 
 
-# * User models
+# * User models =================================================
 class Role(str, Enum):
   PARENT = "parent"
   ADMIN = "admin"
@@ -97,7 +97,7 @@ class UserUpdateResponse(BaseModel):
     message: str
     user: UserResponse
 
-# * Volunteer models
+# * Volunteer models ==========================================
 class AvailabilityDays(str, Enum):
     WEEKDAYS = "Weekdays"
     WEEKENDS = "Weekends"
@@ -116,19 +116,6 @@ class Availability(BaseModel):
         if v is None or v == []:
             return None
         return v
-    
-    @field_validator('times', pre=True, always=True)
-    def validate_times(cls, v):
-        if v is None or v == []:
-            return None
-        if isinstance(v, list):
-            # Validate each time value
-            valid_times = [time.value for time in AvailabilityTimes]
-            for time in v:
-                if time not in valid_times:
-                    raise ValueError(f"Invalid time: {time}. Must be one of {valid_times}")
-        return v
-    
 
 class Volunteer(BaseModel):
   id: str = Field(..., min_length=1, description="Volunteer identifier")
@@ -143,8 +130,15 @@ class Volunteer(BaseModel):
   photoConsent: bool = Field(default=False)
   backgroundCheckConsent: bool = Field(default=False)
 
-  createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
-  updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+  createdAt: datetime
+  updatedAt: Optional[datetime]
+
+  model_config = {
+    "from_attributes":True,
+    "json_encoders":{
+      datetime: lambda v: v.isoformat()
+    }
+  }
   
 
 class VolunteerCreate(BaseModel):
@@ -158,7 +152,7 @@ class VolunteerCreate(BaseModel):
   bio: Optional[str] = Field(None, min_length=5, max_length=500, description="Volunteer bio")
   photoConsent: bool = Field(..., description="Must consent to photo usage")
   backgroundCheckConsent: bool = Field(..., description="Must consent to background check")
-  userId: str = Field(..., description="Associated user ID")
+  # userId: str = Field(..., description="Associated user ID")
 
   @field_validator("cities", "skills", mode="before")
   def clean_lists(cls, v):
@@ -184,7 +178,7 @@ class VolunteerUpdate(BaseModel):
       return None
      return [item.strip() for item in v if item and item.strip()]
 
-# * Password Reset models
+# * Password Reset models ============================================
 
 class PasswordResetRequest(BaseModel):
    email: EmailStr
@@ -194,7 +188,7 @@ class PasswordResetPayload(BaseModel):
    new_password: str = Field(min_length=8, description="New Account Password")
 
 
-# * Child models
+# * Child models ====================================================
 class Child(BaseModel):
   id: str = Field(..., min_length=1, description="Child identifier")
   firstName: str = Field(min_length=1, max_length=50)

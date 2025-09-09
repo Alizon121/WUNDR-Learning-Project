@@ -151,6 +151,8 @@ class ChildCreate(BaseModel):
   photoConsent: bool = False
   waiver: bool = False
 
+  emergencyContacts: List["EmergencyContactCreate"] = Field(default_factory=list)
+
   createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
   updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
 
@@ -172,3 +174,26 @@ class ChildUpdate(BaseModel):
 
   photoConsent: bool = False
   waiver: bool = False
+
+
+
+#! Emergency Contact
+class EmergencyContactCreate(BaseModel):
+    firstName: str = Field(min_length=1, max_length=100)
+    lastName: str = Field(min_length=1, max_length=100)
+    relationship: str = Field(min_length=1, max_length=200)
+    phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$')
+    # priority: int = Field(ge=1, le=3)
+
+class EmergencyContactUpdate(BaseModel):
+    firstName: str = Field(default=None)
+    lastName: str = Field(default=None)
+    relationship: str = Field(default=None)
+    phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$')
+    # priority: int = Field(default=None)
+
+class EmergencyContactResponse(EmergencyContactCreate):
+    id: str
+    childId: str
+    createdAt: datetime
+    updatedAt: datetime

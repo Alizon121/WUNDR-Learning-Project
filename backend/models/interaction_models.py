@@ -35,14 +35,14 @@ class Event(BaseModel):
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
     limit: int = Field(default=10)
-    
+
     city: str = Field(min_length=1)
     state: str = Field(min_length=1)
     address: str = Field(min_length=1)
     zipCode: int = Field(length=5)
     latitude: float
     longitude: float
-    
+
     # users: List["User"] = Field(default_factory=list)
     # children: List["Child"] = Field(default_factory=list)
     # reviews: List["Review"] = Field(default_factory=list)
@@ -59,7 +59,7 @@ class EventCreate(BaseModel):
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
     limit: int = Field(default=10)
-    
+
     city: str = Field(min_length=1)
     state: str = Field(min_length=1)
     address: str = Field(min_length=1)
@@ -79,7 +79,7 @@ class EventUpdate(BaseModel):
     name: Optional[str] = Field(default=None)
     description: Optional[str] = Field(default=None)
     date: Optional[datetime] = Field(default=None)
-    
+
     city: Optional[str] = Field(default=None)
     state: Optional[str] = Field(default=None)
     address: Optional[str] = Field(default=None)
@@ -160,23 +160,23 @@ class Jobs(BaseModel):
     class Config:
         form_attributes = True
 
-#! Emergency Contact
-class EmergencyContactCreate(BaseModel):
-    firstName: str = Field(min_length=1, max_length=100)
-    lastName: str = Field(min_length=1, max_length=100)
-    relationship: str = Field(min_length=1, max_length=200)
-    phoneNumber: str = Field()
-    priority: int = Field(ge=1, le=3)
+# #! Emergency Contact
+# class EmergencyContactCreate(BaseModel):
+#     firstName: str = Field(min_length=1, max_length=100)
+#     lastName: str = Field(min_length=1, max_length=100)
+#     relationship: str = Field(min_length=1, max_length=200)
+#     phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$')
+#     # priority: int = Field(ge=1, le=3)
 
-class EmergencyContactUpdate(BaseModel):
-    firstName: Optional[str] = Field(default=None)
-    lastName: Optional[str] = Field(default=None)
-    relationship: Optional[str] = Field(default=None)
-    phoneNumber: Optional[str] = Field(default=None)
-    priority: Optional[int] = Field(default=None)
+# class EmergencyContactUpdate(BaseModel):
+#     firstName: str = Field(default=None)
+#     lastName: str = Field(default=None)
+#     relationship: str = Field(default=None)
+#     phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$')
+#     # priority: int = Field(default=None)
 
-class EmergencyContactResponse(EmergencyContactCreate):
-    id: str
-    childId: str
-    createdAt: datetime
-    updatedAt: datetime
+# class EmergencyContactResponse(EmergencyContactCreate):
+#     id: str
+#     childId: str
+#     createdAt: datetime
+#     updatedAt: datetime

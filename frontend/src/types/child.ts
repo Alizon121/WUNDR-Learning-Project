@@ -1,3 +1,4 @@
+import { EmergencyContact } from "./emergencyContact";
 import { User } from "./user";
 
 export type Child = {
@@ -12,5 +13,7 @@ export type Child = {
     allergiesMedical?: string | null
     notes?: string | null;
     photoConsent: boolean
+    waiver: boolean
     parents: User[]
+    emergencyContacts: EmergencyContact[]
 }

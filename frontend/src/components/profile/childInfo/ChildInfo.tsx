@@ -67,6 +67,8 @@ const ChildInfo = () => {
         return children[idx]
     })
 
+    console.log("visibleChildren", visibleChildren)
+
     const handleNext = () => {
         if (children.length > 0) setCurrChildIdx((prevIdx) => (((prevIdx + 1) % children.length) + children.length) % children.length)
     }
@@ -124,16 +126,6 @@ const ChildInfo = () => {
                                     </div>
                                 </div>
 
-                                {/* <div className="mb-4">
-                                    <div className="font-bold">PARENT/GUARDIANS</div>
-                                    <div className="text-gray-500 text-sm my-1 ml-2">{(child?.parents ?? []).map((p) => `${p.firstName} ${p.lastName}`).join(", ") || ""}</div>
-                                </div>
-
-                                <div className="mb-4">
-                                    <div className="font-bold">HOMESCHOOL PROGRAM</div>
-                                    <div className="text-gray-500 text-sm my-1 ml-2">Coming soon...</div>
-                                </div> */}
-
                                 <div className="mb-4">
                                     <div className="font-bold">GRADE</div>
                                     <div className="text-gray-500 text-sm my-1 ml-2">{child.grade ? displayGrade(child.grade) : "N/A"}</div>
@@ -142,6 +134,19 @@ const ChildInfo = () => {
                                 <div className="flex flex-row gap-3 mb-4">
                                     <div className="font-bold">PHOTO CONSENT </div>
                                     <div className="text-gray-500 text-sm mt-1">{child.photoConsent ? <FaCheck/> : <FaX/>}</div>
+                                </div>
+
+                                <div className="mb-4 border-t pt-4">
+                                    <div className="font-bold">EMERGENCY CONTACTS</div>
+                                    <div className="text-gray-500 text-sm my-1 ml-2">
+                                        {child?.emergencyContacts?.map((contact) => (
+                                            <div key={contact.id} className="mb-2">
+                                                <div>Contact: {contact.firstName} {contact.lastName}</div>
+                                                <div>Relationship: {contact.relationship}</div>
+                                                <div>Phone Number: {contact.phoneNumber}</div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="mb-4 border-t pt-4">

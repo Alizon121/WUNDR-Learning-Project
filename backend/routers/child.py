@@ -1,8 +1,7 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from backend.db.prisma_client import db
 from typing import Annotated
-from backend.models.user_models import User, ChildCreate, ChildUpdate
-from backend.models.interaction_models import EmergencyContactCreate, EmergencyContactUpdate
+from backend.models.user_models import User, ChildCreate, ChildUpdate, EmergencyContactCreate, EmergencyContactUpdate
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from .auth.login import get_current_user
@@ -20,64 +19,106 @@ async def create_child(
     current_user: Annotated[User, Depends(get_current_user)]
 
 ):
-
     # Make sure the user is authenticated
     enforce_authentication(current_user, "add a child")
 
-    # print("THIS IS THE PARENTID:", current_user.id)
-
     # Add the child
     try:
-        created_child = await db.children.create(
-            data={
-                "firstName": child_data.firstName,
-                "lastName": child_data.lastName,
-                "preferredName": child_data.preferredName,
-                "homeschool": child_data.homeschool,
-                # "homeschoolProgram": child_data.homeschoolProgram,
-                "grade": child_data.grade,
-                "birthday": child_data.birthday,
-                "allergiesMedical": child_data.allergiesMedical,
-                "notes": child_data.notes,
-                "waiver": child_data.waiver,
-                "photoConsent": child_data.photoConsent,
-                "parentIDs": [current_user.id], # Add the current user's ID to parentIDs
-                "eventIDs": [], # Create activityIDs array so we can easily add to it later
-                "createdAt": child_data.createdAt,
-                "updatedAt": child_data.updatedAt
-            },
-        )
+        async with db.tx() as tx:
+            # create child
+            created_child = await tx.children.create(
+                data={
+                    "firstName": child_data.firstName,
+                    "lastName": child_data.lastName,
+                    "preferredName": child_data.preferredName,
+                    "homeschool": child_data.homeschool,
+                    "grade": child_data.grade,
+                    "birthday": child_data.birthday,
+                    "allergiesMedical": child_data.allergiesMedical,
+                    "notes": child_data.notes,
+                    "waiver": child_data.waiver,
+                    "photoConsent": child_data.photoConsent,
+                    "parentIDs": [current_user.id], # Add the current user's ID to parentIDs
+                    "eventIDs": [], # Create activityIDs array so we can easily add to it later
+                    "createdAt": child_data.createdAt,
+                    "updatedAt": child_data.updatedAt
+                },
+            )
 
-        # Once we create the child, update the current user to include the new child
-        updated_user = await db.users.update(
-            where={"id": current_user.id},
-            data={
-                "childIDs": {
-                    "push": created_child.id
-                }
-            },
-            include={
-                "children": True
-            }
-        )
+            # create/link emergency contacts
+            contacts: list = []
+            contact_ids: list[str] = []
+            for ec in getattr(child_data, "emergencyContacts", []):
+                existing_contact = await tx.emergencycontact.find_first(
+                    where={
+                        "firstName": ec.firstName,
+                        "lastName": ec.lastName,
+                        "phoneNumber": ec.phoneNumber
+                    }
+                )
 
+                if existing_contact:
+                    if created_child.id in existing_contact.childIDs:
+                        contacts.append(existing_contact)
+                        contact_ids.append(existing_contact.id)
+                    else:
+                        updated_contact = await tx.emergencycontact.update(
+                            where={"id": existing_contact.id},
+                            data={
+                                "childIDs": existing_contact.childIDs + [created_child.id],
+                                "relationship": ec.relationship
+                            }
+                        )
+                        contacts.append(updated_contact)
+                        contact_ids.append(updated_contact.id)
+                else:
+                    new_contact = await tx.emergencycontact.create(
+                        data={
+                            "firstName": ec.firstName,
+                            "lastName": ec.lastName,
+                            "phoneNumber": ec.phoneNumber,
+                            "relationship": ec.relationship,
+                            "childIDs": [created_child.id]
+                        }
+                    )
+                    contacts.append(new_contact)
+                    contact_ids.append(new_contact.id)
+
+            # attach contacts to child and fetch with include
+            if contact_ids:
+                created_child = await tx.children.update(
+                    where={ "id": created_child.id },
+                    data={ "emergencyContactIDs": { "set": contact_ids } },
+                    include={ "emergencyContacts": True, "parents": True }
+                )
+            else:
+                created_child = await tx.children.find_unique(
+                    where={ "id": created_child.id},
+                    include={ "emergencyContacts": True, "parents": True }
+                )
+
+            # Once we create the child, update the current user to include the new child
+            updated_user = await tx.users.update(
+                where={"id": current_user.id},
+                data={ "childIDs": { "push": created_child.id } },
+                include={ "children": True }
+            )
+
+        return {
+            "child": created_child,
+            "parent": updated_user,
+            "emergencyContacts": contacts,
+            "message": "Child added successfully"
+        }
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create child: {str(e)}"
+            detail=f"Failed to create child and emergency contacts: {str(e)}"
         )
 
-    # payload = {
-    #     "child": created_child,
-    #     "parent": updated_user,
-    #     "message": "Child added successfully"
-    # }
-
-    # return JSONResponse(
-    #     status_code=201,
-    #     content=jsonable_encoder(payload)
-    # )
-    return {"child": created_child, "parent": updated_user, "message": "Child added successfully"}
 
 # ! Get Children of the Current User
 @router.get("/current", status_code=status.HTTP_200_OK)
@@ -94,7 +135,7 @@ async def get_children(
                 "has": current_user.id
             }
         },
-        include={"parents": True}
+        include={"emergencyContacts": True, "parents": True}
 
     )
     return children
@@ -115,7 +156,8 @@ async def get_child_by_id(
         include={
             # Include the child's parents and their events
             "parents": True,
-            "events": True
+            "events": True,
+            "emergencyContacts": True
         }
     )
 
@@ -308,11 +350,11 @@ async def create_emergency_contact(
 
 
     # Validate priority range (assuming 1-3 is acceptable range)
-    if not (1 <= emergency_contact_data.priority <= 3):
-        raise HTTPException(
-            status_code=400,
-            detail="Priority must be between 1 and 3"
-        )
+    # if not (1 <= emergency_contact_data.priority <= 3):
+    #     raise HTTPException(
+    #         status_code=400,
+    #         detail="Priority must be between 1 and 3"
+    #     )
 
     # Check for priority conflicts (if you want unique priorities per child)
     # existing_priority = await db.emergencycontact.find_first(
@@ -349,7 +391,8 @@ async def create_emergency_contact(
                 where={"id": existing_contact.id},
                 data={
                     "childIDs": existing_contact.childIDs + [child_id],
-                    "priority": emergency_contact_data.priority  # Update priority for this relationship
+                    "relationship": emergency_contact_data.relationship
+                    # "priority": emergency_contact_data.priority  # Update priority for this relationship
                 }
             )
 
@@ -365,7 +408,7 @@ async def create_emergency_contact(
                     "lastName": emergency_contact_data.lastName,
                     "phoneNumber": emergency_contact_data.phoneNumber,
                     "relationship": emergency_contact_data.relationship,
-                    "priority": emergency_contact_data.priority,
+                    # "priority": emergency_contact_data.priority,
                     "childIDs": [child_id]
                     }
             )
@@ -478,8 +521,8 @@ async def update_emergency_contact(
         if emergency_contact_data.phoneNumber is not None:
             update_payload["phoneNumber"] = emergency_contact_data.phoneNumber
 
-        if emergency_contact_data.priority is not None:
-            update_payload["priority"] = emergency_contact_data.priority
+        # if emergency_contact_data.priority is not None:
+        #     update_payload["priority"] = emergency_contact_data.priority
 
         updated_contact = await db.emergencycontact.update(
             where={"id": contact_id},

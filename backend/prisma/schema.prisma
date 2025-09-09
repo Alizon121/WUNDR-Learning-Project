@@ -85,7 +85,7 @@ model EmergencyContact{
   lastName              String
   phoneNumber           String
   relationship          String
-  priority              Int @default(1)
+  // priority              Int @default(1)
   createdAt             DateTime @default(now())
   updatedAt             DateTime? @updatedAt
 

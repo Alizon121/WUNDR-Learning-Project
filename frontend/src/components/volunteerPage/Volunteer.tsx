@@ -1,7 +1,7 @@
 import {useEffect, useState } from 'react';
 import HeroVolunteer from "./Hero"
 import Opportunities from './Opportunities';
-import VolunteerForm from './VolunteerForm';
+import VolunteerForm from './VolunteerForm ';
 
 type TabKey = 'opps' | 'form';
 

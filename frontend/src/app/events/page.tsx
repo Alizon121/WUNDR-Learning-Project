@@ -6,7 +6,6 @@ import { makeApiRequest } from "../../../utils/api";
 import { Activity } from "@/types/activity";
 import { Event } from "@/types/event";
 
-
 interface GroupedEvents {
   activity: string;
   events: Event[];
@@ -19,6 +18,7 @@ export default function EventsPage() {
 
   useEffect(() => {
     const user = localStorage.getItem("user");
+    console.log("THIS IS THE USER:", user);
     if (user) {
       const userObj = JSON.parse(user);
       setIsAdmin(userObj.role === "admin");

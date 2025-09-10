@@ -39,6 +39,9 @@ model Users {
   // One-to-m
   notifications     Notifications[]
   reviews           Reviews[]
+
+  // One-to-one
+  volunteer Volunteers?
 }
 
 enum Roles {
@@ -77,6 +80,62 @@ model Children {
   updatedAt             DateTime? @updatedAt
 }
 
+//  ! Volunteer             =============================================================================
+
+model Volunteers{
+  id                     String  @id @default(auto()) @map("_id") @db.ObjectId
+  firstName              String
+  lastName               String
+  email                  String?
+  phoneNumber            String?
+  cities                 String[]
+  availability           Json
+  skills                 String[]
+  bio                    String?
+  photoConsent           Boolean
+  backgroundCheckConsent Boolean
+
+  // One-to-one relationship
+  user Users @relation(fields: [userId], references: [id])
+  userId String @unique @db.ObjectId
+
+  // One-to-many relationship
+  volunteerOpportunitiesIDs String[] @db.ObjectId
+  volunteerOpportunity VolunteerOpportunities @relation(fields: [volunteerOpportunitiesIDs], references: [id])
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime? @updatedAt
+}
+
+//  ! Volunteer Opportunity =============================================================================
+
+enum Venue {
+  Indoors
+  Outdoors
+  Online
+}
+
+model VolunteerOpportunities{
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  venue           Venue
+  duties          String[]
+  skills          String[]
+  time            String
+  requirements    String[]
+  tags            String[]
+  // guide           Boolean DO WE NEED THIS?
+  minAge          Int
+  bgCheckRequired Boolean
+
+  // One-to-many relationship
+  volunteerIDs String[] @db.ObjectId
+  volunteer Volunteers[] @relation(fields: [volunteerIDs], references: [id])
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime? @updatedAt
+}
+
 //  ! Emergency Contact     =============================================================================
 
 model EmergencyContact{
@@ -105,7 +164,7 @@ model Activities {
 // ! Events         =============================================================================
 
 model Events {
-    id          String      @id @default(auto()) @map("_id") @db.ObjectId
+    id            String      @id @default(auto()) @map("_id") @db.ObjectId
 
     name          String      @unique
     description   String

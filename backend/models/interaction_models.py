@@ -1,6 +1,7 @@
 from __future__ import annotations
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, TYPE_CHECKING, Optional
+from enum import Enum
 from datetime import datetime, timezone
 
 
@@ -174,9 +175,71 @@ class EmergencyContactUpdate(BaseModel):
     relationship: Optional[str] = Field(default=None)
     phoneNumber: Optional[str] = Field(default=None)
     priority: Optional[int] = Field(default=None)
+      
+class EmergencyContactResponse(EmergencyContactCreate):
+    id: str
+    childId: str
+    createdAt: datetime
+    updatedAt: datetime
 
-# class EmergencyContactResponse(EmergencyContactCreate):
-#     id: str
-#     childId: str
-#     createdAt: datetime
-#     updatedAt: datetime
+# ! Volunteer Opportunity models
+class Venue(str, Enum):
+   INDOORS= "Indoors"
+   OUTDOORS="Outdoors"
+   ONLINE="Online"
+   
+
+class VolunteerOpportunityCreate(BaseModel):
+  id: str = Field(..., min_length=1, description="Volunteer identifier")
+  title: str = Field(...,min_length=2, max_length=100, description="title for volunteer opportunity")
+  venue: Venue = Field(..., description="Venue type")
+  duties: List[str] = Field(default_factory=list, description="list of duties")
+  skills: List[str] = Field(default_factory=list, description="List of skills")
+  time: str = Field(..., description="Time/schedule information")
+  requirements: List[str] = Field(default_factory=list, description="Requirements")
+  tags: List[str] = Field(default_factory=list, description="Tags for volunteer opportunity")
+  minAge: int = Field(le=16, ge=100, description="Age requirement")
+  bgCheckRequired: bool = Field(default=True, description="Background check requirement")
+
+  @field_validator("duties", "skills", "requirements", "tags", mode="before")
+  def clean_string_lists(cls, v):
+     if v is None or v == []:
+         return None
+     return [item.strip() for item in v if item and item.strip()]
+
+class VolunteerOpportunityResponse(BaseModel):
+    id: str = Field(..., description="Opportunity identifier")
+    title: str
+    venue: Venue
+    duties: List[str]
+    skills: List[str]
+    time: str
+    requirements: List[str]
+    tags: List[str]
+    minAge: int
+    bgCheckRequired: bool
+    createdAt: datetime
+    updatedAt: Optional[datetime]
+    
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+class VolunteerOpportunityUpdate(BaseModel):
+    title: Optional[str] = Field(default=None)
+    venue: Optional[Venue] = Field(default=None)
+    duties: Optional[List[str]] = Field(default=None)
+    skills: Optional[List[str]] = Field(default=None)
+    time: Optional[str] = Field(default=None)
+    requirements: Optional[List[str]] = Field(default=None)
+    tags: Optional[List[str]] = Field(default=None)
+    minAge: Optional[int] =Field(None, ge=16, le=100)
+    bgCheckRequired: Optional[bool] = Field(default=None)
+
+    @field_validator("duties", "skills", "requirements", "tags", mode="before")
+    def clean_string_list(cls, v):
+        if v is None or v == []:
+            return None
+        return [item.strip() for item in v if item and item.strip()]

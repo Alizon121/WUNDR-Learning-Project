@@ -1,9 +1,12 @@
+import OpenModalButton from "@/app/context/openModalButton";
 import Link from "next/link";
 import { formatDate } from "../../../utils/formatDate";
 import { Event } from "@/types/event";
+import DeleteEventModal from "./DeleteEventModal";
 
 interface Props {
   event: Event;
+  events: Event[];
   isAdmin: boolean;
 }
 
@@ -28,24 +31,35 @@ export default function EventCard({ event, isAdmin }: Props) {
           <span className="text-xs text-gray-500 mb-2">
             {event.participants} participant(s) enrolled
           </span>
+
+          <div className="flex justify-between gap-x-2 mt-2">
+            <button className="flex-1 bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
+              <Link href={`/events/${event.id}`}>
+                <strong>VIEW DETAILS</strong>
+              </Link>
+            </button>
+            <button className="flex-1 bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
+              <Link href={`/events/${event.id}`}>
+                <strong>JOIN EVENT</strong>
+              </Link>
+            </button>
+          </div>
+
           {isAdmin && (
             <div className="flex justify-between mt-2 gap-x-2">
               <button className="mt-2 bg-green-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
                 <Link href={`/events/${event.id}`}>
                   <strong>EDIT</strong>
-                  {/* View Details */}
                 </Link>
               </button>
-              <button className="mt-2 bg-red-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-                <Link href={`/events/${event.id}`}>
-                  <strong>DELETE</strong>
-                  {/* View Details */}
-                </Link>
-              </button>
+              <OpenModalButton
+                className="mt-2 bg-red-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors"
+                buttonText="DELETE"
+                modalComponent={<DeleteEventModal event={event} />}
+              />
               <button className="mt-2 bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
                 <Link href={`/events/${event.id}`}>
                   <strong>BLAST</strong>
-                  {/* View Details */}
                 </Link>
               </button>
             </div>

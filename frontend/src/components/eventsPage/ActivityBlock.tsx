@@ -1,8 +1,9 @@
+import { Event } from "@/types/event";
 import EventCard from "./EventCard";
 
 interface Props {
     activityName: string;
-    events: any[];
+    events: Event[]
     isAdmin: boolean;
 }
 

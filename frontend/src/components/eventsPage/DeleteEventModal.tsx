@@ -1,6 +1,6 @@
 import { useModal } from "@/app/context/modal";
 import { useState } from "react";
-import Event from "@/types/event";
+import { Event } from "@/types/event";
 import React from "react";
 import { makeApiRequest } from "../../../utils/api";
 import { FaExclamationTriangle, FaTrash } from "react-icons/fa";

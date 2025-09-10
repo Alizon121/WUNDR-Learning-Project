@@ -18,7 +18,7 @@ export default function EventsPage() {
 
   useEffect(() => {
     const user = localStorage.getItem("user");
-    console.log("THIS IS THE USER:", user);
+    // console.log("THIS IS THE USER:", user);
     if (user) {
       const userObj = JSON.parse(user);
       setIsAdmin(userObj.role === "admin");

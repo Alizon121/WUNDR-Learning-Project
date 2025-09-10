@@ -8,7 +8,6 @@ export default function EventsDetailPage() {
     const { eventId } = useParams()
     const { event, loading, error, refetch } = useEvent(eventId)
 
-
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">

@@ -162,19 +162,19 @@ class Jobs(BaseModel):
         form_attributes = True
 
 # #! Emergency Contact
-# class EmergencyContactCreate(BaseModel):
-#     firstName: str = Field(min_length=1, max_length=100)
-#     lastName: str = Field(min_length=1, max_length=100)
-#     relationship: str = Field(min_length=1, max_length=200)
-#     phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$')
-#     # priority: int = Field(ge=1, le=3)
+class EmergencyContactCreate(BaseModel):
+    firstName: str = Field(min_length=1, max_length=100)
+    lastName: str = Field(min_length=1, max_length=100)
+    relationship: str = Field(min_length=1, max_length=200)
+    phoneNumber: str = Field(pattern=r'^\+[1-9]\d{1,14}$')
+    # priority: int = Field(ge=1, le=3)
 
 class EmergencyContactUpdate(BaseModel):
     firstName: Optional[str] = Field(default=None)
     lastName: Optional[str] = Field(default=None)
     relationship: Optional[str] = Field(default=None)
     phoneNumber: Optional[str] = Field(default=None)
-    priority: Optional[int] = Field(default=None)
+    # priority: Optional[int] = Field(default=None)
       
 class EmergencyContactResponse(EmergencyContactCreate):
     id: str
@@ -190,7 +190,6 @@ class Venue(str, Enum):
    
 
 class VolunteerOpportunityCreate(BaseModel):
-  id: str = Field(..., min_length=1, description="Volunteer identifier")
   title: str = Field(...,min_length=2, max_length=100, description="title for volunteer opportunity")
   venue: Venue = Field(..., description="Venue type")
   duties: List[str] = Field(default_factory=list, description="list of duties")
@@ -198,8 +197,9 @@ class VolunteerOpportunityCreate(BaseModel):
   time: str = Field(..., description="Time/schedule information")
   requirements: List[str] = Field(default_factory=list, description="Requirements")
   tags: List[str] = Field(default_factory=list, description="Tags for volunteer opportunity")
-  minAge: int = Field(le=16, ge=100, description="Age requirement")
+  minAge: int = Field(le=16, description="Age requirement")
   bgCheckRequired: bool = Field(default=True, description="Background check requirement")
+  volunteerIDs: List[str] = Field(default=None, description="Enrolled Volunteers")
 
   @field_validator("duties", "skills", "requirements", "tags", mode="before")
   def clean_string_lists(cls, v):

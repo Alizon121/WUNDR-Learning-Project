@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
+from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict, model_serializer
 # from models.interaction_models import Review, Notification, Activity, Event
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Any
 from enum import Enum
 from datetime import datetime, timedelta, timezone, date
 
@@ -102,21 +102,26 @@ class AvailabilityDays(str, Enum):
     WEEKDAYS = "Weekdays"
     WEEKENDS = "Weekends"
 
-class AvailabilityTimes(str, Enum):
-    MORNING = "Morning"
-    AFTERNOON = "Afternoon"
-    EVENING = "Evening"
+class VolunteerCreate(BaseModel):
+  firstName: str = Field(..., min_length=1, max_length=100, description="First Name")
+  lastName: str = Field(..., min_length=1, max_length=100, description="Last Name")
+  email: Optional[EmailStr] = Field(None, description="Email")
+  phoneNumber: Optional[str] = Field(None, min_length = 10, max_length= 20, description="Phone number")
+  cities: List[str] = Field(default_factory=list, description="Cities to volunteer in")
+  daysAvail: List[AvailabilityDays] = Field(None, description="Availability schedule")
+  timesAvail: List[str] = Field(..., description="Available times")
+  skills: Optional[List[str]] = Field(default_factory=list, description="Volunteer skills")
+  bio: Optional[str] = Field(None, min_length=5, max_length=500, description="Volunteer bio")
+  photoConsent: bool = Field(..., description="Must consent to photo usage")
+  backgroundCheckConsent: bool = Field(..., description="Must consent to background check")
+  # userId: str = Field(..., description="Associated user ID")
 
-class Availability(BaseModel):
-    days: Optional[List[AvailabilityDays]] = None
-    times: Optional[List[AvailabilityTimes]] = None
-    
-    @field_validator('days', 'times', mode="before")
-    def validate_availability(cls, v):
-        if v is None or v == []:
-            return None
-        return v
-
+  @field_validator("cities", "timesAvail", "skills", mode="before")
+  def clean_lists(cls, v):
+    if v is None:
+       return []
+    return [item.strip() for item in v if item and item.strip()]
+  
 class Volunteer(BaseModel):
   id: str = Field(..., min_length=1, description="Volunteer identifier")
   firstName: str = Field(min_length=1, max_length=50)
@@ -124,7 +129,8 @@ class Volunteer(BaseModel):
   email: Optional[str] = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
   phoneNumber: Optional[str]
   cities: List[str] = Field(default_factory=list)
-  availability: Optional[Availability]
+  daysAvail: List[AvailabilityDays]
+  timesAvail: List[str]
   skills: List[str] = Field(default_factory=list)
   bio: Optional[str] = Field(min_length=5, max_length=500)
   photoConsent: bool = Field(default=False)
@@ -139,34 +145,14 @@ class Volunteer(BaseModel):
       datetime: lambda v: v.isoformat()
     }
   }
-  
-
-class VolunteerCreate(BaseModel):
-  firstName: str = Field(..., min_length=1, max_length=100, description="First Name")
-  lastName: str = Field(..., min_length=1, max_length=100, description="Last Name")
-  email: Optional[EmailStr] = Field(None, description="Email")
-  phoneNumber: Optional[str] = Field(None, min_length = 10, max_length= 20, description="Phone number")
-  cities: Optional[List[str]] = Field(default_factory=list, description="Cities to volunteer in")
-  availability: Optional[Availability] = Field(None, description="Availability schedule")
-  skills: Optional[List[str]] = Field(default_factory=list, description="Volunteer skills")
-  bio: Optional[str] = Field(None, min_length=5, max_length=500, description="Volunteer bio")
-  photoConsent: bool = Field(..., description="Must consent to photo usage")
-  backgroundCheckConsent: bool = Field(..., description="Must consent to background check")
-  # userId: str = Field(..., description="Associated user ID")
-
-  @field_validator("cities", "skills", mode="before")
-  def clean_lists(cls, v):
-    if v is None:
-       return []
-    return [item.strip() for item in v if item and item.strip()]
-  
 class VolunteerUpdate(BaseModel):
   firstName: Optional[str] = None
   lastName: Optional[str] = None
   email: Optional[str] = None
   phoneNumber: Optional[str] = None
   cities: Optional[List[str]] = None
-  availability: Optional[Availability] = None
+  daysAvail: Optional[AvailabilityDays] = None
+  timesAvail: Optional[List[str]] = None
   skills: Optional[List[str]] = None
   bio: Optional[str] = Field(None, min_length=5, max_length=500)
   photoConsent: Optional[bool] = None

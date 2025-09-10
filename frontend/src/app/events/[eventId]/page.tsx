@@ -8,7 +8,6 @@ export default function EventsDetailPage() {
     const { eventId } = useParams()
     const { event, loading, error, refetch } = useEvent(eventId)
 
-    console.log('eventttttt', event)
 
     if (loading) {
         return (
@@ -70,6 +69,13 @@ export default function EventsDetailPage() {
                             </svg>
                             {event?.date.split("T")[0]}
                         </div>
+
+                        <div className="mt-3">
+                            <p>{event.address}</p>
+                            <p>{event.city}, {event.state} {event.zipCode}</p>
+                            <p>{event.latitude}°N, {event.longitude}°W</p>
+                        </div>
+
                         <div className="mt-3">
                             <h3 className="flex items-center text-white-800 text-lg font-semibold">{event?.participants == 1 ? "Participant" : "Participants"}</h3>
                             <span>{event?.participants}</span>

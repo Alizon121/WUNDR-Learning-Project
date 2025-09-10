@@ -39,7 +39,43 @@ async def create_volunteer_opportunity(
             detail=f"Unable to create volunteer opportunity: {e}"
         )
 
-# DELETE OPPORTUNITY
+@router.delete("/{opportunity_id}", status_code=status.HTTP_200_OK)
+async def delete_opportunity(
+    opportunity_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+        Authenticate and enforce admin for current user
+        Delete the opportunity
+        return deleted opportunity
+    """
+
+    # Validate user
+    enforce_authentication(current_user)
+    enforce_admin(current_user)
+
+    # Query for the opportunity
+    try:
+        opportunity = await db.volunteeropportunities.find_unique(
+            where={"id": opportunity_id}
+        )
+
+        if not opportunity:
+            raise HTTPException(
+                status_code=404,
+                detail="Unable to locate opportunity"
+            )
+
+        deleted_opportunity = await db.volunteeropportunities.delete(
+            where={"id": opportunity_id}
+        )
+
+        return {"Deleted Opportunity": delete_opportunity}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to delete volunteer opportunity: {e}"
+        )
 
 # * Volunteer Routes ======================================
 @router.get("/{opportunity_id}/volunteers/", status_code=status.HTTP_200_OK)

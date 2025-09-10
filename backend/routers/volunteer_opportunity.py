@@ -68,7 +68,7 @@ async def update_opportunity(
 
     # Update the opportunity
     try:
-        data = opportunity_data.model_dump()
+        data = opportunity_data.model_dump(exclude_unset=True)
 
         updated_opportunity = await db.volunteeropportunities.update(
             where={"id": opportunity_id},
@@ -114,7 +114,7 @@ async def delete_opportunity(
             where={"id": opportunity_id}
         )
 
-        return {"Deleted Opportunity": delete_opportunity}
+        return {"Deleted Opportunity": deleted_opportunity}
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -143,7 +143,7 @@ async def get_volunteers_by_opportunity(
             where={"id": opportunity_id}
         )
 
-        return {"Opportunity": opportunity.volunteerIDs}
+        return {"Volunteers": opportunity.volunteerIDs}
     except:
         raise HTTPException(
             status_code=500,

@@ -150,7 +150,7 @@ class VolunteerUpdate(BaseModel):
   email: Optional[str] = None
   phoneNumber: Optional[str] = None
   cities: Optional[List[str]] = None
-  daysAvail: Optional[AvailabilityDays] = None
+  daysAvail: Optional[List[AvailabilityDays]] = None
   timesAvail: Optional[List[str]] = None
   skills: Optional[List[str]] = None
   bio: Optional[str] = Field(None, min_length=5, max_length=500)

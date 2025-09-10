@@ -47,7 +47,6 @@ async def volunteer_sign_up(
 
 @router.patch("/", status_code=status.HTTP_200_OK)
 async def update_volunteer(
-    volunteer_id: str,
     current_user: Annotated[User, Depends(get_current_user)],
     volunteer_data: VolunteerUpdate
 ):
@@ -74,7 +73,10 @@ async def update_volunteer(
     
     # Handle update
     try:
-        data = volunteer_data.model_dump()
+        data = volunteer_data.model_dump(exclude_unset=True)
+
+        if not data:
+            return {"Original Volunteer": volunteer}
 
         updated_volunteer = await db.volunteers.update(
             where={"userId": current_user.id},

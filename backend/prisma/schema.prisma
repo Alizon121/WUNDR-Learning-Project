@@ -124,7 +124,7 @@ enum Venue {
 model VolunteerOpportunities{
   id              String  @id @default(auto()) @map("_id") @db.ObjectId
   title           String
-  venue           Venue
+  venue           Venue[]
   duties          String[]
   skills          String[] // Optional
   time            String

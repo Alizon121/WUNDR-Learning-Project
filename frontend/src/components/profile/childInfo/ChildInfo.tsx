@@ -67,8 +67,6 @@ const ChildInfo = () => {
         return children[idx]
     })
 
-    console.log("visibleChildren", visibleChildren)
-
     const handleNext = () => {
         if (children.length > 0) setCurrChildIdx((prevIdx) => (((prevIdx + 1) % children.length) + children.length) % children.length)
     }
@@ -88,7 +86,8 @@ const ChildInfo = () => {
 
             <button
                 onClick={handleShowForm}
-                className="flex items-center mb-30 bg-wonderleaf border-none py-[12px] px-[24px] text-base rounded-md cursor-pointer mb-30 mx-auto">
+                className="flex items-center mb-30 bg-wonderleaf border-none py-[12px] px-[24px] text-base rounded-md cursor-pointer mb-30 mx-auto"
+            >
                     Add a child?
             </button>
 

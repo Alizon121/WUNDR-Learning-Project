@@ -11,14 +11,9 @@ type Props = {
     onSuccess: (createdChild: any) => void
 }
 
-type FormErrors = Partial<Record<"firstName" | "lastName" | "birthday", string>>
 type ChildForm = Omit<ChildPayload, "emergencyContacts" | "createdAt" | "updatedAt">;
-type ECErrors = Partial<{
-    firstName: string
-    lastName: string
-    relationship: string
-    phoneNumber: string
-}>
+type FormErrors = Partial<Record<"firstName" | "lastName" | "birthday", string>>
+type ECErrors = Partial<Record<"firstName" | "lastName" | "relationship" | "phoneNumber", string>>
 
 const blankEC = (): EmergencyContact => ({
     id: "",
@@ -26,7 +21,7 @@ const blankEC = (): EmergencyContact => ({
     lastName: "",
     relationship: "",
     phoneNumber: ""
-});
+})
 
 const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
     const [errors, setErrors] = useState<FormErrors>({})

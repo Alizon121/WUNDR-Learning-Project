@@ -3,7 +3,7 @@ import { FormErrors } from "@/types/forms"
 import React, { useState } from "react"
 import { handleSignup, SignupPayload } from "../../../utils/auth";
 import { formatUs, toE164US } from "../../../utils/formatPhoneNumber";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/app/context/auth";
 import { User } from "@/types/user";
 
@@ -14,6 +14,14 @@ const SignupModal = () => {
     const { closeModal } = useModal()
     const { loginWithToken } = useAuth()
     const router = useRouter()
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+
+    const nextParam = searchParams.get('next');
+    const safeNext =
+    nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')
+        ? nextParam
+        : pathname || '/';
 
     // State for errors, step, roles, child info, etc.
     const [errors, setErrors] = useState<FormErrors>({})
@@ -25,6 +33,7 @@ const SignupModal = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [creating, setCreating] = useState(false)
+    
 
     // Form fields for each step
     const [form1, setForm1] = useState({
@@ -112,12 +121,12 @@ const SignupModal = () => {
             const response = await handleSignup(userInfo)
             await loginWithToken(response.token, response.user as User | undefined)
             closeModal();
-
+            
+            let redirectTo = safeNext;
             if (selectedRole === "parent") {
-                router.push(parentNext === 'now' ? "/profile?tab=child" : "/")
-            } else {
-                router.push("/")
+                redirectTo = parentNext === 'now' ? "/profile?tab=child" : safeNext;
             }
+            router.replace(redirectTo);
 
         } catch (err) {
             setServerError("A network error occurred. Please try again later.");

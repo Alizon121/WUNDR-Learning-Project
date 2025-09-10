@@ -9,7 +9,6 @@ export default function Volunteer(){
     const [tab, setTab] = useState<TabKey>('opps');
     
 
-    // (опционально) открывать вкладку по хэшу в URL: /volunteer-page#apply
     useEffect(() => {
         if (typeof window === 'undefined') return;
         const hash = window.location.hash.replace('#', '');

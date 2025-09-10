@@ -147,3 +147,30 @@ export function handleLogout() {
   // console.log("👋 Logged out");
   router.push('/')
 }
+
+// GetToken  =================================================
+//!Get the token from localStorage (client-side only).
+
+export const TOKEN_KEY = 'token';
+
+export function setToken(token: string) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+//! Quick UI check: does a token exist? (not a security check)
+export function isLoggedIn(): boolean {
+  return !!getToken();
+}
+
+

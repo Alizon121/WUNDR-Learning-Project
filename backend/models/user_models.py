@@ -114,7 +114,6 @@ class VolunteerCreate(BaseModel):
   bio: Optional[str] = Field(None, min_length=5, max_length=500, description="Volunteer bio")
   photoConsent: bool = Field(..., description="Must consent to photo usage")
   backgroundCheckConsent: bool = Field(..., description="Must consent to background check")
-  # userId: str = Field(..., description="Associated user ID")
 
   @field_validator("cities", "timesAvail", "skills", mode="before")
   def clean_lists(cls, v):

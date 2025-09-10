@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react"
 import { makeApiRequest } from "../utils/api"
-
-interface Event {
-  id: string
-  name: string
-  image: string
-  date: string
-  description: string
-  participants: number
-}
+import { Event } from "@/types/event"
 
 export function useEvent(eventId: string | string[] | undefined) {
   const [event, setEvent] = useState<Event | null>(null)

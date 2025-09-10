@@ -1,7 +1,8 @@
 import OpenModalButton from "@/app/context/openModalButton";
 import Link from "next/link";
+import { formatDate } from "../../../utils/formatDate";
+import { Event } from "@/types/event";
 import DeleteEventModal from "./DeleteEventModal";
-import Event from "@/types/event";
 
 interface Props {
   event: Event;
@@ -9,18 +10,8 @@ interface Props {
   isAdmin: boolean;
 }
 
-const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-
-    return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    });
-};
-
-export default function EventCard({ event, events, isAdmin }: Props) {
-    return (
+export default function EventCard({ event, isAdmin }: Props) {
+  return (
       <div className="flex-shrink-0 w-80 bg-white border rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
         {/* Date Badge */}
         <div className="inline-block bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
@@ -29,7 +20,7 @@ export default function EventCard({ event, events, isAdmin }: Props) {
 
         {/* Event Content */}
         <h3 className="text-lg font-semibold text-gray-800 mb-2">
-          {event.name}
+          {event.name} in {event.city}
         </h3>
         <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[3.5rem]">
           {event.description}

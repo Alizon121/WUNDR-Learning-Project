@@ -3,14 +3,8 @@
 import { useEffect, useState } from "react";
 import ActivityBlock from "@/components/eventsPage/ActivityBlock";
 import { makeApiRequest } from "../../../utils/api";
-import Event from "@/types/event";
-
-interface Activity {
-  id: string;
-  name: string;
-  description: string;
-  events: Event[];
-}
+import { Activity } from "@/types/activity";
+import { Event } from "@/types/event";
 
 interface GroupedEvents {
   activity: string;
@@ -29,7 +23,7 @@ export default function EventsPage() {
       const userObj = JSON.parse(user);
       setIsAdmin(userObj.role === "admin");
     }
-  });
+  }, []);
 
   useEffect(() => {
     const fetchActivitiesWithEvents = async () => {
@@ -40,7 +34,7 @@ export default function EventsPage() {
 
         const formatted: GroupedEvents[] = activities.map((activity) => ({
           activity: activity.name,
-          events: activity.events,
+          events: activity.events ?? [],
         }));
 
         setGroupedEvents(formatted);
@@ -72,14 +66,12 @@ export default function EventsPage() {
       </div>
 
       {groupedEvents.map(({ activity, events }) => (
-        // <div>
         <ActivityBlock
           key={activity}
           activityName={activity}
           events={events}
           isAdmin={isAdmin}
         />
-        // </div>
       ))}
     </main>
   );

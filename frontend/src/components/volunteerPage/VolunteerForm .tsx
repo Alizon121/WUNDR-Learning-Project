@@ -1,27 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { makeApiRequest } from '../../../utils/api';
 import type { VolunteerCreate, AvailabilityDay } from '@/types/volunteer';
 import { isLoggedIn } from '../../../utils/auth';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { formatUs, toE164US } from '../../../utils/formatPhoneNumber';
+import MultiSelect from '@/components/common/MultiSelect';
+import { CITIES_CO } from '@/data/citiesCO';
 import { useModal } from '@/app/context/modal';
 import LoginModal from '@/components/login/LoginModal';
 import SignupModal from '@/components/signup/SignupModal';
- 
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+
+const TIME_OPTIONS = ['Mornings', 'Afternoons', 'Evenings'] as const;
+type TimeOption = (typeof TIME_OPTIONS)[number];
 
 type FormState = {
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber: string;
-  citiesLine: string;   // "Westcliffe, Pueblo"
-  timesLine: string;    // "mornings, evenings"
-  skillsLine: string;   // "hiking, photography"
-  daysAvail: AvailabilityDay[]; // ['Weekdays','Weekends']
+  selectedCities: string[];
+  timesChoices: string[];
+  skillsLine: string;
+  daysAvail: AvailabilityDay[];
   bio: string;
   photoConsent: boolean;
   backgroundCheckConsent: boolean;
@@ -32,8 +35,8 @@ const initial: FormState = {
   lastName: '',
   email: '',
   phoneNumber: '',
-  citiesLine: '',
-  timesLine: '',
+  selectedCities: [],
+  timesChoices: [],
   skillsLine: '',
   daysAvail: [],
   bio: '',
@@ -41,25 +44,31 @@ const initial: FormState = {
   backgroundCheckConsent: false,
 };
 
+// Helpers
+const toList = (s: string) => s.split(',').map(x => x.trim()).filter(Boolean);
+const emailValid = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+
 export default function VolunteerForm() {
-    const { setModalContent } = useModal()
   const [f, setF] = useState<FormState>(initial);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
-  const search = useSearchParams();
-  const next = encodeURIComponent(
-    search?.toString() ? `${pathname}?${search.toString()}` : pathname
-  )
 
-  const logged = isLoggedIn();
+  // Hydration-safe "am I logged in?"
+  const [client, setClient] = useState(false);
+  useEffect(() => setClient(true), []);
+  const logged = client && isLoggedIn();
   const disabled = !logged || submitting;
 
-  const goLogin = () => setModalContent(<LoginModal />);
-  const goSignup = () => setModalContent(<SignupModal />);
+  const { setModalContent } = useModal();
+  const firstNameRef = useRef<HTMLInputElement | null>(null);
 
+  // Focus the first name once the user is allowed to type
+  useEffect(() => {
+    if (logged && !disabled) firstNameRef.current?.focus();
+  }, [logged, disabled]);
+
+  // Toggle helpers
   const toggleDay = (d: AvailabilityDay) =>
     setF(v => ({
       ...v,
@@ -68,13 +77,39 @@ export default function VolunteerForm() {
         : [...v.daysAvail, d],
     }));
 
+  const toggleTime = (t: TimeOption) =>
+    setF(v => ({
+      ...v,
+      timesChoices: v.timesChoices.includes(t)
+        ? v.timesChoices.filter(x => x !== t)
+        : [...v.timesChoices, t],
+    }));
+
+  const selectAllTimes = () =>
+    setF(v => ({
+      ...v,
+      timesChoices:
+        v.timesChoices.length === TIME_OPTIONS.length ? [] : [...TIME_OPTIONS],
+    }));
+
+  // Submit
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setOk(false);
 
+    // Required validations
     if (!f.firstName.trim() || !f.lastName.trim()) {
       setError('Please provide first and last name.');
+      return;
+    }
+    if (!f.email.trim() || !emailValid(f.email.trim())) {
+      setError('Please provide a valid email address.');
+      return;
+    }
+    const e164 = toE164US(f.phoneNumber);
+    if (!e164) {
+      setError('Please enter a valid 10-digit US phone number.');
       return;
     }
     if (!f.photoConsent || !f.backgroundCheckConsent) {
@@ -82,18 +117,17 @@ export default function VolunteerForm() {
       return;
     }
 
-    const toList = (s: string) =>
-      s.split(',').map(x => x.trim()).filter(Boolean);
+    const skillsList = toList(f.skillsLine);
 
     const payload: VolunteerCreate = {
       firstName: f.firstName.trim(),
       lastName: f.lastName.trim(),
       email: f.email.trim() || undefined,
       phoneNumber: f.phoneNumber.trim() || undefined,
-      cities: toList(f.citiesLine),
-      daysAvail: f.daysAvail,                // 'Weekdays' | 'Weekends'
-      timesAvail: toList(f.timesLine),
-      skills: toList(f.skillsLine),
+      cities: f.selectedCities,
+      daysAvail: f.daysAvail,
+      timesAvail: f.timesChoices,
+      skills: skillsList,
       bio: f.bio.trim() || undefined,
       photoConsent: f.photoConsent,
       backgroundCheckConsent: f.backgroundCheckConsent,
@@ -114,106 +148,141 @@ export default function VolunteerForm() {
     }
   };
 
-  
-
   return (
-    <div className="mx-auto max-w-3xl">
-        {!logged && (
-  <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-    <p className="font-medium">Please log in to apply as a volunteer.</p>
-    <div className="mt-2 flex gap-3">
-      <button
-        type="button"
-        onClick={goLogin}
-        className="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
-      >
-        Log in
-      </button>
+    <div id="volunteer" className="mx-auto max-w-3xl scroll-mt-24">
+      <div className="mb-6 text-center">
+        <p className="mt-2 text-slate-600">
+          Tell us a bit about yourself and your availability — we'll match you with a good fit.
+        </p>
+        <div className="mt-4 rounded-xl">
+          Wonderhood team reach out within <span className="font-medium">2-3 business days</span>.
+        </div>
+      </div>
 
-      <button
-        type="button"
-        onClick={goSignup}  // либо setModalContent(SignupModal), либо router.push(`/signup?next=${next}`)
-        className="rounded-lg border border-emerald-600 px-4 py-2 text-emerald-700 hover:bg-emerald-50"
-      >
-        Sign up
-      </button>
-    </div>
-  </div>
-)}
-
+      {/* Show login prompt only on client and only when logged out */}
+      {client && !logged && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+          <p className="font-medium">Please log in to apply as a volunteer.</p>
+          <div className="mt-2 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setModalContent(<LoginModal />)}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
+            >
+              Log in
+            </button>
+            <button
+              type="button"
+              onClick={() => setModalContent(<SignupModal />)}
+              className="rounded-lg border border-emerald-600 px-4 py-2 text-emerald-700 hover:bg-emerald-50"
+            >
+              Sign up
+            </button>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="space-y-6 rounded-2xl bg-white p-6 shadow-sm">
-        {/* Одним флажком блокируем всё для гостя и во время отправки */}
         <fieldset disabled={disabled} aria-disabled={disabled} className={disabled ? 'opacity-60' : ''}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">First name *</label>
+              <label className="mb-1 block text-sm font-medium">
+                First name <span className="text-rose-600">*</span>
+              </label>
               <input
+                ref={firstNameRef}
                 className="w-full rounded-lg border px-3 py-2"
                 value={f.firstName}
                 onChange={e => setF({ ...f, firstName: e.target.value })}
+                required
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Last name *</label>
+              <label className="mb-1 block text-sm font-medium">
+                Last name <span className="text-rose-600">*</span>
+              </label>
               <input
                 className="w-full rounded-lg border px-3 py-2"
                 value={f.lastName}
                 onChange={e => setF({ ...f, lastName: e.target.value })}
+                required
               />
             </div>
+
             <div>
-              <label className="mb-1 block text-sm font-medium">Email</label>
+              <label className="mb-1 block text-sm font-medium">
+                Email <span className="text-rose-600">*</span>
+              </label>
               <input
                 type="email"
                 className="w-full rounded-lg border px-3 py-2"
                 value={f.email}
                 onChange={e => setF({ ...f, email: e.target.value })}
+                placeholder="name@example.com"
+                required
               />
             </div>
+
             <div>
-              <label className="mb-1 block text-sm font-medium">Phone</label>
+              <label className="mb-1 block text-sm font-medium">
+                Phone <span className="text-rose-600">*</span>
+              </label>
               <input
+                inputMode="tel"
                 className="w-full rounded-lg border px-3 py-2"
                 value={f.phoneNumber}
-                onChange={e => setF({ ...f, phoneNumber: e.target.value })}
+                onChange={e => setF({ ...f, phoneNumber: formatUs(e.target.value) })}
+                placeholder="123-456-7890"
+                required
               />
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          {/* Cities + Times */}
+          <div className="grid gap-6 md:grid-cols-2 mt-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">Cities</label>
-              <input
-                placeholder="Westcliffe, Pueblo"
-                className="w-full rounded-lg border px-3 py-2"
-                value={f.citiesLine}
-                onChange={e => setF({ ...f, citiesLine: e.target.value })}
+              <label className="mb-1 block text-sm font-medium">
+                Cities <span className="ml-1 text-xs text-gray-500">(multi-select)</span>
+              </label>
+              <MultiSelect
+                options={CITIES_CO as unknown as string[]}
+                value={f.selectedCities}
+                onChange={next => setF({ ...f, selectedCities: next })}
+                placeholder="Select cities…"
+                className="text-gray-400"
               />
             </div>
+
             <div>
-              <label className="mb-1 block text-sm font-medium">Times</label>
-              <input
-                placeholder="mornings, evenings"
-                className="w-full rounded-lg border px-3 py-2"
-                value={f.timesLine}
-                onChange={e => setF({ ...f, timesLine: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Skills</label>
-              <input
-                placeholder="hiking, photography"
-                className="w-full rounded-lg border px-3 py-2"
-                value={f.skillsLine}
-                onChange={e => setF({ ...f, skillsLine: e.target.value })}
-              />
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="block text-sm font-medium">Times</label>
+                <button
+                  type="button"
+                  onClick={selectAllTimes}
+                  className="text-xs text-emerald-700 hover:underline mr-4"
+                >
+                  {f.timesChoices.length === TIME_OPTIONS.length ? 'Clear all' : 'Select all'}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
+                {TIME_OPTIONS.map(t => (
+                  <label key={t} className="inline-flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={f.timesChoices.includes(t)}
+                      onChange={() => toggleTime(t)}
+                    />
+                    <span>{t}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/* Availability (days) */}
+          <div className="space-y-2 mt-4">
             <label className="block text-sm font-medium">Availability (days)</label>
-            <div className="flex gap-6">
+            <div className="flex gap-6 text-sm">
               {(['Weekdays', 'Weekends'] as AvailabilityDay[]).map(d => (
                 <label key={d} className="inline-flex items-center gap-2">
                   <input
@@ -227,7 +296,22 @@ export default function VolunteerForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/* Skills (required) */}
+          <div className="space-y-2 mt-4">
+            <label className="block text-sm font-medium">
+              Skills <span className="text-rose-600">*</span>
+            </label>
+            <input
+              placeholder="hiking, photography"
+              className="w-full rounded-lg border px-3 py-2.5"
+              value={f.skillsLine}
+              onChange={e => setF({ ...f, skillsLine: e.target.value })}
+              required
+            />
+          </div>
+
+          {/* Short bio */}
+          <div className="space-y-2 mt-4">
             <label className="block text-sm font-medium">Short bio (optional)</label>
             <textarea
               rows={4}
@@ -237,13 +321,17 @@ export default function VolunteerForm() {
             />
           </div>
 
-          <div className="space-y-3">
-            <label className="block text-sm font-medium">Consents *</label>
+          {/* Consents */}
+          <div className="space-y-3 mt-4">
+            <label className="block text-sm font-medium">
+              Consents <span className="text-rose-600">*</span>
+            </label>
             <label className="flex items-start gap-2">
               <input
                 type="checkbox"
                 checked={f.photoConsent}
                 onChange={e => setF({ ...f, photoConsent: e.target.checked })}
+                required
               />
               <span className="text-sm">I consent to photos/videos (Photo Policy).</span>
             </label>
@@ -252,6 +340,7 @@ export default function VolunteerForm() {
                 type="checkbox"
                 checked={f.backgroundCheckConsent}
                 onChange={e => setF({ ...f, backgroundCheckConsent: e.target.checked })}
+                required
               />
               <span className="text-sm">I consent to a background check (18+).</span>
             </label>
@@ -264,15 +353,18 @@ export default function VolunteerForm() {
           )}
           {ok && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
-              Thank you! Your application has been submitted.
+              Thank you for applying! We've received your information and will contact you within 2–3 business days.
             </div>
           )}
 
-          <div className="flex justify-end">
+          <div
+            className="mt-6 flex justify-center sm:justify-end"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          >
             <button
               type="submit"
               disabled={disabled}
-              className="rounded-xl bg-emerald-600 px-5 py-2.5 text-white hover:bg-emerald-700 disabled:opacity-60"
+              className="w-full sm:w-auto min-h-11 rounded-xl bg-emerald-600 px-5 py-2.5 text-white hover:bg-emerald-700 disabled:opacity-60"
             >
               {submitting ? 'Submitting…' : 'Submit application'}
             </button>

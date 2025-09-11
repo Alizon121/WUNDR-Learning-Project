@@ -3,7 +3,7 @@ from backend.db.prisma_client import db
 from typing import Annotated
 from backend.models.user_models import User
 
-from backend.models.interaction_models import VolunteerOpportunityCreate
+from backend.models.interaction_models import VolunteerOpportunityCreate, VolunteerOpportunityUpdate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 
@@ -38,6 +38,50 @@ async def create_volunteer_opportunity(
             status_code=500,
             detail=f"Unable to create volunteer opportunity: {e}"
         )
+    
+@router.patch("/{opportunity_id}", status_code=status.HTTP_200_OK)
+async def update_opportunity(
+    opportunity_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    opportunity_data: VolunteerOpportunityUpdate
+):  
+    """
+        Authenticate user and enforce admin
+        Update a volunteer oppportunity
+        return updated volunteer opportunity
+    """
+    
+    # Validate user
+    enforce_authentication(current_user)
+    enforce_admin(current_user)
+
+    # Verify the opportunity exists
+    existing_opportunity = await db.volunteeropportunities.find_unique(
+        where={"id": opportunity_id}
+    )
+
+    if not existing_opportunity:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to located volunteer opportunity"
+        )
+
+    # Update the opportunity
+    try:
+        data = opportunity_data.model_dump(exclude_unset=True)
+
+        updated_opportunity = await db.volunteeropportunities.update(
+            where={"id": opportunity_id},
+            data=data
+        )
+
+        return {"Updated Opportunity": updated_opportunity}
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to update volunteer opportunity: {e}"
+        )
 
 @router.delete("/{opportunity_id}", status_code=status.HTTP_200_OK)
 async def delete_opportunity(
@@ -70,7 +114,7 @@ async def delete_opportunity(
             where={"id": opportunity_id}
         )
 
-        return {"Deleted Opportunity": delete_opportunity}
+        return {"Deleted Opportunity": deleted_opportunity}
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -99,7 +143,7 @@ async def get_volunteers_by_opportunity(
             where={"id": opportunity_id}
         )
 
-        return {"Opportunity": opportunity.volunteerIDs}
+        return {"Volunteers": opportunity.volunteerIDs}
     except:
         raise HTTPException(
             status_code=500,

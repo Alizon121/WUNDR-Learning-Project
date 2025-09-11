@@ -191,10 +191,10 @@ class Venue(str, Enum):
 
 class VolunteerOpportunityCreate(BaseModel):
   title: str = Field(...,min_length=2, max_length=100, description="title for volunteer opportunity")
-  venue: Venue = Field(..., description="Venue type")
+  venue: List[Venue] = Field(None, description="Venue types")
   duties: List[str] = Field(default_factory=list, description="list of duties")
   skills: List[str] = Field(default_factory=list, description="List of skills")
-  time: str = Field(..., description="Time/schedule information")
+  time: str = Field(None, description="Time/schedule information")
   requirements: List[str] = Field(default_factory=list, description="Requirements")
   tags: List[str] = Field(default_factory=list, description="Tags for volunteer opportunity")
   minAge: int = Field(le=16, description="Age requirement")
@@ -210,7 +210,7 @@ class VolunteerOpportunityCreate(BaseModel):
 class VolunteerOpportunityResponse(BaseModel):
     id: str = Field(..., description="Opportunity identifier")
     title: str
-    venue: Venue
+    venue: List[Venue]
     duties: List[str]
     skills: List[str]
     time: str
@@ -229,7 +229,7 @@ class VolunteerOpportunityResponse(BaseModel):
 
 class VolunteerOpportunityUpdate(BaseModel):
     title: Optional[str] = Field(default=None)
-    venue: Optional[Venue] = Field(default=None)
+    venue: Optional[List[Venue]] = Field(default=None)
     duties: Optional[List[str]] = Field(default=None)
     skills: Optional[List[str]] = Field(default=None)
     time: Optional[str] = Field(default=None)

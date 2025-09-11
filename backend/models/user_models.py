@@ -121,7 +121,7 @@ class VolunteerCreate(BaseModel):
     if v is None:
        return []
     return [item.strip() for item in v if item and item.strip()]
-  
+
 class Volunteer(BaseModel):
   id: str = Field(..., min_length=1, description="Volunteer identifier")
   firstName: str = Field(min_length=1, max_length=50)
@@ -241,6 +241,9 @@ class ChildUpdate(BaseModel):
 
   photoConsent: bool = False
   waiver: bool = False
+
+  emergencyContacts: List["EmergencyContactCreate"] = Field(default_factory=list)
+
 
 
 

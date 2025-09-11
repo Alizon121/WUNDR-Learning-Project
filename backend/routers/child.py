@@ -218,43 +218,94 @@ async def update_child(
     update_data: ChildUpdate,
     current_user: Annotated[User, Depends(get_current_user)]
 ):
-
     # Make sure the user is authenticated
     enforce_authentication(current_user, "update your child's information")
 
     # Fetch the child
-    child = await db.children.find_unique(
-        where={"id": child_id}
-    )
-
+    child = await db.children.find_unique(where={"id": child_id})
     if not child:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Child not found."
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Child not found.")
 
     # Make sure the current user is a parent of the child
     if current_user.id not in child.parentIDs:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied: You are not a parent of this child."
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: You are not a parent of this child.")
 
-    # Make the update
-    updated_child = await db.children.update(
-        where={"id": child.id},
-        # exclude any fields that were not included in the payload
-        data=update_data.model_dump(exclude_unset=True),
-        include={
-            "parents": True,
-            "events": True
+    non_contact_data = update_data.model_dump(exclude_unset=True, exclude={"emergencyContacts"})
+    contacts = update_data.emergencyContacts
+    try:
+        async with db.tx() as tx:
+            # Make the non-emergency contact update
+            if non_contact_data:
+                updated_child = await tx.children.update(
+                    where={"id": child.id},
+                    data=non_contact_data,
+                    include={
+                        "parents": True,
+                        "emergencyContacts": True,
+                    }
+                )
+            else:
+                updated_child = await tx.children.find_unique(
+                    where={"id": child.id},
+                    include={
+                        "parents": True,
+                        "emergencyContacts": True
+                    }
+                )
+
+            # if contacts were to be updated, they are reconciled and use same IDs
+            if contacts is not None:
+                contact_ids: list[str] = []
+
+                for ec in contacts:
+                    existing_contact = await tx.emergencycontact.find_first(
+                        where={
+                            "firstName": ec.firstName,
+                            "lastName": ec.lastName,
+                            "phoneNumber": ec.phoneNumber,
+                            "relationship": ec.relationship
+                        }
+                    )
+
+                    if existing_contact:
+                        if updated_child.id not in (existing_contact.childIDs or []):
+                            await tx.emergencycontact.update(
+                                where={"id": existing_contact.id},
+                                data={"childIDs": {"set": list({*(existing_contact.childIDs or []), updated_child.id})}}
+                            )
+
+                        contact_ids.append(existing_contact.id)
+                    else:
+                        new_contact = await tx.emergencycontact.create(
+                            data={
+                                "firstName": ec.firstName,
+                                "lastName": ec.lastName,
+                                "phoneNumber": ec.phoneNumber,
+                                "relationship": ec.relationship,
+                                "childIDs": {"set": [updated_child.id]}
+                            }
+                        )
+                        contact_ids.append(new_contact.id)
+
+                contact_ids = list(dict.fromkeys(contact_ids))
+                updated_child = await tx.children.update(
+                    where={"id": updated_child.id},
+                    data={"emergencyContactIDs": {"set": contact_ids}},
+                    include={"emergencyContacts": True, "parents": True}
+                )
+
+        return {
+            "child": updated_child,
+            "message": "Child updated successfully"
         }
-    )
 
-    return {
-        "child": updated_child,
-        "message": "Child updated successfully"
-    }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update child and emergency contacts: {str(e)}"
+        )
 
 
 # ! Delete Child
@@ -582,7 +633,7 @@ async def delete_emergency_contact(
             )
 
             return {"Deleted Contact": deleted_contact}
-        
+
         else:
             updated_child_ids = [id for id in contact.childIDs if id != child_id]
 

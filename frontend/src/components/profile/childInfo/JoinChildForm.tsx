@@ -3,7 +3,7 @@ import { ChildPayload } from "../../../../utils/auth";
 import { makeApiRequest } from "../../../../utils/api";
 import { calculateAge } from "../../../../utils/calculateAge";
 import { gradeOptions } from "../../../../utils/displayGrade";
-import { EmergencyContact } from "@/types/emergencyContact";
+import { ECErrors, EmergencyContact } from "@/types/emergencyContact";
 import { formatUs, toE164US } from "../../../../utils/formatPhoneNumber";
 
 type Props = {
@@ -11,17 +11,15 @@ type Props = {
     onSuccess: (createdChild: any) => void
 }
 
-type ChildForm = Omit<ChildPayload, "emergencyContacts" | "createdAt" | "updatedAt">;
 type FormErrors = Partial<Record<"firstName" | "lastName" | "birthday", string>>
-type ECErrors = Partial<Record<"firstName" | "lastName" | "relationship" | "phoneNumber", string>>
-
+type ChildForm = Omit<ChildPayload, "emergencyContacts" | "createdAt" | "updatedAt">;
 const blankEC = (): EmergencyContact => ({
     id: "",
     firstName: "",
     lastName: "",
     relationship: "",
     phoneNumber: ""
-})
+});
 
 const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
     const [errors, setErrors] = useState<FormErrors>({})
@@ -98,7 +96,6 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
     }
 
     const addEC = () => setEcs(prev => (prev.length < 3 ? [...prev, blankEC()] : prev))
-
     const removeEC = (i: number) => {
         setEcs(prev => prev.filter((_, idx) => idx !== i));
         setEcErrors(prev => prev.filter((_, idx) => idx !== i));
@@ -345,9 +342,7 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wondergreen focus:border-transparent"
                         />
 
-                        <button
-                            type="button"
-                            onClick={nextStep}
+                        <button type="button" onClick={nextStep}
                             className="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
                         >
                             Continue
@@ -370,11 +365,7 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="font-semibold">Contact {i + 1}</div>
                                     {i > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => removeEC(i)}
-                                            className="text-sm text-red-600 hover:underline"
-                                        >
+                                        <button type="button" onClick={() => removeEC(i)} className="text-sm text-red-600 hover:underline">
                                             Remove
                                         </button>
                                     )}
@@ -440,27 +431,20 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                         ))}
 
                         <div className="flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={prevStep}
+                            <button type="button" onClick={prevStep}
                                 className="bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                             >
                              Back
                             </button>
 
                             <div className="flex items-center gap-3">
-                                <button
-                                    type="button"
-                                    onClick={addEC}
-                                    disabled={ecs.length >= 3}
+                                <button type="button" onClick={addEC} disabled={ecs.length >= 3}
                                     className="px-4 py-3 rounded-lg border border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-50"
                                 >
                                     + Add another ({ecs.length}/3)
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onClick={nextStep}
+                                <button type="button" onClick={nextStep}
                                     className="px-4 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors font-medium"
                                 >
                                     Continue
@@ -473,34 +457,27 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
 
             {currentStep === 3 && (
                 <>
-                    <h2 className="flex flex-col text-xl mt-4 mb-6 text-center">
-                        Waiver
-                    </h2>
-
+                    <h2 className="flex flex-col text-xl mt-4 mb-6 text-center">Waiver</h2>
                     <label className="inline-flex items-center gap-2">
                         <input
-                        type="checkbox"
-                        name="waiver"
-                        checked={child.waiver ?? false}
-                        onChange={handleChange}
-                        className="h-4 w-4"
+                            type="checkbox"
+                            name="waiver"
+                            checked={child.waiver ?? false}
+                            onChange={handleChange}
+                            className="h-4 w-4"
                         />
                             <span>Placeholder Waiver</span>
                     </label>
 
                     <div className="flex space-x-3 pt-4">
-                        <button
-                            type="button"
-                            onClick={prevStep}
+                        <button type="button" onClick={prevStep}
                             className="flex-1 bg-gray-200 text-gray-700 p-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                         >
                             Back
                         </button>
 
-                        <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full bg-blue-100 text-white p-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-60"
+                        <button type="submit" disabled={submitting}
+                            className="w-full bg-blue-100 text-white p-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-60"
                         >
                             {submitting ? "Saving…" : "Save"}
                         </button>
@@ -512,11 +489,8 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
                 <div className="flex justify-center">
                     <div className="flex space-x-2">
                         {[1, 2, 3].map((step) => (
-                            <div
-                                key={step}
-                                className={`w-3 h-3 rounded-full transition-colors ${
-                                    step <= currentStep ? 'bg-green-500' : 'bg-gray-300'
-                                }`}
+                            <div key={step}
+                                className={`w-3 h-3 rounded-full transition-colors ${step <= currentStep ? 'bg-green-500' : 'bg-gray-300'}`}
                             />
                         ))}
                     </div>

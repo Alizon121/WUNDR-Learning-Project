@@ -23,6 +23,7 @@ const normalizeEC = (c: ECInput) => ({
     phoneNumber: onlyDigitals(c.phoneNumber || "")
 })
 
+// removes duplicate contacts within array
 export const dedupeECs = (arr: ECInput[]) => {
     const seen = new Set<string>()
     const out: ECInput[] = []
@@ -39,9 +40,12 @@ export const dedupeECs = (arr: ECInput[]) => {
     return out.slice(0, 3);
 }
 
+// compares currentContact array and potential edited array
+//this is necessary to see if we run patch request with or w/o emergenecy contacts
 export const ecsEqual = (a: ECInput[], b: ECInput[]) => {
     const toKeySet = (xs: ECInput[]) => new Set(xs.map(x => JSON.stringify(normalizeEC(x))))
 
+    //converts each each to a normalized set
     const A = toKeySet(a)
     const B = toKeySet(b)
 

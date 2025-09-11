@@ -232,6 +232,7 @@ async def update_child(
 
     non_contact_data = update_data.model_dump(exclude_unset=True, exclude={"emergencyContacts"})
     contacts = update_data.emergencyContacts
+
     try:
         async with db.tx() as tx:
             # Make the non-emergency contact update
@@ -267,15 +268,18 @@ async def update_child(
                         }
                     )
 
+                    # if we find the contact, we are making sure it is linked with child
                     if existing_contact:
                         if updated_child.id not in (existing_contact.childIDs or []):
+                            new_childIDs = [*existing_contact, updated_child.id]
                             await tx.emergencycontact.update(
                                 where={"id": existing_contact.id},
-                                data={"childIDs": {"set": list({*(existing_contact.childIDs or []), updated_child.id})}}
+                                data={"childIDs": {"set": new_childIDs}}
                             )
-
+                        # collect the existing contact id
                         contact_ids.append(existing_contact.id)
                     else:
+                        # create contact and link to child
                         new_contact = await tx.emergencycontact.create(
                             data={
                                 "firstName": ec.firstName,
@@ -287,6 +291,7 @@ async def update_child(
                         )
                         contact_ids.append(new_contact.id)
 
+                # deduplicate collected ids and replace chlid's linked contacts
                 contact_ids = list(dict.fromkeys(contact_ids))
                 updated_child = await tx.children.update(
                     where={"id": updated_child.id},

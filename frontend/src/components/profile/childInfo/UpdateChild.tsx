@@ -33,6 +33,7 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
     const [ecs, setEcs] = useState<ECInput[]>([blankEC()])
     const [ecErrors, setEcErrors] = useState<ECErrors[]>([])
 
+    // console.log('lets go', currChild.emergencyContacts.map((c) => c.phoneNumber))
     useEffect(() => {
         setFirstName(currChild.firstName ?? "")
         setPreferredName(currChild.preferredName ?? "")
@@ -83,14 +84,7 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
             (idx === i ? { ...contact, [field]: isPhone ? formatUs(v) : v } : contact)))
     }
 
-    const addEC = () => setEcs(prev => (prev.length < 3 ? [...prev, blankEC()] : prev))
-    const removeEC = (i: number) => {
-        setEcs(prev => prev.filter((_, idx) => idx !== i));
-        setEcErrors(prev => prev.filter((_, idx) => idx !== i));
-    }
-
     const validateECs = (contacts: ECInput[]) => {
-        // First contact required; others required only if any field is filled
         const filled = (c: ECInput) => !!(c.firstName.trim() || c.lastName.trim() || c.relationship.trim() || c.phoneNumber.trim())
         const errs: ECErrors[] = contacts.map(() => ({}))
 
@@ -166,6 +160,12 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
         } finally {
             setSaving(false)
         }
+    }
+
+    const addEC = () => setEcs(prev => (prev.length < 3 ? [...prev, blankEC()] : prev))
+    const removeEC = (i: number) => {
+        setEcs(prev => prev.filter((_, idx) => idx !== i));
+        setEcErrors(prev => prev.filter((_, idx) => idx !== i));
     }
 
     return (

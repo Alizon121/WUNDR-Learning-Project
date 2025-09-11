@@ -62,10 +62,12 @@ const ChildInfo = () => {
         }
     }
 
-    const visibleChildren = Array.from({ length: Math.min(2, children.length) }, (_, i) => {
+    const visibleChildren = Array.from({ length: Math.min(1, children.length) }, (_, i) => {
         const idx = (((currChildIdx + i) % children.length) + children.length) % children.length
         return children[idx]
     })
+
+    console.log('vissibleChild', visibleChildren)
 
     const handleNext = () => {
         if (children.length > 0) setCurrChildIdx((prevIdx) => (((prevIdx + 1) % children.length) + children.length) % children.length)
@@ -92,12 +94,12 @@ const ChildInfo = () => {
             </button>
 
             <div className="flex flex-row gap-6 my-10">
-                {children.length > 2 && (
+                {children.length > 1 && (
                     <FaCircleChevronLeft className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handlePrev}/>
                 )}
 
                 {visibleChildren.map((child) => (
-                    <div key={child.id} className="basis-1/2">
+                    <div key={child.id} className="basis-full max-w-3xl w-full mx-auto">
                         {editingChildId === child.id ? (
                             <UpdateChildForm
                                 setEditingChildId={setEditingChildId}
@@ -162,7 +164,7 @@ const ChildInfo = () => {
                     </div>
                 ))}
 
-                {children.length > 2 && (
+                {children.length > 1 && (
                     <FaCircleChevronRight className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handleNext}/>
                 )}
             </div>

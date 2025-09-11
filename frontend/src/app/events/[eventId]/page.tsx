@@ -75,10 +75,13 @@ export default function EventsDetailPage() {
                             <p>{event.latitude}°N, {event.longitude}°W</p>
                         </div>
 
-                        <div className="mt-3">
-                            <h3 className="flex items-center text-white-800 text-lg font-semibold">{event?.participants == 1 ? "Participant" : "Participants"}</h3>
-                            <span>{event?.participants}</span>
-                        </div>
+                        <h3 className="flex items-center text-lg gap-2 mt-3">
+                            <span className="font-semibold">
+                                {event?.participants === 1 ? "Participant" : "Participants"}:
+                            </span>
+                            <span>{event?.participants}/10</span>
+                        </h3>
+
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-white-800 mt-3">About this Event</h3>
                             <p className="text-white-800 leading-relaxed text-base md:text-lg">

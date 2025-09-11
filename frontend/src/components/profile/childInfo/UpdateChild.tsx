@@ -4,12 +4,21 @@ import { makeApiRequest } from "../../../../utils/api"
 import { FaCheck } from "react-icons/fa"
 import { FaX } from "react-icons/fa6"
 import { gradeOptions } from "../../../../utils/displayGrade"
+import { dedupeECs, ECErrors, ECInput, ecsEqual, EmergencyContact } from "@/types/emergencyContact"
+import { e164toUS, formatUs, toE164US } from "../../../../utils/formatPhoneNumber"
 
 type Props = {
     currChild: Child
     setEditingChildId: (id: string | null) => void
     refreshChildren: () => Promise<void>
 }
+
+const blankEC = (): ECInput => ({
+    firstName: "",
+    lastName: "",
+    relationship: "",
+    phoneNumber: ""
+});
 
 const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refreshChildren }) => {
     const [firstName, setFirstName] = useState<string>("")
@@ -21,7 +30,10 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
     const [allergiesMedical, setAllergiesMedical] = useState<string>("")
     const [notes, setNotes] = useState<string>("")
     const [saving, setSaving] = useState(false)
+    const [ecs, setEcs] = useState<ECInput[]>([blankEC()])
+    const [ecErrors, setEcErrors] = useState<ECErrors[]>([])
 
+    // console.log('lets go', currChild.emergencyContacts.map((c) => c.phoneNumber))
     useEffect(() => {
         setFirstName(currChild.firstName ?? "")
         setPreferredName(currChild.preferredName ?? "")
@@ -38,6 +50,18 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
         } else {
             setBirthday("")
         }
+
+        const initialFromServer: ECInput[] =
+            (currChild.emergencyContacts ?? []).map(ec => ({
+                firstName: ec.firstName ?? "",
+                lastName: ec.lastName ?? "",
+                relationship: ec.relationship ?? "",
+                phoneNumber: e164toUS(ec.phoneNumber) ?? formatUs(ec.phoneNumber ?? "")
+            }))
+
+        const initial = initialFromServer.length ? initialFromServer : [blankEC()]
+        setEcs(initial)
+        setEcErrors(initial.map(() => ({})))
     }, [currChild.id])
 
     const isValid = useMemo(() => Boolean(firstName?.trim() && lastName?.trim()), [firstName, lastName])
@@ -54,11 +78,52 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
         setGrade(Number(n))
     }
 
+    const handleECChange = (i: number, field: keyof ECInput, isPhone: boolean = false) => (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = e.target.value
+        setEcs(prev => prev.map((contact, idx) =>
+            (idx === i ? { ...contact, [field]: isPhone ? formatUs(v) : v } : contact)))
+    }
+
+    const validateECs = (contacts: ECInput[]) => {
+        const filled = (c: ECInput) => !!(c.firstName.trim() || c.lastName.trim() || c.relationship.trim() || c.phoneNumber.trim())
+        const errs: ECErrors[] = contacts.map(() => ({}))
+
+        contacts.forEach((c, i) => {
+            const required = i === 0 || filled(c)
+            if (!required) return
+            if (!c.firstName.trim()) errs[i].firstName = "Required"
+            if (!c.lastName.trim())  errs[i].lastName = "Required"
+            if (!c.relationship.trim()) errs[i].relationship = "Required"
+            if (!toE164US(c.phoneNumber)) errs[i].phoneNumber = "Enter a valid US phone"
+        })
+
+        const deduped = dedupeECs(contacts)
+        const ok =
+            deduped.length >= 1 &&
+            deduped.length <= 3 &&
+            errs.every(e => Object.keys(e).length === 0)
+
+        return { ok, errs, deduped }
+    }
+
     const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (!isValid || saving) return
 
-        const payload = {
+        const { ok: ecOk, errs, deduped } = validateECs(ecs)
+        setEcErrors(errs)
+        if (!ecOk) return
+
+        const currentECs: ECInput[] = (currChild.emergencyContacts ?? []).map(ec => ({
+            firstName: ec.firstName ?? "",
+            lastName: ec.lastName ?? "",
+            relationship: ec.relationship ?? "",
+            phoneNumber: e164toUS(ec.phoneNumber) ?? formatUs(ec.phoneNumber ?? "")
+        }))
+
+        const includeECs = !ecsEqual(deduped, currentECs)
+
+        const payload: any = {
             firstName: firstName?.trim(),
             preferredName: preferredName === "" ? null : preferredName?.trim(),
             lastName: lastName?.trim(),
@@ -68,6 +133,15 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
             allergiesMedical: allergiesMedical === "" ? null : allergiesMedical?.trim(),
             notes: notes === "" ? null : notes?.trim(),
             updatedAt: new Date().toISOString()
+        }
+
+        if (includeECs) {
+            payload.emergencyContacts = deduped.map(c => ({
+                firstName: c.firstName.trim(),
+                lastName: c.lastName.trim(),
+                relationship: c.relationship.trim(),
+                phoneNumber: toE164US(c.phoneNumber)
+            }))
         }
 
         console.log('look here', payload)
@@ -86,6 +160,12 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
         } finally {
             setSaving(false)
         }
+    }
+
+    const addEC = () => setEcs(prev => (prev.length < 3 ? [...prev, blankEC()] : prev))
+    const removeEC = (i: number) => {
+        setEcs(prev => prev.filter((_, idx) => idx !== i));
+        setEcErrors(prev => prev.filter((_, idx) => idx !== i));
     }
 
     return (
@@ -156,16 +236,6 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
                     />
                 </div>
 
-                {/* <div className="mb-4">
-                    <div className="font-bold">PARENT/GUARDIANS</div>
-                    <div className="text-gray-500 text-sm mt-1 ml-2">{currChild.parents.map((p) => `${p.firstName} ${p.lastName}`)}</div>
-                </div> */}
-
-                {/* <div className="mb-4">
-                    <div className="font-bold">HOMESCHOOL PROGRAM</div>
-                    <div className="text-gray-500 text-sm mt-1 ml-2">Coming soon...</div>
-                </div> */}
-
                 <div className="flex flex-row justify-between mb-4">
                     <div>
                         <div className="font-bold mb-2">GRADE (OPTIONAL)</div>
@@ -189,6 +259,90 @@ const UpdateChildForm: React.FC<Props> = ({ currChild, setEditingChildId, refres
                             onChange={(e) => setPhotoConsent(e.currentTarget.checked)}
                             disabled={saving}
                         />
+                    </div>
+                </div>
+
+                <div className="mb-4 border-t pt-4">
+                    <div className="font-bold">EMERGENCY CONTACTS</div>
+                    <div className="text-gray-500 text-sm my-1 ml-2">
+                        <div className="space-y-3">
+                            {ecs.map((c, i) => (
+                                <div key={i} className="p-3 border rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="font-semibold">Contact {i + 1}</div>
+                                        <button type="button" onClick={() => removeEC(i)} disabled={saving || ecs.length <= 1}
+                                            className="text-sm text-red-600 hover:underline disabled:opacity-50"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <div className="flex gap-3">
+                                        <div className="flex-1">
+                                            <input
+                                                placeholder="First Name"
+                                                value={c.firstName}
+                                                onChange={handleECChange(i, "firstName")}
+                                                disabled={saving}
+                                                className="w-full p-3 border rounded-lg"
+                                                maxLength={50}
+                                                required={i === 0}
+                                            />
+                                            {ecErrors[i]?.firstName && <p className="text-sm text-red-600 mt-1">{ecErrors[i]?.firstName}</p>}
+                                        </div>
+                                        <div className="flex-1">
+                                            <input
+                                                placeholder="Last Name"
+                                                value={c.lastName}
+                                                onChange={handleECChange(i, "lastName")}
+                                                disabled={saving}
+                                                className="w-full p-3 border rounded-lg"
+                                                maxLength={50}
+                                                required={i === 0}
+                                            />
+                                            {ecErrors[i]?.lastName && <p className="text-sm text-red-600 mt-1">{ecErrors[i]?.lastName}</p>}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-3">
+                                        <input
+                                            placeholder="Relationship to Child"
+                                            value={c.relationship}
+                                            onChange={handleECChange(i, "relationship")}
+                                            disabled={saving}
+                                            className="w-full p-3 border rounded-lg"
+                                            maxLength={50}
+                                            required={i === 0}
+                                        />
+                                        {ecErrors[i]?.relationship && <p className="text-sm text-red-600 mt-1">{ecErrors[i]?.relationship}</p>}
+                                    </div>
+
+                                    <div className="mt-3">
+                                        <input
+                                            type="tel"
+                                            inputMode="tel"
+                                            autoComplete="tel"
+                                            placeholder="Phone Number"
+                                            value={c.phoneNumber}
+                                            onChange={handleECChange(i, "phoneNumber", true)}
+                                            disabled={saving}
+                                            className="w-full p-3 border rounded-lg"
+                                            maxLength={12}
+                                            required={i === 0}
+                                        />
+                                        {ecErrors[i]?.phoneNumber && <p className="text-sm text-red-600 mt-1">{ecErrors[i]?.phoneNumber}</p>}
+                                    </div>
+                                </div>
+                            ))}
+
+                            <div className="flex justify-end">
+                                <button type="button" onClick={addEC} disabled={saving || ecs.length >= 3}
+                                    className="px-4 py-2 rounded-lg border border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-50"
+                                >
+                                    + Add another ({ecs.length}/3)
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

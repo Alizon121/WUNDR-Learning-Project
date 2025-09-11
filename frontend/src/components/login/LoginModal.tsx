@@ -40,6 +40,7 @@ const LoginModal = () => {
     // Get modal and auth actions
     const { closeModal } = useModal();
     const { loginWithToken } = useAuth();
+    
 
     // Validate email format (returns true/false)
     const validateEmail = (email: string) => {
@@ -107,22 +108,22 @@ const LoginModal = () => {
         }
     };
 
-    // Redirect from /reset-password page to "/" (home), if needed
+    // Compute safeNext: prefer `next` param; otherwise current path and keep #apply when on /volunteer
     const pathname = usePathname();
-    const router = useRouter();
     const searchParams = useSearchParams();
+    const router = useRouter();
 
     const nextParam = searchParams.get('next');
-    // open-redirect safety + fallback for current path
-    const safeNext =
-        nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')
-        ? nextParam
-        : pathname || '/';
+    const isVolunteer = (pathname || '').toLowerCase().includes('/volunteer');
 
+    const safeNext =
+    nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')
+        ? nextParam
+        : `${pathname || '/'}${isVolunteer ? '#apply' : ''}`;
 
     useEffect(() => {
         if (pathname.startsWith("/reset-password")) {
-            router.replace("/");
+        router.replace("/");    
         }
     }, [pathname, router]);
 

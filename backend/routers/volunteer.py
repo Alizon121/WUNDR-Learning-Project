@@ -26,7 +26,7 @@ async def volunteer_sign_up_general(
         volunteer = await db.volunteers.create(
             data={
                 **data,
-                "status": "NEW",                     
+                "status": "New",                     
                 "user": {"connect": {"id": current_user.id}}, 
             }
         )
@@ -179,4 +179,48 @@ async def delete_volunteer(
         raise HTTPException(
             status_code=500,
             detail=f"Unable to delete the volunteer: {e}"
+        )
+@router.patch("/{volunteer_id}/admin", status_code=status.HTTP_200_OK)
+async def update_volunteer_admin_only(
+    volunteer_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    volunteer_data: VolunteerUpdate
+):
+    """
+        Authenticate and enforce admin for current user
+        Allow admin to update volunteer application (e.g. application status)
+        Return updated volunteer
+    """
+
+    # Validate user
+    enforce_authentication(current_user)
+    enforce_admin(current_user)
+
+    # Validate volunteer exists
+    existing_volunteer = await db.volunteers.find_unique(
+        where={"id": volunteer_id}
+    )
+
+    if not existing_volunteer:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to locate volunteer"
+        )
+    
+    try:
+        data = volunteer_data.model_dump(exclude_none=True)
+        if not data:
+            return {"Volunteer not updated": existing_volunteer}
+        
+        updated_volunteer = await db.volunteers.update(
+            where={"id": volunteer_id},
+            data=data
+        )
+
+        return {"Updated Volunteer": updated_volunteer}
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to update volunteer"
         )

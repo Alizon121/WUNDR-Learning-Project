@@ -103,8 +103,8 @@ class AvailabilityDays(str, Enum):
     WEEKENDS = "Weekends"
 
 class AppStatus(str, Enum):
-    NEW = "NEW"
-    IN_REVIEW = "In review"
+    NEW = "New"
+    IN_REVIEW = "In_review"
     APPROVED = "Approved"
     REJECT = "Rejected"
 

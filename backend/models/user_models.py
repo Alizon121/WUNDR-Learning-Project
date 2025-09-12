@@ -102,6 +102,12 @@ class AvailabilityDays(str, Enum):
     WEEKDAYS = "Weekdays"
     WEEKENDS = "Weekends"
 
+class AppStatus(str, Enum):
+    NEW = "NEW"
+    IN_REVIEW = "In review"
+    APPROVED = "Approved"
+    REJECT = "Rejected"
+
 class VolunteerCreate(BaseModel):
   firstName: str = Field(..., min_length=1, max_length=100, description="First Name")
   lastName: str = Field(..., min_length=1, max_length=100, description="Last Name")
@@ -114,6 +120,7 @@ class VolunteerCreate(BaseModel):
   bio: Optional[str] = Field(None, min_length=5, max_length=500, description="Volunteer bio")
   photoConsent: bool = Field(..., description="Must consent to photo usage")
   backgroundCheckConsent: bool = Field(..., description="Must consent to background check")
+  status: AppStatus = Field(None, description="Application's status")
 
   @field_validator("cities", "timesAvail", "skills", mode="before")
   def clean_lists(cls, v):
@@ -156,6 +163,7 @@ class VolunteerUpdate(BaseModel):
   bio: Optional[str] = Field(None, min_length=5, max_length=500)
   photoConsent: Optional[bool] = None
   backgroundCheckConsent: Optional[bool] = None
+  status: Optional[AppStatus] = None
 
   @field_validator("cities", "skills", mode="before")
   def clean_lists(cls, v):

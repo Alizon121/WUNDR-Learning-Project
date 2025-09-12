@@ -107,7 +107,6 @@ model Volunteers{
   bio                    String?
   photoConsent           Boolean
   backgroundCheckConsent Boolean
-  roleAppliedId          String? @db.ObjectId
   status                 AppStatus @default(NEW)
 
   // One-to-one relationship
@@ -120,8 +119,6 @@ model Volunteers{
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime? @updatedAt
-  @@index([roleAppliedId, status])
-  @@index([status])
 }
 
 //  ! Volunteer Opportunity =============================================================================

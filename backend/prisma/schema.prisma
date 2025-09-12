@@ -87,6 +87,13 @@ enum Days {
   Weekends
 }
 
+enum AppStatus {
+  New
+  In_review
+  Approved
+  Rejected
+}
+
 model Volunteers{
   id                     String  @id @default(auto()) @map("_id") @db.ObjectId
   firstName              String
@@ -100,6 +107,7 @@ model Volunteers{
   bio                    String?
   photoConsent           Boolean
   backgroundCheckConsent Boolean
+  status                 AppStatus @default(New)
 
   // One-to-one relationship
   user Users @relation(fields: [userId], references: [id])

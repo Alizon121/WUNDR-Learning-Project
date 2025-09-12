@@ -17,7 +17,30 @@ export default function Navbar() {
   const { user, isLoggedIn, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, []);
+
+  useEffect(() => { setShowDropdown(false); }, [pathname]);
+
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [isMenuOpen]);
 
 
   const handleSignup = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -34,18 +57,6 @@ export default function Navbar() {
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
-
-  // Click outside the menu
-  useEffect(() => {
-    function onDown(e: MouseEvent) {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    }
-    if (isMenuOpen) document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [isMenuOpen]);
 
   // Block the scroll body when the menu is open
   useEffect(() => {
@@ -134,7 +145,7 @@ export default function Navbar() {
 
               {/* User Name */}
               {isLoggedIn && user && (
-                <div className="relative group">
+                <div ref={userMenuRef} className="relative">
                   <button
                     onClick={() => setShowDropdown(v => !v)}
                     className={`
@@ -154,7 +165,7 @@ export default function Navbar() {
                       viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                   </button>
                   {showDropdown && (
-                    <UserDropdown onLogout={logout} />
+                    <UserDropdown onLogout={logout} onClose={() => setShowDropdown(false)} />
                   )}
                 </div>
               )}

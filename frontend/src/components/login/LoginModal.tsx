@@ -23,7 +23,6 @@ const EyeOffIcon = () => (
 
 
 const LoginModal = () => {
-    const { refetch } = useUser()
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [errors, setErrors] = useState<{ [key: string]: string }>({});

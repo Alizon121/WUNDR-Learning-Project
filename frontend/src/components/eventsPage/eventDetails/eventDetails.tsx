@@ -15,7 +15,6 @@ const EventDetails = () => {
     const [selected, setSelected] = useState<Set<string>>(new Set)
     const [successEnroll, setSuccessEnroll] = useState(false)
 
-
     const toggleChild = (id: string) => {
         setSelected(prev => {
             const next = new Set(prev)

@@ -135,7 +135,7 @@ export default function VolunteerForm() {
 
     setSubmitting(true);
     try {
-      await makeApiRequest<{ volunteer: any }>(`${API}/volunteers`, {
+      await makeApiRequest<{ volunteer: any }>(`${API}/volunteer/`, {
         method: 'POST',
         body: payload,
       });

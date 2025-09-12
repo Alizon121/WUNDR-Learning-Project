@@ -16,5 +16,5 @@ export type Event = {
     longitude: number
 
     userId: string[]
-    childIds: string[]
+    childIDs: string[]
 }

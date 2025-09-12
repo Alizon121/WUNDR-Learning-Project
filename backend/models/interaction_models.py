@@ -94,6 +94,10 @@ class EventUpdate(BaseModel):
     userIDs: Optional[List[str]] = Field(default=None)
     childIDs: Optional[List[str]] = Field(default=None)
 
+
+class EnrollChildren(BaseModel):
+    childIDs: List[str]
+
 # ! Reviews
 class Review(BaseModel):
     id: str = Field(..., min_length=1, description="Review identifier")
@@ -175,7 +179,7 @@ class EmergencyContactUpdate(BaseModel):
     relationship: Optional[str] = Field(default=None)
     phoneNumber: Optional[str] = Field(default=None)
     # priority: Optional[int] = Field(default=None)
-      
+
 class EmergencyContactResponse(EmergencyContactCreate):
     id: str
     childId: str
@@ -187,7 +191,7 @@ class Venue(str, Enum):
    INDOORS= "Indoors"
    OUTDOORS="Outdoors"
    ONLINE="Online"
-   
+
 
 class VolunteerOpportunityCreate(BaseModel):
   title: str = Field(...,min_length=2, max_length=100, description="title for volunteer opportunity")
@@ -220,7 +224,7 @@ class VolunteerOpportunityResponse(BaseModel):
     bgCheckRequired: bool
     createdAt: datetime
     updatedAt: Optional[datetime]
-    
+
     class Config:
         from_attributes = True
         json_encoders = {

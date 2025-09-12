@@ -66,16 +66,15 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
         const { name, value } = e.currentTarget
 
         setEcs(prev => prev.map((contact, idx) =>
-            idx === i
-                ?
-                    {
-                        ...contact,
-                        ...(name === "emergencyFirstName" ? { firstName: value }
-                            : name === "emergencyLastName" ? { lastName: value }
-                            : name === "relationship" ? { relationship: value }
-                            : {})
-                    }
-                : contact
+            idx === i ?
+                {
+                    ...contact,
+                    ...(name === "emergencyFirstName" ? { firstName: value }
+                        : name === "emergencyLastName" ? { lastName: value }
+                        : name === "relationship" ? { relationship: value }
+                        : {})
+                }
+            : contact
         ))
         setServerError(null)
     }
@@ -84,13 +83,12 @@ const JoinChildForm: React.FC<Props> = ({ showForm, onSuccess }) => {
         const { value } = e.currentTarget
 
         setEcs(prev => prev.map((contact, idx) =>
-            idx === i
-                ?
-                    {
-                        ...contact,
-                        phoneNumber: formatUs(value)
-                    }
-                : contact
+            idx === i ?
+                {
+                    ...contact,
+                    phoneNumber: formatUs(value)
+                }
+            : contact
         ))
         setServerError(null)
     }

@@ -4,6 +4,7 @@ import { useModal } from "@/app/context/modal";
 import { useAuth } from "@/app/context/auth";
 import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useUser } from "../../../hooks/useUser";
 
 // Eye icon SVGs
     const EyeIcon = () => (
@@ -20,6 +21,7 @@ import { usePathname, useRouter } from "next/navigation";
     );
 
 const LoginModal = () => {
+    const { refetch } = useUser()
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -67,7 +69,7 @@ const LoginModal = () => {
     // Handle submit for "Forgot Password" form
     const handleForgotPasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+
         if (!forgotPasswordEmail || !validateEmail(forgotPasswordEmail)) {
             setForgotPasswordMessage("Please enter a valid email address");
             return;
@@ -122,10 +124,10 @@ const LoginModal = () => {
 
         // Client-side validation
         const newErrors: { [key: string]: string } = {};
-        
+
         if (!email) newErrors.email = "Email is required";
         else if (!validateEmail(email)) newErrors.email = "Please provide a valid email address";
-        
+
         if (!password) newErrors.password = "Password is required";
         else if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
 
@@ -210,8 +212,8 @@ const LoginModal = () => {
                     <form onSubmit={handleForgotPasswordSubmit} className="p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-green-600 w-full text-center">Reset Password</h2>
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 onClick={closeModal}
                                 className="text-gray-400 hover:text-gray-600 text-2xl"
                             >
@@ -237,7 +239,7 @@ const LoginModal = () => {
 
                             {forgotPasswordMessage && (
                                 <div className={`p-3 rounded-lg text-sm ${
-                                    forgotPasswordMessage.includes('sent') 
+                                    forgotPasswordMessage.includes('sent')
                                         ? 'bg-green-50 border border-green-200 text-green-700'
                                         : 'bg-red-50 border border-red-200 text-red-700'
                                 }`}>
@@ -297,8 +299,8 @@ const LoginModal = () => {
                     {/* Header */}
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold text-green-600 w-full text-center">Welcome Back</h2>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={closeModal}
                             className="text-gray-400 hover:text-gray-600 text-2xl"
                         >
@@ -362,7 +364,7 @@ const LoginModal = () => {
                                 </button>
                                 </div>
 
-                            
+
                             {errors.password && (
                                 <div className="text-red-500 text-sm mt-1">{errors.password}</div>
                             )}

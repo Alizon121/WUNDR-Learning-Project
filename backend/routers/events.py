@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
 from backend.db.prisma_client import db
 from typing import Annotated
 from backend.models.user_models import User
-from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate
+from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate, EnrollChildren
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
@@ -164,7 +164,7 @@ async def get_event_by_id(event_id: str):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Event not found"
             )
-        
+
         return event
 
     except Exception as e:
@@ -243,31 +243,31 @@ async def update_event(
 
     if event_data.date is not None:
         update_payload["date"] = event_data.date
-        
+
     if event_data.image is not None:
         update_payload["image"] = event_data.image
-        
+
     if event_data.participants is not None:
         update_payload["participants"] = event_data.participants
 
     if event_data.limit is not None:
         update_payload["limit"] = event_data.limit
-        
+
     if event_data.city is not None:
         update_payload["city"] = event_data.city
-        
+
     if event_data.state is not None:
         update_payload["state"] = event_data.state
-        
+
     if event_data.address is not None:
         update_payload["address"] = event_data.address
-        
+
     if event_data.zipCode is not None:
         update_payload["zipCode"] = event_data.zipCode
-        
+
     if event_data.latitude is not None:
         update_payload["latitude"] = event_data.latitude
-        
+
     if event_data.longitude is not None:
         update_payload["longitude"] = event_data.longitude
 
@@ -353,7 +353,7 @@ async def delete_event_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Event not found"
         )
-    
+
     # Get all the emails associated with an event as list
     users =  event.users
     user_emails = [user.email for user in users]
@@ -385,7 +385,7 @@ async def add_user_to_event(
     """
     Add the current user to an existing event
     like a volunteer
-    
+
     Verify authentication
     Fetch the event
     Check if user is already enrolled
@@ -454,10 +454,9 @@ async def add_user_to_event(
     return {"event": updated_event, "message": "User added to event and notified"}
 
 @router.patch("/{event_id}/enroll", status_code=status.HTTP_200_OK)
-async def add_child_to_event(
+async def add_children_to_event(
     event_id: str,
-    child_id: str,
-    # icon: str,
+    payload: EnrollChildren,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):
@@ -478,42 +477,44 @@ async def add_child_to_event(
 
     # Fetch the event
     event = await db.events.find_unique(where={"id": event_id})
-
     if not event:
         raise HTTPException(
             status_code=404,
             detail="Event not found")
 
-    # Fetch child and verify parenthood
-    child = await db.children.find_unique(
-        where={"id": child_id}
+    incoming_ids = set(payload.childIDs)
+    existing_ids = set(event.childIDs or [])
+
+    to_add = list(incoming_ids - existing_ids)
+    if not to_add:
+        return {
+            "event": event,
+            "message": "No new children to enroll"
+        }
+
+    # validate existing children
+    children = await db.children.find_many(
+        where={"id": {"in": to_add}}
     )
+    found_ids = {c.id for c in children}
+    missing = set(to_add) - found_ids
+    if missing:
+        raise HTTPException(status_code=404, detail=f"Child not found: {', '.join(missing)}")
 
-    if not child:
-        raise HTTPException(
-            status_code=404,
-            detail="Child not found"
-        )
+    # validate parenthood
+    for c in children:
+        if current_user.id not in (c.parentIDs or []):
+            raise HTTPException(
+                status_code=403,
+                detail="You are not the parent of this child."
+            )
 
-    if current_user.id not in child.parentIDs:
-        raise HTTPException(
-            status_code=403,
-            detail="You are not the parent of this child."
-        )
-
-    # Check if child is already enrolled
-    if child.id in event.childIDs:
-        raise HTTPException(
-            status_code=400,
-            detail="Child is already enrolled"
-        )
-
-    # Add child to event
+    # Add children to event
     updated_event = await db.events.update(
         where={"id": event_id},
            data={
-            "children": {"connect": {"id": child_id}},
-            "participants": {"increment": 1}
+            "children": {"connect": [{"id": cid} for cid in to_add]},
+            "participants": {"increment": len(to_add)}
             }
     )
 
@@ -547,7 +548,7 @@ async def add_child_to_event(
         event.date
     )
 
-    return {"event": updated_event, "message": "Child added to event and user notified"}
+    return {"event": updated_event, "message": "Children added to event and user notified"}
 
 @router.patch("/{event_id}/leave", status_code=status.HTTP_200_OK)
 async def remove_user_from_event(
@@ -587,13 +588,13 @@ async def remove_user_from_event(
             status_code=400,
             detail="User is not enrolled"
         )
-    
+
     # ! Create logic for deleting the previous notification?
-    
+
     # Send notification to User that they have been removed from event
     subject = f'Unenrollment Confirmation: {event.name}'
     content = f'Hello,\n\nThis email confirms that you have been unenrolled from the {event.name} event at Wonderhood on {event.date}. Please find more events at our website.\n\nBest,\n\nWonderhood Team'
-    
+
     background_tasks.add_task(
         send_email_one_user,
         current_user.email,
@@ -608,7 +609,7 @@ async def remove_user_from_event(
         where={"id": event_id},
           data={
             "userIDs": updated_user_list,
-            "participants": {"decrement":1}  
+            "participants": {"decrement":1}
             }
     )
 
@@ -669,11 +670,11 @@ async def remove_child_from_event(
             status_code=400,
             detail="Child is not enrolled"
         )
-    
+
     # Notification to user for unenrolling child
     subject = f'Unenrollment Confirmation: {event.name}'
     content = f'Hello,\n\nThis email confirms that your child has been unenrolled from the {event.name} on {event.date}. Please find more events on our website.\n\nBest,\n\nWonderhood Team'
-    
+
     background_tasks.add_task(
         send_email_one_user,
         current_user.email,
@@ -824,7 +825,7 @@ async def create_review(
                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                detail=f'Failed to create review: {e}'
           )
-     
+
 # * =============================================
 # Add the Jobs routes here
 # Add a message on UI noting to look for correspondences from us in their spam folder
@@ -884,7 +885,7 @@ async def send_message_to_users_of_enrolled_child(
 
     if not parent_emails:
         raise HTTPException(status_code=404, detail="Unable to obtain parent emails")
-    
+
     # Creat the notifications for the UI
     notification_data = [
         {
@@ -965,7 +966,7 @@ async def send_enrolled_user_notification(
             where={"id":id}
         )
         users_emails.append(users.email)
-    
+
     background_tasks.add_task(
         send_email_multiple_users,
         users_emails,

@@ -8,15 +8,17 @@ from .auth.utils import enforce_admin, enforce_authentication
 
 router = APIRouter()
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/{opportunity_id}", status_code=status.HTTP_201_CREATED)
 async def volunteer_sign_up(
+    opportunity_id: str,
     current_user: Annotated[User, Depends(get_current_user)],
     volunteer_data: VolunteerCreate
 ):
     """
         Authenticated user
         Sign up as a volunteer
-        return Json of enrolled user
+        Information for volunteer application
+        return Json of user's application
     """
 
     # Validate User
@@ -32,13 +34,32 @@ async def volunteer_sign_up(
             detail="User is already registered as a volunteer"
         )
 
+    # Validate the opportunity exists
+    opportunity = await db.volunteeropportunities.find_unique(
+        where={"id": opportunity_id}
+    )
+    
+    if not opportunity:
+        raise HTTPException(
+            status_code=404,
+            detail="Volunteer opportunity not found"
+        )
+    
     try:
         data = volunteer_data.model_dump()
         data["userId"] = current_user.id
         
-        volunteer = await db.volunteers.create(data=data)
+        volunteer = await db.volunteers.create(
+            data={
+                **data,
+                "volunteerOpportunities": {
+                    "connect": [{"id": opportunity_id}]
+                }
+            }
+        )
 
         return {"volunteer": volunteer}
+
     except Exception as e:
         raise HTTPException(
             status_code=500,

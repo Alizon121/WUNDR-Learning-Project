@@ -8,6 +8,35 @@ from .auth.utils import enforce_admin, enforce_authentication
 
 router = APIRouter()
 
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def volunteer_sign_up_general(
+    current_user: Annotated[User, Depends(get_current_user)],
+    volunteer_data: VolunteerCreate
+):
+    enforce_authentication(current_user)
+
+    existing = await db.volunteers.find_unique(where={"userId": current_user.id})
+    if existing:
+        raise HTTPException(status_code=400, detail="User is already registered as a volunteer")
+
+    try:
+        data = volunteer_data.model_dump()
+        # ⚠️ Do NOT set userId directly — the relation is mandatory;
+        # use a nested `connect` to link the user.
+        volunteer = await db.volunteers.create(
+            data={
+                **data,
+                "status": "NEW",                     
+                "user": {"connect": {"id": current_user.id}}, 
+            }
+        )
+        return {"volunteer": volunteer}
+
+    except Exception as e:
+        print("VOL_CREATE_ERR:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/{opportunity_id}", status_code=status.HTTP_201_CREATED)
 async def volunteer_sign_up(
     opportunity_id: str,

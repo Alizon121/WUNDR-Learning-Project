@@ -8,6 +8,20 @@ from .auth.utils import enforce_admin, enforce_authentication
 
 router = APIRouter()
 
+# @router.get("/my-opportunities", status_code=200)
+# async def my_opportunities(
+#     current_user: Annotated[User, Depends(get_current_user)],
+# ):
+#     enforce_authentication(current_user)
+#     vol = await db.volunteers.find_unique(
+#         where={"userId": current_user.id},
+#         include={"volunteerOpportunities": {"select": {"id": True}}}
+#     )
+#     if not vol:
+#         return {"opportunityIds": []}
+#     return {"opportunityIds": [o.id for o in vol.volunteerOpportunities]}
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def volunteer_sign_up_general(
     current_user: Annotated[User, Depends(get_current_user)],
@@ -23,6 +37,7 @@ async def volunteer_sign_up_general(
         data = volunteer_data.model_dump()
         # ⚠️ Do NOT set userId directly — the relation is mandatory;
         # use a nested `connect` to link the user.
+
         volunteer = await db.volunteers.create(
             data={
                 **data,
@@ -37,6 +52,66 @@ async def volunteer_sign_up_general(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+
+# @router.post("/{opportunity_id}", status_code=status.HTTP_201_CREATED)
+# async def volunteer_sign_up(
+#     opportunity_id: str,
+#     current_user: Annotated[User, Depends(get_current_user)],
+#     volunteer_data: VolunteerCreate
+# ):
+#     """
+#         Authenticated user
+#         Sign up as a volunteer
+#         Information for volunteer application
+#         return Json of user's application
+#     """
+
+#     # Validate User
+#     enforce_authentication(current_user)
+
+#     existing_volunteer = await db.volunteers.find_unique(
+#             where={"userId": current_user.id}
+#         )
+        
+#     if existing_volunteer:
+#         raise HTTPException(
+#             status_code=400,
+#             detail="User is already registered as a volunteer"
+#         )
+
+#     # Validate the opportunity exists
+#     opportunity = await db.volunteeropportunities.find_unique(
+#         where={"id": opportunity_id}
+#     )
+    
+#     if not opportunity:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="Volunteer opportunity not found"
+#         )
+    
+#     try:
+#         data = volunteer_data.model_dump()
+#         data["userId"] = current_user.id
+        
+#         volunteer = await db.volunteers.create(
+#             data={
+#                 **data,
+#                 "volunteerOpportunities": {
+#                     "connect": [{"id": opportunity_id}]
+#                 }
+#             }
+#         )
+
+#         return {"volunteer": volunteer}
+
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Unable to enroll volunteer: {e}"
+#         )
+
 @router.post("/{opportunity_id}", status_code=status.HTTP_201_CREATED)
 async def volunteer_sign_up(
     opportunity_id: str,
@@ -44,56 +119,61 @@ async def volunteer_sign_up(
     volunteer_data: VolunteerCreate
 ):
     """
-        Authenticated user
-        Sign up as a volunteer
-        Information for volunteer application
-        return Json of user's application
+    Sign up to a specific opportunity.
+    - If volunteer already exists -> update it and connect the opportunity.
+    - If not -> create volunteer and connect the opportunity.
+    - Prevent duplicate connection to the same opportunity.
     """
 
-    # Validate User
     enforce_authentication(current_user)
 
-    existing_volunteer = await db.volunteers.find_unique(
-            where={"userId": current_user.id}
-        )
-        
-    if existing_volunteer:
-        raise HTTPException(
-            status_code=400,
-            detail="User is already registered as a volunteer"
-        )
-
-    # Validate the opportunity exists
-    opportunity = await db.volunteeropportunities.find_unique(
-        where={"id": opportunity_id}
-    )
-    
+    # 1) Validate the opportunity exists
+    opportunity = await db.volunteeropportunities.find_unique(where={"id": opportunity_id})
     if not opportunity:
-        raise HTTPException(
-            status_code=404,
-            detail="Volunteer opportunity not found"
-        )
-    
+        raise HTTPException(status_code=404, detail="Volunteer opportunity not found")
+
+    # 2) Find existing volunteer (with current connections)
+    volunteer = await db.volunteers.find_unique(
+        where={"userId": current_user.id},
+        include={"volunteerOpportunities": True}
+    )
+
     try:
+        if volunteer:
+            # 2a) Already applied to this specific opportunity?
+            already = any(o.id == opportunity_id for o in (volunteer.volunteerOpportunities or []))
+            if already:
+                raise HTTPException(status_code=409, detail="Already applied to this opportunity")
+
+            # 2b) Update volunteer fields (if provided) and connect new opportunity
+            data = volunteer_data.model_dump(exclude_unset=True)
+            updated = await db.volunteers.update(
+                where={"userId": current_user.id},
+                data={
+                    **data,
+                    "volunteerOpportunities": {"connect": [{"id": opportunity_id}]}
+                }
+            )
+            return {"volunteer": updated}
+
+        # 3) No volunteer yet -> create new with user relation + connect opportunity
         data = volunteer_data.model_dump()
-        data["userId"] = current_user.id
-        
-        volunteer = await db.volunteers.create(
+        created = await db.volunteers.create(
             data={
                 **data,
-                "volunteerOpportunities": {
-                    "connect": [{"id": opportunity_id}]
-                }
+                "status": "New",
+                "user": {"connect": {"id": current_user.id}},
+                "volunteerOpportunities": {"connect": [{"id": opportunity_id}]}
             }
         )
+        return {"volunteer": created}
 
-        return {"volunteer": volunteer}
-
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unable to enroll volunteer: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Unable to enroll volunteer: {e}")
+
+
 
 @router.patch("/", status_code=status.HTTP_200_OK)
 async def update_volunteer(
@@ -179,48 +259,4 @@ async def delete_volunteer(
         raise HTTPException(
             status_code=500,
             detail=f"Unable to delete the volunteer: {e}"
-        )
-@router.patch("/{volunteer_id}/admin", status_code=status.HTTP_200_OK)
-async def update_volunteer_admin_only(
-    volunteer_id: str,
-    current_user: Annotated[User, Depends(get_current_user)],
-    volunteer_data: VolunteerUpdate
-):
-    """
-        Authenticate and enforce admin for current user
-        Allow admin to update volunteer application (e.g. application status)
-        Return updated volunteer
-    """
-
-    # Validate user
-    enforce_authentication(current_user)
-    enforce_admin(current_user)
-
-    # Validate volunteer exists
-    existing_volunteer = await db.volunteers.find_unique(
-        where={"id": volunteer_id}
-    )
-
-    if not existing_volunteer:
-        raise HTTPException(
-            status_code=400,
-            detail="Unable to locate volunteer"
-        )
-    
-    try:
-        data = volunteer_data.model_dump(exclude_none=True)
-        if not data:
-            return {"Volunteer not updated": existing_volunteer}
-        
-        updated_volunteer = await db.volunteers.update(
-            where={"id": volunteer_id},
-            data=data
-        )
-
-        return {"Updated Volunteer": updated_volunteer}
-    
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Unable to update volunteer"
         )

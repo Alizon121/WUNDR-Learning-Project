@@ -48,15 +48,12 @@ const initial: FormState = {
 // Works for both general and per-opportunity flows.
 // If `opportunityId` is provided -> POST /volunteer/{id}
 // Else -> POST /volunteer/
-export default function VolunteerForm({
-  opportunityId,
-  roleTitle,
-  onDone, // optional: close modal in Opportunities fallback
-}: {
+export default function VolunteerForm({opportunityId, roleTitle, onDone,}: {
   opportunityId?: string;
   roleTitle?: string;
   onDone?: () => void;
-}) {
+}) { 
+
   const [f, setF] = useState<FormState>(initial);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +67,22 @@ export default function VolunteerForm({
 
   // Local "one-time" lock for general form. Backend enforces too.
   const [lockedGeneral, setLockedGeneral] = useState(false);
-  useEffect(() => { if (client) setLockedGeneral(isGeneralSubmitted()); }, [client]);
+
+  useEffect(() => {
+    if (!client || !logged) return;
+    (async () => {
+      try {
+        const res = await makeApiRequest<{ hasGeneral: boolean }>(
+          `${API}/volunteer/my-opportunities`,
+          { method: 'GET' }
+        );
+        setLockedGeneral(!!res.hasGeneral);
+      } catch {
+        setLockedGeneral(false); 
+      }
+    })();
+  }, [client, logged]);
+
 
   const disabled = !logged || submitting || (!opportunityId && lockedGeneral);
 
@@ -256,7 +268,7 @@ export default function VolunteerForm({
       )}
 
       {/* General one-time lock banner */}
-      {!opportunityId && lockedGeneral && (
+      {!opportunityId && logged && lockedGeneral && (
         <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
           You have already submitted an application. Thank you!
         </div>

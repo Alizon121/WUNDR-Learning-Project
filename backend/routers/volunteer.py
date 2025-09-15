@@ -8,18 +8,32 @@ from .auth.utils import enforce_admin, enforce_authentication
 
 router = APIRouter()
 
-# @router.get("/my-opportunities", status_code=200)
-# async def my_opportunities(
-#     current_user: Annotated[User, Depends(get_current_user)],
-# ):
-#     enforce_authentication(current_user)
-#     vol = await db.volunteers.find_unique(
-#         where={"userId": current_user.id},
-#         include={"volunteerOpportunities": {"select": {"id": True}}}
-#     )
-#     if not vol:
-#         return {"opportunityIds": []}
-#     return {"opportunityIds": [o.id for o in vol.volunteerOpportunities]}
+@router.get("/my-opportunities", status_code=200)
+async def my_opportunities(
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    enforce_authentication(current_user)
+
+    vol = await db.volunteers.find_unique(where={"userId": current_user.id})
+    ids = vol.volunteerOpportunityIDs if vol and vol.volunteerOpportunityIDs else []
+
+    return {"opportunityIds": ids, "hasGeneral": bool(vol)}
+
+
+# All @router.get("/applications", status_code=200)
+@router.get("/applications", status_code=200)
+async def list_all_applications(
+    current_user: Annotated[User, Depends(get_current_user)],
+    kind: str = "all"  # all | general
+):
+    enforce_authentication(current_user)
+    enforce_admin(current_user)
+
+    vols = await db.volunteers.find_many()
+    if kind.lower() == "general":
+        vols = [v for v in vols if not (v.volunteerOpportunityIDs and len(v.volunteerOpportunityIDs))]
+    return {"volunteers": vols}
+
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -50,7 +64,6 @@ async def volunteer_sign_up_general(
     except Exception as e:
         print("VOL_CREATE_ERR:", e)
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 

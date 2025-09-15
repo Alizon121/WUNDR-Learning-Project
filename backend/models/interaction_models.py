@@ -200,14 +200,14 @@ class VolunteerOpportunityCreate(BaseModel):
   time: str = Field(None, description="Time/schedule information")
   requirements: List[str] = Field(default_factory=list, description="Requirements")
   tags: List[str] = Field(default_factory=list, description="Tags for volunteer opportunity")
-  minAge: int = Field(le=16, description="Age requirement")
+  minAge: int = Field(ge=16, description="Age requirement")
   bgCheckRequired: bool = Field(default=True, description="Background check requirement")
-  volunteerIDs: List[str] = Field(default=None, description="Enrolled Volunteers")
+  volunteerIDs: List[str] = Field(default_factory=list, description="Enrolled Volunteers")
 
   @field_validator("duties", "skills", "requirements", "tags", mode="before")
   def clean_string_lists(cls, v):
-     if v is None or v == []:
-         return None
+     if v is None:
+         return []
      return [item.strip() for item in v if item and item.strip()]
 
 class VolunteerOpportunityResponse(BaseModel):

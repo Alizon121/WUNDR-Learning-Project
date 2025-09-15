@@ -5,6 +5,7 @@ import HeroVolunteer from './Hero';
 import Opportunities from './Opportunities';
 import VolunteerForm from './VolunteerForm';
 import { useModal } from '@/app/context/modal';
+import AdminVolunteerOpportunities from '../AdminVolunteer/AdminVolunteerOpportunities';
 
 type TabKey = 'opps' | 'form';
 const hashToTab = (h: string): TabKey =>
@@ -15,7 +16,6 @@ export default function Volunteer() {
   const [mounted, setMounted] = useState(false);
   const { closeModal } = useModal();
 
-  // 👇 добавляем выбранную роль
   const [selected, setSelected] = useState<{ id?: string; title?: string }>({});
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function Volunteer() {
     });
   };
 
-// 👇 обработчик клика "Apply for this role"
+// "Apply for this role"
 const handleApply = (roleTitle?: string, opportunityId?: string) => {
   setSelected({ id: opportunityId, title: roleTitle });
   goForm();

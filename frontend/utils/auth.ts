@@ -173,4 +173,18 @@ export function isLoggedIn(): boolean {
   return !!getToken();
 }
 
+// UserRole =================================================
+export function getUserRole():
+  | 'admin' | 'parent' | 'instructor' | 'volunteer' | null {
+  try {
+    const str = localStorage.getItem('user');
+    if (str) return JSON.parse(str)?.role ?? null;
+    const raw = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (!raw) return null;
+    const payload = JSON.parse(atob(raw.split('.')[1] || ''));
+    return (payload.role || payload.user?.role) ?? null;
+  } catch { return null; }
+}
+
+
 

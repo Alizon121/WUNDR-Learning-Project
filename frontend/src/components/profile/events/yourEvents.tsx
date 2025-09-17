@@ -6,6 +6,7 @@ import { useUser } from "../../../../hooks/useUser"
 import { formatDate } from "../../../../utils/formatDate"
 import { useMemo, useRef, useState } from "react"
 import EventCalendar from "./calendar"
+import Link from "next/link"
 
 
 const YourEvents = () => {
@@ -70,32 +71,34 @@ const YourEvents = () => {
 
                     return (
                         <div key={event.id} className="basis-1/2 max-w-3xl w-full mx-auto">
-                            <div className="bg-white rounded-lg p-6 min-h-[350px]">
-                                <div className="mb-6">
-                                    <div className="inline-block bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
-                                        {formatDate(event.date)}
+                            <Link href={`/events/${event.id}`}>
+                                <div className="bg-white rounded-lg p-6 min-h-[350px]">
+                                    <div className="mb-6">
+                                        <div className="inline-block bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
+                                            {formatDate(event.date)}
+                                        </div>
+
+                                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                                            {event.name} in {event.city}
+                                        </h3>
+
+                                        <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[3.5rem]">
+                                            {event.description}
+                                        </p>
                                     </div>
 
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                                        {event.name} in {event.city}
-                                    </h3>
-
-                                    <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[3.5rem]">
-                                        {event.description}
-                                    </p>
+                                    <div className="flex flex-col justify-center mt-auto">
+                                        <p className="text-xs text-gray-500 mb-2">Your Children Enrolled:</p>
+                                        {children.length && (
+                                            <ul className="list-disc pl-5 text-xs text-gray-700 space-y-0.5">
+                                                {children.map((name, i) => (
+                                                    <li key={`${event.id}-${i}`}>{name}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
                                 </div>
-
-                                <div className="flex flex-col justify-center mt-auto">
-                                    <p className="text-xs text-gray-500 mb-2">Your Children Enrolled:</p>
-                                    {children.length && (
-                                        <ul className="list-disc pl-5 text-xs text-gray-700 space-y-0.5">
-                                            {children.map((name, i) => (
-                                                <li key={`${event.id}-${i}`}>{name}</li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            </div>
+                            </Link>
                         </div>
                     )
                 })}

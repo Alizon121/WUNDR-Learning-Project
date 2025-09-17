@@ -5,6 +5,7 @@ import UserInfo from "./userInfo/UserInfo"
 import ChildInfo from "./childInfo/ChildInfo"
 import { useRouter, useSearchParams } from "next/navigation";
 import Notifications from "./notifications/NotifInfo"
+import YourEvents from "./events/yourEvents";
 
 type TabKey = 'user' | 'child' | 'events' | 'notifications';
 
@@ -53,6 +54,7 @@ const Profile = () => {
             <div className="w-3/4">
                 {tabIdx === 0 && <UserInfo />}
                 {tabIdx === 1 && <ChildInfo />}
+                {tabIdx === 2 && <YourEvents />}
                 {tabIdx === 3 && <Notifications />}
             </div>
         </div>

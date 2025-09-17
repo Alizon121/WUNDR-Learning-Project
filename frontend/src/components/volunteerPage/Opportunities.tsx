@@ -8,21 +8,9 @@ import VolunteerForm from './VolunteerForm';
 import { useEffect, useRef, useState } from 'react';
 import { makeApiRequest } from '../../../utils/api';
 import { markOppSubmitted, isOppSubmitted } from './volunteerLocks';
+import { Opp, Venue } from "../../types/opportunity"
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-
-type Venue = 'Indoors' | 'Outdoors' | 'Online';
-type Opp = {
-  id: string;
-  title: string;
-  venue: Venue[];
-  duties: string[];
-  skills: string[];
-  time: string;
-  requirements: string[];
-  tags?: string[];
-};
-
 
 const ALSO_HELPFUL = [
   { title: 'Fundraising / Grants (Online)', blurb: 'Find mini-grants and draft simple applications.' },
@@ -93,10 +81,11 @@ const envLabel = (venue: Venue[]) => {
     if (onApply) return onApply(title, oppId);
     if (!logged) return setModalContent(<LoginModal />);
     setModalContent(
-      <div className="max-w-3xl">
-        <VolunteerForm opportunityId={oppId} roleTitle={title} onDone={closeModal} />
-      </div>
-    );
+    <div className="max-w-3xl">
+      <VolunteerForm key={oppId} opportunityId={oppId} roleTitle={title} onDone={closeModal} />
+    </div>
+  );
+
   };
 
   return (
@@ -155,7 +144,7 @@ const envLabel = (venue: Venue[]) => {
                 <p><span className="font-semibold text-wondergreen">Time:</span> {r.time}</p>
                 <p className="mt-1"><span className="font-semibold text-wondergreen">Requirements:</span> {r.requirements.join(' · ')}</p>
               </div>
-
+              {/* Do not delete! */}
               {/* {r.id && (
                 <details className="mt-5 group">
                   <summary className="cursor-pointer text-sm text-wondergreen hover:text-wonderleaf underline decoration-dotted">
@@ -185,7 +174,7 @@ const envLabel = (venue: Venue[]) => {
         })}
       </div>
 
-      <div className="mt-8 rounded-2xl bg-white border border-wonderleaf/20 p-5">
+      {/* <div className="mt-8 rounded-2xl bg-white border border-wonderleaf/20 p-5">
         <h3 className="text-lg font-semibold text-wondergreen mb-2">Also helpful</h3>
         <ul className="list-disc pl-5 text-gray-700 space-y-1">
           {ALSO_HELPFUL.map(x => (
@@ -203,7 +192,7 @@ const envLabel = (venue: Venue[]) => {
             Apply to Volunteer
           </Link>
         </div>
-      </div>
+      </div> */}
     </section>
   );
 }

@@ -3,30 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { makeApiRequest } from '../../../utils/api';
 import { useModal } from '@/app/context/modal';
+import type { VolunteerApp, AppStatus } from '../../types/volunteer';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-
-type AppStatus = 'New' | 'In_review' | 'Approved' | 'Rejected';
-
-type VolunteerApp = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phoneNumber?: string;
-
-  // NEW: extra fields we want to see
-  bio?: string;                       // Short bio (optional)
-  photoConsent?: boolean;             // Photo consent flag
-  backgroundCheckConsent?: boolean;   // BG check consent flag
-
-  cities?: string[];
-  daysAvail?: string[];
-  timesAvail?: string[];
-  skills?: string[];
-  status?: AppStatus;
-  volunteerOpportunityIDs?: string[];
-};
 
 type Props =
   | { mode: 'all'; title?: string }

@@ -67,8 +67,6 @@ const ChildInfo = () => {
         return children[idx]
     })
 
-    console.log('vissibleChild', visibleChildren)
-
     const handleNext = () => {
         if (children.length > 0) setCurrChildIdx((prevIdx) => (((prevIdx + 1) % children.length) + children.length) % children.length)
     }
@@ -78,6 +76,8 @@ const ChildInfo = () => {
     }
 
     const handleShowForm = () => !showForm ? setShowForm(true) : setShowForm(false)
+
+    if (loading) return <div className="flex justify-center items-center min-h-[200px]">Loading...</div>
 
     return (
         <div>

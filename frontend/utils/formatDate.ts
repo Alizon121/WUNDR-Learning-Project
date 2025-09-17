@@ -34,11 +34,24 @@ export const formatNotificationTime = (timeString: string): string => {
   }
 
 export const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
 
     return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
-    });
-};
+    })
+}
+
+export const combineLocal = (isoOrDateOnly: string, timeStr = "09:00") => {
+    if (!isoOrDateOnly) return new Date(NaN);
+
+    // Extract just the date part
+    const m = isoOrDateOnly.match(/^\d{4}-\d{2}-\d{2}/);
+    if (!m) return new Date(NaN);
+
+    const [y, mm, d] = m[0].split("-").map(Number)
+    const [hh = 0, min = 0] = timeStr.split(":").map(Number)
+
+    return new Date(y, mm - 1, d, hh, min, 0, 0)
+}

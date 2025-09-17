@@ -4,6 +4,8 @@ export type Event = {
     name: string
     description: string
     date: string
+    // startTime: string
+    // endTime: string
     image: string
     participants: number
     limit: number

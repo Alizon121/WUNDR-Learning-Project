@@ -77,6 +77,8 @@ const ChildInfo = () => {
 
     const handleShowForm = () => !showForm ? setShowForm(true) : setShowForm(false)
 
+    if (loading) return <div className="flex justify-center items-center min-h-[200px]">Loading...</div>
+
     return (
         <div>
             <div className="text-center mb-[40px]">

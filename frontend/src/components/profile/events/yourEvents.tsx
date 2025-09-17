@@ -1,23 +1,29 @@
+"use client"
+
 import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6"
 import useGetAllEvents from "../../../../hooks/useGetAllEvents"
 import { useUser } from "../../../../hooks/useUser"
 import { formatDate } from "../../../../utils/formatDate"
-import { useState } from "react"
+import { useMemo, useRef, useState } from "react"
+import EventCalendar from "./calendar"
 
 
 const YourEvents = () => {
     const { events, loading, error, refetch } = useGetAllEvents()
     const { user } = useUser()
     const [currEventIdx, setCurrEventIdx] = useState(0)
+    const cardsRef = useRef<HTMLDivElement>(null)
 
-    const usersEvents = (events ?? []).map((event) => ({
-        description: event.description,
-        name: event.name,
-        city: event.city,
-        date: formatDate(event.date),
+    const usersEvents = useMemo(() => (events ?? []).map((event) => ({
         id: event.id,
+        name: event.name,
+        description: event.description,
+        city: event.city,
+        date: event.date,
+        // startTime: event.startTime,
+        // endTime: event.endTime,
         childIds: (user?.children ?? []).filter(child => (event.childIDs ?? []).includes(child.id))
-    }))
+    })), [events, user])
 
     const visibleEvents = Array.from({ length: Math.min(2, usersEvents.length) }, (_, i) => {
         const idx = (((currEventIdx + i) % usersEvents.length) + usersEvents.length) % usersEvents.length
@@ -27,18 +33,32 @@ const YourEvents = () => {
     const handleNext = () => {
         if (usersEvents.length > 0) setCurrEventIdx((prevIdx) => (((prevIdx + 2) % usersEvents.length) + usersEvents.length) % usersEvents.length)
     }
-
     const handlePrev = () => {
         if (usersEvents.length > 0) setCurrEventIdx((prevIdx) => (((prevIdx - 2) % usersEvents.length) + usersEvents.length) % usersEvents.length)
     }
 
+    const handlePickFromCalendar = (eventId: string) => {
+        const idx = usersEvents.findIndex(e => e.id === eventId)
+        if (idx < 0) return
+
+        setCurrEventIdx(idx)
+
+        cardsRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        })
+    }
+
+    if (loading) return <div className="flex justify-center items-center min-h-[200px]">Loading...</div>
+
     return (
         <div>
             <div className="text-center mb-[40px]">
-                <h1 className="text-4xl font-bold text-wondergreen mb-4">Your Children's Information</h1>
-                <h2 className="max-w-2xl mx-auto text-lg text-wondergreen">Manage your children's profile for their events</h2>
+                <h1 className="text-4xl font-bold text-wondergreen mb-4">Your Events</h1>
+                <h2 className="max-w-2xl mx-auto text-lg text-wondergreen">Manage all the events you and children are enrolled in</h2>
             </div>
 
+            <div ref={cardsRef} className="scroll-mt-24 aria-hidden" />
             <div className="flex flex-row gap-6 my-10">
                 {usersEvents.length > 2 && (
                     <FaCircleChevronLeft className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handlePrev}/>
@@ -84,6 +104,8 @@ const YourEvents = () => {
                     <FaCircleChevronRight className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handleNext}/>
                 )}
             </div>
+
+            <EventCalendar events={usersEvents} onPick={handlePickFromCalendar}/>
         </div>
     )
 }

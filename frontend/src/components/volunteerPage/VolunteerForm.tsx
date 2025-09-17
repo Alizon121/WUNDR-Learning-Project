@@ -15,120 +15,98 @@ import { isGeneralSubmitted, markGeneralSubmitted, markOppSubmitted } from './vo
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 const TIME_OPTIONS = ['Mornings', 'Afternoons', 'Evenings'] as const;
-type TimeOption = (typeof TIME_OPTIONS)[number];
 
-type FormState = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  selectedCities: string[];
-  timesChoices: string[];
-  skillsLine: string;
-  daysAvail: AvailabilityDay[];
-  bio: string;
-  photoConsent: boolean;
-  backgroundCheckConsent: boolean;
-};
-
-const initial: FormState = {
+const initial = {
   firstName: '',
   lastName: '',
   email: '',
   phoneNumber: '',
-  selectedCities: [],
-  timesChoices: [],
+  selectedCities: [] as string[],
+  timesChoices: [] as string[],
   skillsLine: '',
-  daysAvail: [],
+  daysAvail: [] as AvailabilityDay[],
   bio: '',
   photoConsent: false,
   backgroundCheckConsent: false,
 };
 
-// Works for both general and per-opportunity flows.
-// If `opportunityId` is provided -> POST /volunteer/{id}
-// Else -> POST /volunteer/
-export default function VolunteerForm({opportunityId, roleTitle, onDone,}: {
-  opportunityId?: string;
-  roleTitle?: string;
-  onDone?: () => void;
-}) { 
-
-  const [f, setF] = useState<FormState>(initial);
+export default function VolunteerForm({ opportunityId, roleTitle, onDone,}: { opportunityId?: string; roleTitle?: string; onDone?: () => void }) {
+  const [f, setF] = useState(initial);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [okMsg, setOkMsg] = useState<string | null>(null);
 
-  // Client-only checks
+  // client-only
   const [client, setClient] = useState(false);
   useEffect(() => setClient(true), []);
   const logged = client && isLoggedIn();
 
-  // Local "one-time" lock for general form. Backend enforces too.
+  // one-time lock for general form (from local locks)
   const [lockedGeneral, setLockedGeneral] = useState(false);
+
 
   useEffect(() => {
     if (!client || !logged) return;
-    (async () => {
-      try {
-        const res = await makeApiRequest<{ hasGeneral: boolean }>(
-          `${API}/volunteer/my-opportunities`,
-          { method: 'GET' }
-        );
-        setLockedGeneral(!!res.hasGeneral);
-      } catch {
-        setLockedGeneral(false); 
-      }
-    })();
+    setLockedGeneral(isGeneralSubmitted());
   }, [client, logged]);
-
 
   const disabled = !logged || submitting || (!opportunityId && lockedGeneral);
 
   const { setModalContent } = useModal();
   const firstNameRef = useRef<HTMLInputElement | null>(null);
 
-  // Autofocus first name when form becomes enabled
-  useEffect(() => { if (logged && !disabled) firstNameRef.current?.focus(); }, [logged, disabled]);
+  useEffect(() => {
+    if (logged && !disabled) firstNameRef.current?.focus();
+  }, [logged, disabled]);
 
-  // Small helpers
+  // helpers
   const toggleDay = (d: AvailabilityDay) =>
     setF(v => ({
       ...v,
-      daysAvail: v.daysAvail.includes(d) ? v.daysAvail.filter(x => x !== d) : [...v.daysAvail, d],
+      daysAvail: v.daysAvail.includes(d)
+        ? v.daysAvail.filter(x => x !== d)
+        : [...v.daysAvail, d],
     }));
 
-  const toggleTime = (t: TimeOption) =>
+  const toggleTime = (t: (typeof TIME_OPTIONS)[number]) =>
     setF(v => ({
       ...v,
-      timesChoices: v.timesChoices.includes(t) ? v.timesChoices.filter(x => x !== t) : [...v.timesChoices, t],
+      timesChoices: v.timesChoices.includes(t)
+        ? v.timesChoices.filter(x => x !== t)
+        : [...v.timesChoices, t],
     }));
 
   const selectAllTimes = () =>
     setF(v => ({
       ...v,
-      timesChoices: v.timesChoices.length === TIME_OPTIONS.length ? [] : [...TIME_OPTIONS],
+      timesChoices:
+        v.timesChoices.length === TIME_OPTIONS.length ? [] : [...TIME_OPTIONS],
     }));
 
-  // Submit to correct endpoint based on presence of opportunityId
+  // submit
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setOk(false);
     setOkMsg(null);
 
-    // Basic validation
-    if (!f.firstName.trim() || !f.lastName.trim()) return setError('Please provide first and last name.');
-    if (!f.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return setError('Please provide a valid email address.');
+    // basic validation
+    if (!f.firstName.trim() || !f.lastName.trim())
+      return setError('Please provide first and last name.');
+    if (!f.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()))
+      return setError('Please provide a valid email address.');
     const e164 = toE164US(f.phoneNumber);
     if (!e164) return setError('Please enter a valid 10-digit US phone number.');
-    if (!f.photoConsent || !f.backgroundCheckConsent) return setError('Photo and background check consents are required.');
+    if (!f.photoConsent || !f.backgroundCheckConsent)
+      return setError('Photo and background check consents are required.');
 
     setSubmitting(true);
     try {
       const isRole = Boolean(opportunityId);
-      const url = isRole ? `${API}/volunteer/${opportunityId}` : `${API}/volunteer/`;
+      const url = isRole
+        ? `${API}/volunteer/${opportunityId}`
+        : `${API}/volunteer/`;
 
       await makeApiRequest<{ volunteer: any }>(url, {
         method: 'POST',
@@ -147,26 +125,30 @@ export default function VolunteerForm({opportunityId, roleTitle, onDone,}: {
         } satisfies VolunteerCreate,
       });
 
-      // Success
+      // success
       if (isRole) {
-        // If user had no volunteer record, backend created it; general form can be considered done too
         markOppSubmitted(opportunityId!);
-        markGeneralSubmitted();
         setOk(true);
-        setOkMsg(`Thank you! Your application for “${roleTitle ?? 'this role'}” was submitted. We will contact you within 2–3 business days.`);
+        setOkMsg(
+          `Thank you! Your application for “${
+            roleTitle ?? 'this role'
+          }” was submitted. We will contact you within 2–3 business days.`
+        );
         setError(null);
-        onDone?.(); // close modal if we are in the Opportunities fallback
-      } else {
+        onDone?.();
         markGeneralSubmitted();
         setOk(true);
-        setOkMsg('Thank you! Your application was submitted successfully. We appreciate your desire to support the Wonderhood Project and will contact you within 2–3 business days.');
+        setOkMsg(
+          'Thank you! Your application was submitted successfully. We appreciate your desire to support the Wonderhood Project and will contact you within 2–3 business days.'
+        );
       }
 
       setF(initial);
 
-      // Scroll banner into view
       requestAnimationFrame(() => {
-        document.getElementById('volunteer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document
+          .getElementById('volunteer')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     } catch (err: any) {
       const code = String(err?.status || err?.response?.status || '');
@@ -178,17 +160,17 @@ export default function VolunteerForm({opportunityId, roleTitle, onDone,}: {
         err?.response?.data?.message ||
         '';
 
-      // 401: not authorized → show login modal
       if (code === '401') {
-        try { localStorage.removeItem('access_token'); localStorage.removeItem('token'); } catch {}
+        try {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('token');
+        } catch {}
         setModalContent(<LoginModal />);
         setError('Please log in to apply as a volunteer.');
         return;
       }
 
-      // Per-opportunity specific handling
       if (opportunityId) {
-        // 409: already connected to this opportunity
         if (code === '409' || /already applied to this opportunity/i.test(detail)) {
           markOppSubmitted(opportunityId);
           setOk(true);
@@ -197,13 +179,11 @@ export default function VolunteerForm({opportunityId, roleTitle, onDone,}: {
           onDone?.();
           return;
         }
-        // 404: opportunity removed
         if (code === '404') {
           setError('This opportunity no longer exists.');
           return;
         }
       } else {
-        // General form already exists → treat as a friendly success + lock UI
         if (/already registered as a volunteer/i.test(detail)) {
           markGeneralSubmitted();
           setOk(true);
@@ -213,7 +193,6 @@ export default function VolunteerForm({opportunityId, roleTitle, onDone,}: {
         }
       }
 
-      // Fallback
       setError(detail || 'Failed to submit application.');
     } finally {
       setSubmitting(false);
@@ -223,7 +202,7 @@ export default function VolunteerForm({opportunityId, roleTitle, onDone,}: {
   return (
     <div id="volunteer" className="mx-auto max-w-3xl scroll-mt-24">
       {/* Header */}
-      {opportunityId ? (
+      {opportunityId && onDone ? (
         <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
           Applying for: <span className="font-medium">{roleTitle ?? 'Selected role'}</span>
         </div>
@@ -234,7 +213,7 @@ export default function VolunteerForm({opportunityId, roleTitle, onDone,}: {
           Tell us a bit about yourself and your availability — we'll match you with a good fit.
         </p>
         <div className="mt-4 rounded-xl">
-          Wonderhood team will reach out within <span className="font-medium">2–3 business days</span>.
+          Wonderhood team will reach out within <span className="font-medium">2-3 business days</span>.
         </div>
       </div>
 

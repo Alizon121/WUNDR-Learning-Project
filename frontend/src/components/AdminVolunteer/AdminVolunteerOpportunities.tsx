@@ -5,46 +5,18 @@ import { makeApiRequest } from '../../../utils/api';
 import { isLoggedIn } from '../../../utils/auth';
 import { useModal } from '@/app/context/modal';
 import LoginModal from '@/components/login/LoginModal';
-import ApplicantsModal from '@/components/AdminVolunteer/ApplicantsModal';
+import {
+  VENUE_OPTIONS,
+  type Venue,
+  type Opp,
+  type OppCreate,
+  type OppUpdate,
+} from '../../types/opportunity';
 
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 const OPPS_API = `${API}/opportunities`;
 
-// --- Types / enums ---
-const VENUE_OPTIONS = ['Indoors', 'Outdoors', 'Online'] as const;
-type Venue = typeof VENUE_OPTIONS[number];
-
-type Opp = {
-  id: string;
-  title: string;
-  venue: Venue[];
-  duties: string[];
-  skills: string[];
-  time: string;
-  requirements: string[];
-  tags: string[];
-  minAge: number;
-  bgCheckRequired: boolean;
-  volunteerIDs?: string[];          // optional on read, required in create body
-  createdAt?: string;
-  updatedAt?: string | null;
-};
-
-type VolLite = {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phoneNumber?: string;
-  cities?: string[];
-  timesAvail?: string[];
-  status?: string;
-};
-
-
-type OppCreate = Omit<Opp, 'id' | 'createdAt' | 'updatedAt'>;
-type OppUpdate = Partial<OppCreate>;
 
 // --- Helpers ---
 const linesToList = (s: string) =>
@@ -81,10 +53,13 @@ const emptyForm: OppCreate = {
   tags: [],
   minAge: 18,
   bgCheckRequired: true,
-  volunteerIDs: [],                 // <- key fix for 422
+  volunteerIDs: [],
 };
 
-export default function AdminVolunteerOpportunities() {
+export default function AdminVolunteerOpportunities({onViewAllApps, onViewAppsFor} : {
+  onViewAllApps?: () => void;
+  onViewAppsFor?: (opp: Opp) => void;
+}) {
   const { setModalContent } = useModal();
 
   // Client-only auth gate
@@ -106,21 +81,18 @@ export default function AdminVolunteerOpportunities() {
   // Search
   const [q, setQ] = useState('');
   const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return items;
-    return items.filter(x =>
-      [x.title, ...x.tags, ...x.skills].join(' ').toLowerCase().includes(s)
-    );
-  }, [items, q]);
+  const s = q.trim().toLowerCase();
+  if (!s) return items;
+  return items.filter(x =>
+    [x.title, ...(x.tags ?? []), ...x.skills] 
+      .join(' ')
+      .toLowerCase()
+      .includes(s)
+  );
+}, [items, q]);
 
-  const openAllApps = () => {
-  setModalContent(<ApplicantsModal mode="all" />);
-  };
 
-  const openAppsFor = (opp: Opp) => {
-    setModalContent(<ApplicantsModal mode="opp" opportunityId={opp.id} title={opp.title} />);
-  };
-
+ 
 
   // Initial load
   useEffect(() => {
@@ -219,14 +191,10 @@ export default function AdminVolunteerOpportunities() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6">
-      <h1 className="text-2xl font-semibold mb-4">Volunteer Opportunities (Admin)</h1>
-      <button
-        type="button"
-        onClick={openAllApps}
-        className="rounded-lg border px-3 py-2 hover:bg-gray-50"
-        >
-          View all applications
-        </button>
+      <h1 className="text-2xl font-semibold mb-4">Create Volunteer Opportunities</h1>
+      <button onClick={() => onViewAllApps?.()} className="rounded-lg border px-3 py-2 hover:bg-gray-50">
+        View all applications
+      </button>
 
       {err && (
         <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-800">
@@ -407,10 +375,7 @@ export default function AdminVolunteerOpportunities() {
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button
-                  onClick={() => openAppsFor(opp)}
-                  className="text-sm rounded-md border px-3 py-1.5 hover:bg-gray-50"
-                  >
+                  <button onClick={() => onViewAppsFor?.(opp)} className="text-sm rounded-md border px-3 py-1.5 hover:bg-gray-50">
                     View apps
                   </button>
                   <button

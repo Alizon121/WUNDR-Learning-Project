@@ -1,7 +1,8 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminVolunteerOpportunities from '@/components/AdminVolunteer/AdminVolunteerOpportunities';
+// import AdminVolunteerOpportunities from '@/components/AdminVolunteer/AdminVolunteerOpportunities';
+import AdminVolunteerPage from '@/components/AdminVolunteer/AdminVolunteerPage'
 
 export default function Page() {
   const router = useRouter();
@@ -13,5 +14,6 @@ export default function Page() {
     } catch { router.replace('/'); }
   }, [router]);
 
-  return <AdminVolunteerOpportunities />;
+  // return <AdminVolunteerOpportunities />;
+  return <AdminVolunteerPage />
 }

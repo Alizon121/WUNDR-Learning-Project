@@ -23,16 +23,13 @@ export type VolunteerApp = {
   lastName: string;
   email?: string;
   phoneNumber?: string;
-
   bio?: string;
   photoConsent?: boolean;
   backgroundCheckConsent?: boolean;
-
   cities?: string[];
   daysAvail?: AvailabilityDay[];
   timesAvail?: string[];
   skills?: string[];
-
   status?: AppStatus;
   volunteerOpportunityIDs?: string[];
 };

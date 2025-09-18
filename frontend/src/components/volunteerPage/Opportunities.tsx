@@ -29,31 +29,42 @@ export default function Opportunities({
   const [hydrated, setHydrated] = useState(false);
   const [logged, setLogged] = useState(false);
   const fetched = useRef(false); // guard against StrictMode double-run
+
+  // Data
   const [items, setItems] = useState<Opp[]>([]);
+  const [loaded, setLoaded] = useState(false); // "loaded" ensures we don't flash the placeholder before fetch completes
+
+  const goToGeneralForm = () => {
+    // toggle hash → parent will catch and show form
+    window.location.hash = 'apply';
+  };
 
   useEffect(() => {
-  (async () => {
-    try {
-      const res = await makeApiRequest<{ opportunities: Opp[] }>(
-        `${API}/opportunities/public`,
-        { method: 'GET' }
-      );
-      setItems(res.opportunities ?? []);
-    } catch {}
-  })();
-}, []);
+    (async () => {
+      try {
+        const res = await makeApiRequest<{ opportunities: Opp[] }>(
+          `${API}/opportunities/public`,
+          { method: 'GET' }
+        );
+        setItems(res.opportunities ?? []);
+      } catch {
+        // noop — you could set an error banner here if needed
+      } finally {
+        setLoaded(true);
+      }
+    })();
+  }, []);
 
-
-const envLabel = (venue: Venue[]) => {
-  const hasIn = venue.includes('Indoors');
-  const hasOut = venue.includes('Outdoors');
-  const hasOn = venue.includes('Online');
-  if (hasIn && hasOut) return 'Indoor/Outdoor';
-  if (hasIn && hasOn)  return 'Indoor/Online';
-  if (hasIn) return 'Indoor';
-  if (hasOut) return 'Outdoor';
-  return 'Online';
-};
+  const envLabel = (venue: Venue[]) => {
+    const hasIn = venue.includes('Indoors');
+    const hasOut = venue.includes('Outdoors');
+    const hasOn = venue.includes('Online');
+    if (hasIn && hasOut) return 'Indoor/Outdoor';
+    if (hasIn && hasOn)  return 'Indoor/Online';
+    if (hasIn) return 'Indoor';
+    if (hasOut) return 'Outdoor';
+    return 'Online';
+  };
 
   useEffect(() => {
     setHydrated(true);
@@ -61,31 +72,29 @@ const envLabel = (venue: Venue[]) => {
   }, []);
 
   useEffect(() => {
-  if (!hydrated || !logged || fetched.current) return;
-  fetched.current = true;
-  (async () => {
-    try {
-      const res = await makeApiRequest<{ opportunityIds: string[] }>(
-        `${API}/volunteer/my-opportunities`,
-        { method: 'GET' }
-      );
-      (res.opportunityIds || []).forEach(id => markOppSubmitted(id));
-    } catch (e: any) {
-      if (String(e?.status) === '401' || String(e?.status) === '403') return;
-    }
-  })();
-}, [hydrated, logged]);
-
+    if (!hydrated || !logged || fetched.current) return;
+    fetched.current = true;
+    (async () => {
+      try {
+        const res = await makeApiRequest<{ opportunityIds: string[] }>(
+          `${API}/volunteer/my-opportunities`,
+          { method: 'GET' }
+        );
+        (res.opportunityIds || []).forEach(id => markOppSubmitted(id));
+      } catch (e: any) {
+        if (String(e?.status) === '401' || String(e?.status) === '403') return;
+      }
+    })();
+  }, [hydrated, logged]);
 
   const openApply = (oppId: string, title: string) => {
     if (onApply) return onApply(title, oppId);
     if (!logged) return setModalContent(<LoginModal />);
     setModalContent(
-    <div className="max-w-3xl">
-      <VolunteerForm key={oppId} opportunityId={oppId} roleTitle={title} onDone={closeModal} />
-    </div>
-  );
-
+      <div className="max-w-3xl">
+        <VolunteerForm key={oppId} opportunityId={oppId} roleTitle={title} onDone={closeModal} />
+      </div>
+    );
   };
 
   return (
@@ -100,78 +109,101 @@ const envLabel = (venue: Venue[]) => {
         </p>
       </header>
 
+      {/* Grid of opportunity cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
-        {items.map(r => {
-          const applied = logged && hydrated && isOppSubmitted(r.id); 
-          return (
-            <article
-              key={r.id}
-              className="h-full flex flex-col rounded-2xl bg-white border border-wonderleaf/20 p-5 shadow-sm hover:shadow transition"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-xl font-semibold text-wondergreen">{r.title}</h3>
-                <span className="text-xs px-2 py-1 rounded-full bg-wondersun text-gray-700 shrink-0">
-                  {envLabel(r.venue)}
-                </span>
-              </div>
-
-              {r.tags?.length ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {r.tags.map(t => (
-                    <span key={t} className="text-[11px] px-2 py-1 rounded-full bg-wondergreen/10 text-wondergreen">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-
-              <div className="mt-3 grid sm:grid-cols-2 gap-4">
-                <div className="min-h-[190px] md:min-h-[210px]">
-                  <h4 className="font-medium text-gray-900 mb-1">What you'll do</h4>
-                  <ul className="list-disc pl-5 text-gray-700 text-sm leading-relaxed space-y-2">
-                    {r.duties.map((d, i) => <li key={i}>{d}</li>)}
-                  </ul>
-                </div>
-                <div className="min-h-[190px] md:min-h-[210px]">
-                  <h4 className="font-medium text-gray-900 mb-1">Good fit</h4>
-                  <ul className="list-disc pl-5 text-gray-700 text-sm leading-relaxed space-y-2">
-                    {r.skills.map((s, i) => <li key={i}>{s}</li>)}
-                  </ul>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-lg bg-wondersun/10 border border-wondersun/30 p-3 text-sm text-gray-800">
-                <p><span className="font-semibold text-wondergreen">Time:</span> {r.time}</p>
-                <p className="mt-1"><span className="font-semibold text-wondergreen">Requirements:</span> {r.requirements.join(' · ')}</p>
-              </div>
-              {/* Do not delete! */}
-              {/* {r.id && (
-                <details className="mt-5 group">
-                  <summary className="cursor-pointer text-sm text-wondergreen hover:text-wonderleaf underline decoration-dotted">
-                    Quick hiking guide (what to pack / safety)
-                  </summary>
-                  <div className="mt-2 text-sm text-gray-700 space-y-2">
-                    <div><b>Backpack essentials:</b> water, snack, warm layer, rain shell, hat/sunscreen, small first-aid kit (incl. blister care), headlamp/flashlight, whistle, map/offline GPS, power bank, spare socks, small trash bag.</div>
-                    <div><b>Life-savers in a pinch:</b> communication & meetup plan, warmth/insulation, navigation, water/food, basic first aid.</div>
-                    <div><b>Before you go:</b> check weather, trail conditions, daylight; inform the lead about route and an emergency contact.</div>
-                  </div>
-                </details>
-              )} */}
-
-              <div className="mt-auto pt-4 flex items-center gap-3 border-t border-wonderleaf/20">
-                <button
-                onClick={() => openApply(r.id, r.title)}
-                disabled={applied}
-                className={`px-5 py-2.5 rounded-lg text-white transition-colors
-                  ${applied ? 'bg-gray-300 cursor-not-allowed' : 'bg-wondergreen hover:bg-wonderleaf'}`}
-                >
-                  {applied ? 'Applied' : 'Apply for this role'}
-                </button>
-
-              </div>
+        {loaded && items.length === 0 ? (
+          // Centered placeholder card when there are no open opportunities
+          <div className="col-span-full flex justify-center">
+            <article className="w-full max-w-xl rounded-2xl bg-white border border-wonderleaf/20 p-6 text-center shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900">
+                No open opportunities right now
+              </h3>
+              <p className="mt-2 text-gray-700">
+                You can still apply as a volunteer — we'll contact you when there's a good fit.
+                Thank you for your willingness to help!
+              </p>
+              
+              <button
+                type="button"
+                onClick={goToGeneralForm}
+                className="inline-flex mt-4 items-center justify-center px-4 py-2 rounded-lg bg-wondergreen text-white font-semibold hover:bg-wonderleaf transition"
+              >
+                Apply to Volunteer
+              </button>
             </article>
-          );
-        })}
+          </div>
+        ) : (
+          items.map((r) => {
+            // If the user already applied to this opportunity, card is visually muted & action disabled
+            const applied = logged && hydrated && isOppSubmitted(r.id);
+            return (
+              <article
+                key={r.id}
+                aria-disabled={applied}
+                className={`h-full flex flex-col rounded-2xl bg-white border p-5 shadow-sm hover:shadow transition border-wonderleaf/20
+                  ${applied ? 'opacity-75 ring-1 ring-emerald-200' : ''}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-xl font-semibold text-wondergreen">{r.title}</h3>
+                  <div className="flex items-center gap-2">
+                    {applied && (
+                      <span className="text-[11px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Applied
+                      </span>
+                    )}
+                    <span className="text-xs px-2 py-1 rounded-full bg-wondersun text-gray-700 shrink-0">
+                      {envLabel(r.venue)}
+                    </span>
+                  </div>
+                </div>
+
+                {r.tags?.length ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {r.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="text-[11px] px-2 py-1 rounded-full bg-wondergreen/10 text-wondergreen"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div className="mt-3 grid sm:grid-cols-2 gap-4">
+                  <div className="min-h-[190px] md:min-h-[210px]">
+                    <h4 className="font-medium text-gray-900 mb-1">What you'll do</h4>
+                    <ul className="list-disc pl-5 text-gray-700 text-sm leading-relaxed space-y-2">
+                      {r.duties.map((d, i) => <li key={i}>{d}</li>)}
+                    </ul>
+                  </div>
+                  <div className="min-h-[190px] md:min-h-[210px]">
+                    <h4 className="font-medium text-gray-900 mb-1">Good fit</h4>
+                    <ul className="list-disc pl-5 text-gray-700 text-sm leading-relaxed space-y-2">
+                      {r.skills.map((s, i) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-lg bg-wondersun/10 border border-wondersun/30 p-3 text-sm text-gray-800">
+                  <p><span className="font-semibold text-wondergreen">Time:</span> {r.time}</p>
+                  <p className="mt-1"><span className="font-semibold text-wondergreen">Requirements:</span> {r.requirements.join(' · ')}</p>
+                </div>
+
+                <div className="mt-auto pt-4 flex items-center gap-3 border-t border-wonderleaf/20">
+                  <button
+                    onClick={() => openApply(r.id, r.title)}
+                    disabled={applied}
+                    className={`px-5 py-2.5 rounded-lg text-white transition-colors
+                      ${applied ? 'bg-gray-300 cursor-not-allowed' : 'bg-wondergreen hover:bg-wonderleaf'}`}
+                  >
+                    {applied ? 'Applied' : 'Apply for this role'}
+                  </button>
+                </div>
+              </article>
+            );
+          })
+        )}
       </div>
 
       {/* <div className="mt-8 rounded-2xl bg-white border border-wonderleaf/20 p-5">

@@ -43,13 +43,8 @@ class Event(BaseModel):
     zipCode: int = Field(length=5)
     latitude: float
     longitude: float
-
-    # users: List["User"] = Field(default_factory=list)
-    # children: List["Child"] = Field(default_factory=list)
-    # reviews: List["Review"] = Field(default_factory=list)
-
-    # createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
-    # updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    startTime: str = Field(min_length=1)
+    endTime: str = Field(min_length=1)
 
 class EventCreate(BaseModel):
     activityId: str = Field(min_length=1)
@@ -67,6 +62,8 @@ class EventCreate(BaseModel):
     zipCode: int = Field(length=5)
     latitude: float
     longitude: float
+    startTime: str = Field(min_length=1)
+    endTime: str = Field(min_length=1)
 
     userIDs: List[str] = Field(default_factory=list)
     childIDs: List[str] = Field(default_factory=list)
@@ -87,6 +84,8 @@ class EventUpdate(BaseModel):
     zipCode: Optional[int] = Field(default=None)
     latitude: Optional[float] = Field(default=None)
     longitude: Optional[float] = Field(default=None)
+    startTime: Optional[str] = Field(default=None)
+    endTime: Optional[str] = Field(default=None)
 
     image: Optional[str] = Field(default=None)
     participants: Optional[int] = Field(default=None)

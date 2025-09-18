@@ -77,6 +77,8 @@ async def create_event(
                 "zipCode": event_data.zipCode,
                 "latitude": event_data.latitude,
                 "longitude": event_data.longitude,
+                "startTime": event_data.startTime,
+                "endTime": event_data.endTime,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIDs,
                 "childIDs": event_data.childIDs,
@@ -208,7 +210,7 @@ async def update_event(
         )
 
     # Validate user, child, and activity IDs
-    if event_data.userIds:
+    if event_data.userIDs:
         users = await db.users.find_many(where={"id": {"in": event_data.userIDs}})
         if len(users) != len(event_data.userIDs):
             raise HTTPException(
@@ -270,6 +272,12 @@ async def update_event(
 
     if event_data.longitude is not None:
         update_payload["longitude"] = event_data.longitude
+
+    if event_data.startTime is not None:
+        update_payload["startTime"] = event_data.startTime
+
+    if event_data.endTime is not None:
+        update_payload["endTime"] = event_data.endTime
 
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId

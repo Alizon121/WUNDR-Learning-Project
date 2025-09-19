@@ -1,39 +1,54 @@
-from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, status, Depends, HTTPException
 from backend.db.prisma_client import db
 from typing import Annotated
-from backend.models.user_models import User
-from backend.models.user_models import Volunteer, VolunteerCreate, VolunteerUpdate
+from backend.models.user_models import User, VolunteerCreate, VolunteerUpdate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
+from datetime import datetime, timezone
 
 router = APIRouter()
 
 @router.get("/my-opportunities", status_code=200)
-async def my_opportunities(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
+async def my_opportunities(current_user: Annotated[User, Depends(get_current_user)]):
+    """
+    Return the list of opportunity IDs the current user has applied to,
+    and a boolean flag indicating whether they submitted the *general* application.
+    """
     enforce_authentication(current_user)
 
     vol = await db.volunteers.find_unique(where={"userId": current_user.id})
     ids = vol.volunteerOpportunityIDs if vol and vol.volunteerOpportunityIDs else []
+    # `hasGeneral` is true only if a volunteer record exists AND it has the general timestamp
+    has_general = bool(vol and getattr(vol, "generalAppliedAt", None))
 
-    return {"opportunityIds": ids, "hasGeneral": bool(vol)}
+    return {"opportunityIds": ids, "hasGeneral": has_general}
 
 
-# All @router.get("/applications", status_code=200)
 @router.get("/applications", status_code=200)
 async def list_all_applications(
     current_user: Annotated[User, Depends(get_current_user)],
-    kind: str = "all"  # all | general
+    kind: str = "all",  # "all" | "general"
 ):
+    """
+    Admin-only listing of volunteer applications.
+    - kind="all": return every volunteer record
+    - kind="general": return only *general* apps (those with `generalAppliedAt`
+      and without any connected opportunity IDs)
+    Results are sorted newest-first by createdAt (tz-aware fallback applied).
+    """
     enforce_authentication(current_user)
     enforce_admin(current_user)
 
     vols = await db.volunteers.find_many()
-    if kind.lower() == "general":
-        vols = [v for v in vols if not (v.volunteerOpportunityIDs and len(v.volunteerOpportunityIDs))]
-    return {"volunteers": vols}
 
+    if kind.lower() == "general":
+        vols = [v for v in vols if getattr(v, "generalAppliedAt", None) is not None]
+
+    # Sort newest-first; use a tz-aware epoch as a safe fallback
+    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    vols.sort(key=lambda v: getattr(v, "createdAt", None) or epoch, reverse=True)
+
+    return {"volunteers": vols}
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -41,6 +56,11 @@ async def volunteer_sign_up_general(
     current_user: Annotated[User, Depends(get_current_user)],
     volunteer_data: VolunteerCreate
 ):
+    """
+    Create a *general* volunteer application for the current user.
+    - Allowed only once per user (returns 400 if already registered as volunteer)
+    - Stamps `generalAppliedAt` with a timezone-aware datetime
+    """
     enforce_authentication(current_user)
 
     existing = await db.volunteers.find_unique(where={"userId": current_user.id})
@@ -49,21 +69,23 @@ async def volunteer_sign_up_general(
 
     try:
         data = volunteer_data.model_dump()
-        # ⚠️ Do NOT set userId directly — the relation is mandatory;
-        # use a nested `connect` to link the user.
 
         volunteer = await db.volunteers.create(
             data={
                 **data,
-                "status": "New",                     
-                "user": {"connect": {"id": current_user.id}}, 
+                "status": "New",
+                "generalAppliedAt": datetime.now(timezone.utc),
+                # Link to the user via relation (don’t set userId directly)
+                "user": {"connect": {"id": current_user.id}},
             }
         )
         return {"volunteer": volunteer}
 
     except Exception as e:
+        # Surface as 500 to the client; also logs to server stdout
         print("VOL_CREATE_ERR:", e)
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 

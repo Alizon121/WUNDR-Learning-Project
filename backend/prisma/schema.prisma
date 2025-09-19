@@ -117,6 +117,10 @@ model Volunteers{
   volunteerOpportunityIDs String[] @db.ObjectId
   volunteerOpportunities  VolunteerOpportunities[] @relation(fields: [volunteerOpportunityIDs], references: [id])
 
+  generalAppliedAt      DateTime?
+
+  oppAppliedAt            Json?
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime? @updatedAt
 }

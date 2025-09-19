@@ -15,7 +15,7 @@ export default function ApplicantsPanel(props: Props) {
   const [err, setErr] = useState<string | null>(null);
   const [items, setItems] = useState<VolunteerApp[]>([]);
   const [q, setQ] = useState('');
-  const [kind, setKind] = useState<'all' | 'general'>('all'); // только для режима "all"
+  const [kind, setKind] = useState<'all' | 'general'>('all'); // only for "all"
 
   const mode = props.mode;
   const oppId = mode === 'opp' ? props.opportunityId : undefined;

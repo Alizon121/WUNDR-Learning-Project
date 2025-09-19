@@ -5,6 +5,7 @@ import { makeApiRequest } from '../../../utils/api';
 import { isLoggedIn } from '../../../utils/auth';
 import { useModal } from '@/app/context/modal';
 import LoginModal from '@/components/login/LoginModal';
+import DeleteOpportunityModal from './DeleteOpportunityModal';
 import {
   VENUE_OPTIONS,
   type Venue,
@@ -26,6 +27,7 @@ const listToLines = (a?: string[]) => (a && a.length ? a.join('\n') : '');
 
 const clean = (arr?: string[]) =>
   (arr ?? []).map(s => s.trim()).filter(Boolean);
+
 
 // Normalize payload before sending to API.
 // Important: ensure volunteerIDs exists (FastAPI expects the field).
@@ -91,7 +93,19 @@ export default function AdminVolunteerOpportunities({onViewAllApps, onViewAppsFo
   );
 }, [items, q]);
 
-
+// Delete opp
+const openDelete = (opp: Opp) => {
+  setModalContent(
+    <DeleteOpportunityModal
+      id={opp.id}
+      title={opp.title}
+      onDeleted={() => {
+        setItems(prev => prev.filter(x => x.id !== opp.id));
+        if (editingId === opp.id) resetForm();
+      }}
+    />
+  );
+};
  
 
   // Initial load
@@ -192,7 +206,7 @@ export default function AdminVolunteerOpportunities({onViewAllApps, onViewAppsFo
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6">
       <h1 className="text-2xl font-semibold mb-4">Create Volunteer Opportunities</h1>
-      
+
       {err && (
         <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-800">
           {err}
@@ -228,7 +242,7 @@ export default function AdminVolunteerOpportunities({onViewAllApps, onViewAppsFo
               className="w-full rounded-lg border px-3 py-2"
               value={f.time}
               onChange={e => setF({ ...f, time: e.target.value })}
-              placeholder="e.g., 2–4 hours per event"
+              placeholder="e.g., 2-4 hours per event"
               required
             />
           </div>
@@ -382,7 +396,7 @@ export default function AdminVolunteerOpportunities({onViewAllApps, onViewAppsFo
                     Edit
                   </button>
                   <button
-                    onClick={() => onDelete(opp.id)}
+                    onClick={() => openDelete(opp)}
                     className="text-sm rounded-md border px-3 py-1.5 text-rose-600 hover:bg-rose-50 border-rose-200"
                   >
                     Delete

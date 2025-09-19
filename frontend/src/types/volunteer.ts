@@ -1,6 +1,6 @@
 
 export type AvailabilityDay = 'Weekdays' | 'Weekends';
-export type AppStatus = 'NEW' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED';
+export type AppStatus = 'New' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED';
 
 export type VolunteerCreate = {
   firstName: string;
@@ -32,4 +32,5 @@ export type VolunteerApp = {
   skills?: string[];
   status?: AppStatus;
   volunteerOpportunityIDs?: string[];
+  generalAppliedAt?: string | null;
 };

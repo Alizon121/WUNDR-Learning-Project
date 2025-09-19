@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useModal } from '@/app/context/modal';
 import { isLoggedIn } from '../../../utils/auth';
 import LoginModal from '@/components/login/LoginModal';

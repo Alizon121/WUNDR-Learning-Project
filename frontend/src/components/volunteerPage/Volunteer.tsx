@@ -5,7 +5,6 @@ import HeroVolunteer from './Hero';
 import Opportunities from './Opportunities';
 import VolunteerForm from './VolunteerForm';
 import { useModal } from '@/app/context/modal';
-// import AdminVolunteerOpportunities from '../AdminVolunteer/AdminVolunteerOpportunities'; // (не используется)
 
 type TabKey = 'opps' | 'form';
 const hashToTab = (h: string): TabKey =>

@@ -192,10 +192,7 @@ export default function AdminVolunteerOpportunities({onViewAllApps, onViewAppsFo
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6">
       <h1 className="text-2xl font-semibold mb-4">Create Volunteer Opportunities</h1>
-      <button onClick={() => onViewAllApps?.()} className="rounded-lg border px-3 py-2 hover:bg-gray-50">
-        View all applications
-      </button>
-
+      
       {err && (
         <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-800">
           {err}

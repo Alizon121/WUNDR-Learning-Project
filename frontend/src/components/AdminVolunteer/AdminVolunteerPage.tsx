@@ -11,7 +11,6 @@ export default function AdminVolunteerPage() {
   const [tab, setTab] = useState<Tab>('opps');
   const [selectedOpp, setSelectedOpp] = useState<Pick<Opp, 'id' | 'title'> | null>(null);
 
-  // если у нас выбранная оппа — показываем её заявки
   const openAppsFor = (opp: Opp) => {
     setSelectedOpp({ id: opp.id, title: opp.title });
     setTab('apps');
@@ -21,7 +20,7 @@ export default function AdminVolunteerPage() {
     setTab('apps');
   };
 
-  // При клике на таб “Applications” — общий список
+
   const goApps = () => { setSelectedOpp(null); setTab('apps'); };
   const goOpps = () => setTab('opps');
 

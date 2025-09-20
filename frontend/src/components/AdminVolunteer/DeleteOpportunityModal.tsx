@@ -13,11 +13,7 @@ type DeleteOpportunityModalProps = {
   onDeleted?: () => void; 
 };
 
-const DeleteOpportunityModal: React.FC<DeleteOpportunityModalProps> = ({
-  id,
-  title,
-  onDeleted,
-}) => {
+const DeleteOpportunityModal: React.FC<DeleteOpportunityModalProps> = ({ id, title, onDeleted, }) => {
   const { closeModal } = useModal();
   const [isDeleting, setIsDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);

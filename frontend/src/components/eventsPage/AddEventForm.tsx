@@ -11,6 +11,7 @@ import MultiSelect from '../common/MultiSelect';
 import next from 'next';
 import e from 'express';
 
+type ActivitiesResponse = { activities: Activity[] }
 type FormErrors = Partial<Record<"activity" | "name" | "description" | "date" | "startTime" | "endTime" | "partiicpants", string>>
 const initialEventForm: Event = {
     activityId: [],
@@ -35,14 +36,14 @@ export default function EventForm() {
     const [event, setEvent] = useState<Event>(initialEventForm)
     const [errors, setErrors] = useState<FormErrors>({})
     const [activities, setActivities] = useState<Activity[]>([])
-
+    const [selectedActivity, setSelectedActivity] = useState<string>("")
 
     useEffect(() => {
         // create async helper function to get activities
         const getActivities = async () => {
             try {
-                let fetchActivities: Activity[] = await makeApiRequest("http://localhost:8000/activity")
-                if (fetchActivities) setActivities(fetchActivities)
+                let fetchActivities: ActivitiesResponse = await makeApiRequest("http://localhost:8000/activity")
+                if (fetchActivities.activities) setActivities(fetchActivities.activities)
             } catch {
                 throw Error("Unable to fetch activities")
             }
@@ -50,29 +51,45 @@ export default function EventForm() {
         getActivities()
     }, [])
 
+    const handleChangeSelectOrInputOrText = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    ) => {
+        const { name, value } = e.target
+        setEvent(prev => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+    console.log(selectedActivity)
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrors({})
+
+        // Add validations here
+
+
+    }
+
     return (
         <div>
             <h1>Add an Event Below</h1>
             <form>
                 <fieldset>
                     <div>
-                        {/* add select box for activity - iterate and display all activities */}
                         <div>
                             <label>
                                 Activity <span className="text-rose-600">*</span>
                             </label>
-                            {activities?.map((activity) => {
-                                return (
-                                    <input
-                                        name={activity.name}
-                                        type='checkbox'
-                                        value={activity.id}
-                                        // onChange={null}
-                                        required
-                                    />
-                                )
-                            })
-                            }
+                            <select value={selectedActivity} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedActivity(e.target.value)}>
+                                <option>Select an Activity</option>
+                                {activities.map((activity) => (
+                                    <option key={activity.id} value={activity.id}>
+                                        {activity.name}
+                                    </option>
+                                ))}
+                            </select>
                             {errors.activity && <p className="text-sm text-red-600 mt-1">{errors.activity}</p>}
                         </div>
 
@@ -81,10 +98,10 @@ export default function EventForm() {
                                 Name <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Name'
+                                name='name'
                                 placeholder='Name'
                                 value={event.name}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
@@ -96,10 +113,10 @@ export default function EventForm() {
                                 Description <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Description'
+                                name='description'
                                 placeholder='Description'
                                 value={event.description}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 maxLength={750}
                                 required
                             />
@@ -111,10 +128,10 @@ export default function EventForm() {
                                 Date <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Date'
-                                placeholder='Date (e.g. '
+                                name='date'
+                                placeholder='Date'
                                 value={event.date}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {errors.date && <p className="text-sm text-red-600 mt-1">{errors.date}</p>}
@@ -125,10 +142,10 @@ export default function EventForm() {
                                 Start Time <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Start Time'
+                                name='startTime'
                                 placeholder='Start Time'
                                 value={event.startTime}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {errors.startTime && <p className="text-sm text-red-600 mt-1">{errors.startTime}</p>}
@@ -139,10 +156,10 @@ export default function EventForm() {
                                 End Time <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='End Time'
+                                name='endTime'
                                 placeholder='End Time'
                                 value={event.endTime}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {errors.endTime && <p className="text-sm text-red-600 mt-1">{errors.endTime}</p>}
@@ -153,24 +170,26 @@ export default function EventForm() {
                                 Image <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Image'
+                                name='image'
                                 placeholder='Image (optional)'
                                 value={event.image}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {/* {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>} */}
                         </div>
 
+
+                        {/* There will be no participants when enrolling */}
                         {/* <div>
                             <label>
                                 Participants <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Participants'
+                                name='participants'
                                 placeholder='Participants Actively Enrolled (e.g. 5)'
                                 value={event.name}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
@@ -181,10 +200,10 @@ export default function EventForm() {
                                 Participants Limit <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Limit'
+                                name='limit'
                                 placeholder='Limit of Participants (e.g. 15)'
                                 value={event.name}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {errors.partiicpants && <p className="text-sm text-red-600 mt-1">{errors.partiicpants}</p>}
@@ -229,10 +248,10 @@ export default function EventForm() {
                                 Address <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Address'
+                                name='address'
                                 placeholder='Address'
                                 value={event.address}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {/* {errors.partiicpants && <p className="text-sm text-red-600 mt-1">{errors.partiicpants}</p>} */}
@@ -243,10 +262,10 @@ export default function EventForm() {
                                 Zipcode <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Zipcode'
+                                name='zipCode'
                                 placeholder='Zipcode'
                                 value={event.zipCode}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                         </div>
@@ -256,10 +275,10 @@ export default function EventForm() {
                                 Latititude <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Latitude'
+                                name='latitude'
                                 placeholder='Latitude'
                                 value={event.latitude}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {/* {errors.partiicpants && <p className="text-sm text-red-600 mt-1">{errors.partiicpants}</p>} */}
@@ -270,10 +289,10 @@ export default function EventForm() {
                                 Longitude <span className="text-rose-600">*</span>
                             </label>
                             <input
-                                name='Longitude'
+                                name='longitude'
                                 placeholder='Longitude'
                                 value={event.longitude}
-                                // onChange={null}
+                                onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
                             {/* {errors.partiicpants && <p className="text-sm text-red-600 mt-1">{errors.partiicpants}</p>} */}
@@ -282,7 +301,15 @@ export default function EventForm() {
 
                     </div>
                 </fieldset>
+                <div className='flex flex-row'>
+                    <button type='submit' className='border'>
+                        Add Event
+                    </button>
+                    <button type='reset' className='border'>
+                        Cancel
+                    </button>
+                </div>
             </form>
-        </div>
+        </div >
     )
 }

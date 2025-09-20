@@ -20,13 +20,12 @@ const OPPS_API = `${API}/opportunities`;
 
 
 // --- Helpers ---
-const linesToList = (s: string) =>
-  s.split('\n').map(x => x.trim()).filter(Boolean);
-
-const listToLines = (a?: string[]) => (a && a.length ? a.join('\n') : '');
-
 const clean = (arr?: string[]) =>
   (arr ?? []).map(s => s.trim()).filter(Boolean);
+
+const toLines = (s: string) => s.split('\n');
+
+const fromLines = (a?: string[]) => (a ?? []).join('\n');
 
 
 // Normalize payload before sending to API.
@@ -86,7 +85,7 @@ export default function AdminVolunteerOpportunities({onViewAllApps, onViewAppsFo
   const s = q.trim().toLowerCase();
   if (!s) return items;
   return items.filter(x =>
-    [x.title, ...(x.tags ?? []), ...x.skills] 
+    [x.title, ...(x.tags ?? []), ...x.skills, ...(x.duties ?? []), ...(x.requirements ?? [])] 
       .join(' ')
       .toLowerCase()
       .includes(s)
@@ -133,9 +132,10 @@ const openDelete = (opp: Opp) => {
   }, [hydrated, logged, setModalContent]);
 
   // Form helpers
-  const resetForm = () => { setEditingId(null); setF(emptyForm); };
+  const resetForm = () => { setEditingId(null); setF(emptyForm); setErr(null)};
 
   const startEdit = (opp: Opp) => {
+    setErr(null)
     setEditingId(opp.id);
     setF({
       title: opp.title,
@@ -156,6 +156,11 @@ const openDelete = (opp: Opp) => {
     e.preventDefault();
     if (!f.title.trim()) return alert('Title is required');
     if (!f.venue.length) return alert('Select at least one venue');
+
+    const skillsClean = clean(f.skills);
+    const tagsClean = clean(f.tags);
+    if (skillsClean.length === 0) return setErr('Please provide at least one skill');
+    if (tagsClean.length === 0) return setErr('Please provide at least one tag');
 
     try {
       setErr(null);
@@ -181,17 +186,6 @@ const openDelete = (opp: Opp) => {
       const code = String(e?.status || e?.response?.status || '');
       if (code === '401') setModalContent(<LoginModal />);
       setErr(e?.detail || e?.message || 'Failed to save opportunity.');
-    }
-  };
-
-  const onDelete = async (id: string) => {
-    if (!confirm('Delete this opportunity? This cannot be undone.')) return;
-    try {
-      await makeApiRequest(`${OPPS_API}/${id}`, { method: 'DELETE' });
-      setItems(prev => prev.filter(x => x.id !== id));
-      if (editingId === id) resetForm();
-    } catch (e: any) {
-      setErr(e?.detail || e?.message || 'Failed to delete opportunity.');
     }
   };
 
@@ -294,8 +288,8 @@ const openDelete = (opp: Opp) => {
             <textarea
               rows={5}
               className="w-full rounded-lg border px-3 py-2"
-              value={listToLines(f.duties)}
-              onChange={e => setF({ ...f, duties: linesToList(e.target.value) })}
+              value={fromLines(f.duties)}
+              onChange={e => setF({ ...f, duties: toLines(e.target.value) })}
               required
             />
           </div>
@@ -307,33 +301,35 @@ const openDelete = (opp: Opp) => {
             <textarea
               rows={5}
               className="w-full rounded-lg border px-3 py-2"
-              value={listToLines(f.requirements)}
-              onChange={e => setF({ ...f, requirements: linesToList(e.target.value) })}
+              value={fromLines(f.requirements)}
+              onChange={e => setF({ ...f, requirements: toLines(e.target.value) })}
               required
             />
           </div>
 
           <div className="md:col-span-1">
             <label className="block text-sm font-medium mb-1">
-              Skills (one per line)
+              Skills (one per line) *
             </label>
             <textarea
               rows={4}
               className="w-full rounded-lg border px-3 py-2"
-              value={listToLines(f.skills)}
-              onChange={e => setF({ ...f, skills: linesToList(e.target.value) })}
+              value={fromLines(f.skills)}
+              onChange={e => setF({ ...f, skills: toLines(e.target.value) })}
+              required
             />
           </div>
 
           <div className="md:col-span-1">
             <label className="block text-sm font-medium mb-1">
-              Tags (one per line)
+              Tags (one per line) *
             </label>
             <textarea
               rows={4}
               className="w-full rounded-lg border px-3 py-2"
-              value={listToLines(f.tags)}
-              onChange={e => setF({ ...f, tags: linesToList(e.target.value) })}
+              value={fromLines(f.tags)}
+              onChange={e => setF({ ...f, tags: toLines(e.target.value) })}
+              required
             />
           </div>
         </div>

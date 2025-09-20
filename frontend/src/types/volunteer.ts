@@ -33,4 +33,5 @@ export type VolunteerApp = {
   status?: AppStatus;
   volunteerOpportunityIDs?: string[];
   generalAppliedAt?: string | null;
+  createdAt?: string;
 };

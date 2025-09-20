@@ -13,7 +13,7 @@ import e from 'express';
 type ActivitiesResponse = { activities: Activity[] }
 type FormErrors = Partial<Record<"activity" | "name" | "description" | "date" | "startTime" | "endTime" | "partiicpants", string>>
 const initialEventForm: Event = {
-    activityId: [],
+    activityId: "",
     name: "",
     description: "",
     date: "",
@@ -35,8 +35,6 @@ export default function EventForm() {
     const [event, setEvent] = useState<Event>(initialEventForm)
     const [errors, setErrors] = useState<FormErrors>({})
     const [activities, setActivities] = useState<Activity[]>([])
-    const [selectedActivity, setSelectedActivity] = useState<string>("")
-
     useEffect(() => {
         // create async helper function to get activities
         const getActivities = async () => {
@@ -64,6 +62,11 @@ export default function EventForm() {
         setEvent(initialEventForm)
     }
 
+    const convertStringToIsoFormat = (date: string) => {
+        let newDate: Date = new Date(date)
+        return newDate.toISOString()
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrors({})
@@ -76,17 +79,18 @@ export default function EventForm() {
             activityId: event.activityId,
             name: event.name,
             description: event.description,
-            date: event.date,
+            date: convertStringToIsoFormat(event.date),
             startTime: event.startTime,
             endTime: event.endTime,
             image: event.image,
+            participants: event.participants,
             limit: Number(event.limit),
             city: event.city,
             state: event.state,
             address: event.address,
-            zipCode: event.zipCode,
-            latitude: event.latitude,
-            longitude: event.longitude,
+            zipCode: parseInt(event.zipCode.toString(), 10),
+            latitude: parseFloat(event.latitude.toString()),
+            longitude: parseFloat(event.longitude.toString()),
             userId: [],
             childIDs: []
         }

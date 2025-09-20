@@ -173,6 +173,32 @@ export function isLoggedIn(): boolean {
   return !!getToken();
 }
 
+// * Event ===================================================
+export interface EventPayload {
+
+  id?: string
+  activityId: string[]
+  name: string
+  description: string
+  date: string
+  startTime: string
+  endTime: string
+  image: string
+  participants?: number
+  limit: number
+
+  city: string
+  state: string
+  address: string
+  zipCode: string
+  latitude: number
+  longitude: number
+
+  userId: string[]
+  childIDs: string[]
+}
+
+
 // UserRole =================================================
 export function getUserRole():
   | 'admin' | 'parent' | 'instructor' | 'volunteer' | null {

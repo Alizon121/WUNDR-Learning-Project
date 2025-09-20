@@ -7,8 +7,7 @@ import { CITIES_CO } from '@/data/citiesCO';
 import { US_States } from '@/data/states';
 import { Event } from '@/types/event';
 import { Activity } from '@/types/activity';
-import MultiSelect from '../common/MultiSelect';
-import next from 'next';
+import { EventPayload } from '../../../utils/auth';
 import e from 'express';
 
 type ActivitiesResponse = { activities: Activity[] }
@@ -61,7 +60,9 @@ export default function EventForm() {
         }))
     }
 
-    console.log(selectedActivity)
+    const handleDiscard = async () => {
+        setEvent(initialEventForm)
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,19 +71,57 @@ export default function EventForm() {
         // Add validations here
 
 
+        // Create Payload
+        const payload: EventPayload = {
+            activityId: event.activityId,
+            name: event.name,
+            description: event.description,
+            date: event.date,
+            startTime: event.startTime,
+            endTime: event.endTime,
+            image: event.image,
+            limit: Number(event.limit),
+            city: event.city,
+            state: event.state,
+            address: event.address,
+            zipCode: event.zipCode,
+            latitude: event.latitude,
+            longitude: event.longitude,
+            userId: [],
+            childIDs: []
+        }
+
+        // Try to add an event
+        try {
+            const response: any = await makeApiRequest("http://localhost:8000/event", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: payload
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                console.log("Event successfully created:", data)
+                setEvent(initialEventForm)
+            } else {
+                console.error("Failed to create event")
+            }
+        } catch (e) {
+            throw new Error(`Unable to add event: ${e}`)
+        }
     }
 
     return (
         <div>
             <h1>Add an Event Below</h1>
-            <form>
+            <form onSubmit={handleSubmit}>
                 <fieldset>
                     <div>
                         <div>
                             <label>
                                 Activity <span className="text-rose-600">*</span>
                             </label>
-                            <select value={selectedActivity} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedActivity(e.target.value)}>
+                            <select name="activityId" value={event.activityId} onChange={handleChangeSelectOrInputOrText}>
                                 <option>Select an Activity</option>
                                 {activities.map((activity) => (
                                     <option key={activity.id} value={activity.id}>
@@ -174,35 +213,17 @@ export default function EventForm() {
                                 placeholder='Image (optional)'
                                 value={event.image}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
                             />
                             {/* {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>} */}
                         </div>
-
-
-                        {/* There will be no participants when enrolling */}
-                        {/* <div>
-                            <label>
-                                Participants <span className="text-rose-600">*</span>
-                            </label>
-                            <input
-                                name='participants'
-                                placeholder='Participants Actively Enrolled (e.g. 5)'
-                                value={event.name}
-                                onChange={handleChangeSelectOrInputOrText}
-                                required
-                            />
-                            {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
-                        </div> */}
-
                         <div>
                             <label>
                                 Participants Limit <span className="text-rose-600">*</span>
                             </label>
                             <input
                                 name='limit'
-                                placeholder='Limit of Participants (e.g. 15)'
-                                value={event.name}
+                                placeholder='(e.g. 15)'
+                                value={event.limit}
                                 onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
@@ -236,7 +257,7 @@ export default function EventForm() {
                                 onChange={(e) => setEvent({ ...event, state: e.target.value })}
                             >
                                 {US_States.map((state) => {
-                                    return <option key={state} value={event.state}>
+                                    return <option key={state} value={state}>
                                         {state}
                                     </option>
                                 })}
@@ -305,7 +326,7 @@ export default function EventForm() {
                     <button type='submit' className='border'>
                         Add Event
                     </button>
-                    <button type='reset' className='border'>
+                    <button type='reset' className='border' onClick={handleDiscard}>
                         Cancel
                     </button>
                 </div>

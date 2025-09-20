@@ -10,65 +10,73 @@ import { CITIES_CO } from '@/data/citiesCO';
 import { useModal } from '@/app/context/modal';
 import LoginModal from '@/components/login/LoginModal';
 import SignupModal from '@/components/signup/SignupModal';
+import {
+  isGeneralSubmitted,
+  markGeneralSubmitted,
+  isOppSubmitted,
+  markOppSubmitted,
+} from './volunteerLocks';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-
 const TIME_OPTIONS = ['Mornings', 'Afternoons', 'Evenings'] as const;
-type TimeOption = (typeof TIME_OPTIONS)[number];
 
-type FormState = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  selectedCities: string[];
-  timesChoices: string[];
-  skillsLine: string;
-  daysAvail: AvailabilityDay[];
-  bio: string;
-  photoConsent: boolean;
-  backgroundCheckConsent: boolean;
-};
-
-const initial: FormState = {
+const initial = {
   firstName: '',
   lastName: '',
   email: '',
   phoneNumber: '',
-  selectedCities: [],
-  timesChoices: [],
+  selectedCities: [] as string[],
+  timesChoices: [] as string[],
   skillsLine: '',
-  daysAvail: [],
+  daysAvail: [] as AvailabilityDay[],
   bio: '',
   photoConsent: false,
   backgroundCheckConsent: false,
 };
 
-// Helpers
-const toList = (s: string) => s.split(',').map(x => x.trim()).filter(Boolean);
-const emailValid = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-
-export default function VolunteerForm() {
-  const [f, setF] = useState<FormState>(initial);
+export default function VolunteerForm({
+  opportunityId,
+  roleTitle,
+  onDone,
+}: {
+  opportunityId?: string;
+  roleTitle?: string;
+  onDone?: () => void;
+}) {
+  const [f, setF] = useState(initial);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
 
-  // Hydration-safe "am I logged in?"
+  // client-only flags
   const [client, setClient] = useState(false);
   useEffect(() => setClient(true), []);
   const logged = client && isLoggedIn();
-  const disabled = !logged || submitting;
+
+  // general one-time lock
+  const [lockedGeneral, setLockedGeneral] = useState(false);
+  useEffect(() => {
+    if (client && logged) setLockedGeneral(isGeneralSubmitted());
+  }, [client, logged]);
+
+  // already applied to this specific opp?
+  const oppLocked = client && opportunityId ? isOppSubmitted(opportunityId) : false;
+
+  const disabled =
+    !logged ||
+    submitting ||
+    (!opportunityId && lockedGeneral) ||
+    (Boolean(opportunityId) && oppLocked);
 
   const { setModalContent } = useModal();
   const firstNameRef = useRef<HTMLInputElement | null>(null);
 
-  // Focus the first name once the user is allowed to type
   useEffect(() => {
     if (logged && !disabled) firstNameRef.current?.focus();
   }, [logged, disabled]);
 
-  // Toggle helpers
+  // helpers
   const toggleDay = (d: AvailabilityDay) =>
     setF(v => ({
       ...v,
@@ -77,7 +85,7 @@ export default function VolunteerForm() {
         : [...v.daysAvail, d],
     }));
 
-  const toggleTime = (t: TimeOption) =>
+  const toggleTime = (t: (typeof TIME_OPTIONS)[number]) =>
     setF(v => ({
       ...v,
       timesChoices: v.timesChoices.includes(t)
@@ -92,57 +100,109 @@ export default function VolunteerForm() {
         v.timesChoices.length === TIME_OPTIONS.length ? [] : [...TIME_OPTIONS],
     }));
 
-  // Submit
+  // submit
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setOk(false);
+    setOkMsg(null);
 
-    // Required validations
-    if (!f.firstName.trim() || !f.lastName.trim()) {
-      setError('Please provide first and last name.');
-      return;
-    }
-    if (!f.email.trim() || !emailValid(f.email.trim())) {
-      setError('Please provide a valid email address.');
-      return;
-    }
+    // basic validation
+    if (!f.firstName.trim() || !f.lastName.trim())
+      return setError('Please provide first and last name.');
+    if (!f.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()))
+      return setError('Please provide a valid email address.');
     const e164 = toE164US(f.phoneNumber);
-    if (!e164) {
-      setError('Please enter a valid 10-digit US phone number.');
-      return;
-    }
-    if (!f.photoConsent || !f.backgroundCheckConsent) {
-      setError('Photo and background check consents are required.');
-      return;
-    }
-
-    const skillsList = toList(f.skillsLine);
-
-    const payload: VolunteerCreate = {
-      firstName: f.firstName.trim(),
-      lastName: f.lastName.trim(),
-      email: f.email.trim() || undefined,
-      phoneNumber: f.phoneNumber.trim() || undefined,
-      cities: f.selectedCities,
-      daysAvail: f.daysAvail,
-      timesAvail: f.timesChoices,
-      skills: skillsList,
-      bio: f.bio.trim() || undefined,
-      photoConsent: f.photoConsent,
-      backgroundCheckConsent: f.backgroundCheckConsent,
-    };
+    if (!e164) return setError('Please enter a valid 10-digit US phone number.');
+    if (!f.photoConsent || !f.backgroundCheckConsent)
+      return setError('Photo and background check consents are required.');
 
     setSubmitting(true);
     try {
-      await makeApiRequest<{ volunteer: any }>(`${API}/volunteer/`, {
+      const isRole = Boolean(opportunityId);
+      const url = isRole ? `${API}/volunteer/${opportunityId}` : `${API}/volunteer/`;
+
+      await makeApiRequest<{ volunteer: any }>(url, {
         method: 'POST',
-        body: payload,
+        body: {
+          firstName: f.firstName.trim(),
+          lastName: f.lastName.trim(),
+          email: f.email.trim() || undefined,
+          phoneNumber: e164,
+          cities: f.selectedCities,
+          daysAvail: f.daysAvail,
+          timesAvail: f.timesChoices,
+          skills: f.skillsLine.split(',').map(x => x.trim()).filter(Boolean),
+          bio: f.bio.trim() || undefined,
+          photoConsent: f.photoConsent,
+          backgroundCheckConsent: f.backgroundCheckConsent,
+        } satisfies VolunteerCreate,
       });
-      setOk(true);
+
+      if (isRole) {
+        if (opportunityId) markOppSubmitted(opportunityId);
+        setOk(true);
+        setOkMsg(`Thank you! Your application for “${roleTitle ?? 'this role'}” was submitted. We will contact you within 2–3 business days.`);
+        setError(null);
+        onDone?.(); 
+      } else {
+        // General application 
+        markGeneralSubmitted();
+        setLockedGeneral(true);
+        setOk(true);
+        setOkMsg('Thank you! Your volunteer application was submitted. We will contact you within 2–3 business days.');
+        setError(null);
+      }
+
       setF(initial);
+      requestAnimationFrame(() => {
+        document.getElementById('volunteer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     } catch (err: any) {
-      setError(err?.message ?? 'Failed to submit application.');
+      const code = String(err?.status || err?.response?.status || '');
+      const detail: string =
+        (typeof err === 'string' && err) ||
+        err?.detail ||
+        err?.message ||
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        '';
+
+      if (code === '401') {
+        try {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('token');
+        } catch {}
+        setModalContent(<LoginModal />);
+        setError('Please log in to apply as a volunteer.');
+        return;
+      }
+
+      if (opportunityId) {
+        if (code === '409' || /already applied to this opportunity/i.test(detail)) {
+          markOppSubmitted(opportunityId);
+          setOk(true);
+          setError(null);
+          setOkMsg(`You already applied to “${roleTitle ?? 'this role'}”.`);
+          onDone?.();
+          return;
+        }
+        if (code === '404') {
+          setError('This opportunity no longer exists.');
+          return;
+        }
+      } else {
+        if (/already registered as a volunteer/i.test(detail)) {
+          markGeneralSubmitted();
+          setLockedGeneral(true);
+          setOk(true);
+          setOkMsg('You have already submitted a volunteer application. Thank you!');
+          setError(null);
+          return;
+        }
+      }
+
+      setError(detail || 'Failed to submit application.');
     } finally {
       setSubmitting(false);
     }
@@ -150,35 +210,68 @@ export default function VolunteerForm() {
 
   return (
     <div id="volunteer" className="mx-auto max-w-3xl scroll-mt-24">
+      {/* Header */}
+      {opportunityId ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
+          Applying for: <span className="font-medium">{roleTitle ?? 'Selected role'}</span>
+        </div>
+      ) : null}
+
       <div className="mb-6 text-center">
         <p className="mt-2 text-slate-600">
           Tell us a bit about yourself and your availability — we'll match you with a good fit.
         </p>
         <div className="mt-4 rounded-xl">
-          Wonderhood team reach out within <span className="font-medium">2-3 business days</span>.
+          Wonderhood team will reach out within <span className="font-medium">2–3 business days</span>.
         </div>
       </div>
 
-      {/* Show login prompt only on client and only when logged out */}
+      {/* Login prompt for guests */}
       {client && !logged && (
-        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+        <div
+          className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900"
+          onMouseDown={e => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
+        >
           <p className="font-medium">Please log in to apply as a volunteer.</p>
           <div className="mt-2 flex gap-3">
             <button
               type="button"
-              onClick={() => setModalContent(<LoginModal />)}
+              onMouseDown={e => e.stopPropagation()}
+              onClick={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                requestAnimationFrame(() => setModalContent(<LoginModal />));
+              }}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
             >
               Log in
             </button>
             <button
               type="button"
-              onClick={() => setModalContent(<SignupModal />)}
+              onMouseDown={e => e.stopPropagation()}
+              onClick={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                requestAnimationFrame(() => setModalContent(<SignupModal />));
+              }}
               className="rounded-lg border border-emerald-600 px-4 py-2 text-emerald-700 hover:bg-emerald-50"
             >
               Sign up
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Locks banners */}
+      {!opportunityId && logged && lockedGeneral && !ok && (
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
+          You have already submitted a volunteer application. Thank you!
+        </div>
+      )}
+      {opportunityId && logged && oppLocked && !ok && (
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
+          You already applied to this role.
         </div>
       )}
 
@@ -285,18 +378,14 @@ export default function VolunteerForm() {
             <div className="flex gap-6 text-sm">
               {(['Weekdays', 'Weekends'] as AvailabilityDay[]).map(d => (
                 <label key={d} className="inline-flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={f.daysAvail.includes(d)}
-                    onChange={() => toggleDay(d)}
-                  />
+                  <input type="checkbox" checked={f.daysAvail.includes(d)} onChange={() => toggleDay(d)} />
                   <span>{d}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Skills (required) */}
+          {/* Skills */}
           <div className="space-y-2 mt-4">
             <label className="block text-sm font-medium">
               Skills <span className="text-rose-600">*</span>
@@ -346,6 +435,7 @@ export default function VolunteerForm() {
             </label>
           </div>
 
+          {/* Success / Error */}
           {error && (
             <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-800">
               {error}
@@ -353,10 +443,24 @@ export default function VolunteerForm() {
           )}
           {ok && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
-              Thank you for applying! We've received your information and will contact you within 2–3 business days.
+              <p>
+                {okMsg ??
+                  "Thank you for applying! We've received your information and will contact you within 2–3 business days."}
+              </p>
+              {!opportunityId && (
+                <div className="mt-3">
+                  <a
+                    href="#opportunities"
+                    className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
+                  >
+                    Back to opportunities
+                  </a>
+                </div>
+              )}
             </div>
           )}
 
+          {/* Submit */}
           <div
             className="mt-6 flex justify-center sm:justify-end"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}

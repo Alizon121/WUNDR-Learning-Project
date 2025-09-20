@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from "@/app/context/auth";
 import { useEffect } from 'react';
 
+
 export default function UserDropdown({ onLogout, onClose, }: {
   onLogout: () => void;
   onClose: () => void;
@@ -30,7 +31,23 @@ export default function UserDropdown({ onLogout, onClose, }: {
       >
         Profile
       </Link>
-      {/* Можно добавить еще ссылки! */}
+
+      {user?.role === 'admin' && (
+        <Link
+          href="/admin/volunteer-opp"
+          onClick={onClose}
+          className="block px-4 py-2 hover:bg-wonderleaf/10 text-wondergreen"
+        >
+          Volunteer Opportunities
+        </Link>
+      )}
+
+      <button
+        type="button"
+        className="block w-full text-left px-4 py-2 hover:bg-wonderorange/10 text-wonderorange font-semibold rounded-b-xl"
+        onClick={() => { onClose(); onLogout(); }}
+      >
+      </button>
       <button
         type="button"
         className="block w-full text-left px-4 py-2 hover:bg-wonderorange/10 text-wonderorange font-semibold rounded-b-xl"

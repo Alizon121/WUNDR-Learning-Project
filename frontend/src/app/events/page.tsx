@@ -5,6 +5,7 @@ import ActivityBlock from "@/components/eventsPage/ActivityBlock";
 import { makeApiRequest } from "../../../utils/api";
 import { Activity } from "@/types/activity";
 import { Event } from "@/types/event";
+import Link from "next/link"
 
 interface GroupedEvents {
   activity: string;
@@ -61,7 +62,9 @@ export default function EventsPage() {
         {isAdmin && (
           // Make this redirect to the add form page
           <button className="mt-2 bg-green-700 text-white px-10 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-            <strong>ADD EVENT</strong>
+            <Link href={"/events/addEvent"}>
+              <strong>ADD EVENT</strong>
+            </Link>
           </button>
         )}
       </div>

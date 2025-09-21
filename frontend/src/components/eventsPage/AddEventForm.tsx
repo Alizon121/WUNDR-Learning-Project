@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { makeApiRequest } from '../../../utils/api';
-import { isLoggedIn } from '../../../utils/auth';
 import { CITIES_CO } from '@/data/citiesCO';
 import { US_States } from '@/data/states';
 import { Event } from '@/types/event';
@@ -10,8 +9,9 @@ import { Activity } from '@/types/activity';
 import { EventPayload } from '../../../utils/auth';
 import e from 'express';
 
+type EventsResponse = { events: Event[] }
 type ActivitiesResponse = { activities: Activity[] }
-type FormErrors = Partial<Record<"activity" | "name" | "description" | "date" | "startTime" | "endTime" | "partiicpants", string>>
+type FormErrors = Partial<Record<"activity" | "name" | "description" | "date" | "startTime" | "endTime" | "limit" | "address" | "longitude" | "latitude" | "zipCode", string>>
 const initialEventForm: Event = {
     activityId: "",
     name: "",
@@ -25,7 +25,7 @@ const initialEventForm: Event = {
     city: "",
     state: "",
     address: "",
-    zipCode: "",
+    zipCode: 12345,
     latitude: 0,
     longitude: 0,
     userId: [],
@@ -35,6 +35,23 @@ export default function EventForm() {
     const [event, setEvent] = useState<Event>(initialEventForm)
     const [errors, setErrors] = useState<FormErrors>({})
     const [activities, setActivities] = useState<Activity[]>([])
+    const [fetchedEvents, setFetchedEvents] = useState<Event[]>([])
+    const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+    // useEffect hooks for fetching Events and Activities
+    useEffect(() => {
+        const getEvents = async () => {
+            try {
+                let fetchEvents: EventsResponse = await makeApiRequest("http://localhost:8000/event")
+                if (fetchEvents) setFetchedEvents(fetchEvents.events)
+            } catch (err) {
+                throw Error(`Unable to fetch events:", ${err}`)
+            }
+        }
+        getEvents()
+    }, [])
+
     useEffect(() => {
         // create async helper function to get activities
         const getActivities = async () => {
@@ -70,9 +87,46 @@ export default function EventForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrors({})
+        const newErrors: FormErrors = {}
 
-        // Add validations here
+        // * Add validations here
+        // Ensure the name does not already exist
+        const matchingNames = fetchedEvents.find((e) => e.name === event.name)
+        if (matchingNames) {
+            newErrors.name = "Name Already Exists"
+        }
 
+        // Validate name's length:
+        if (event.name.length < 1) newErrors.name = "Name must be greater than one character"
+
+        // Validate description length:
+        if (event.description.length < 1) newErrors.description = "Description must be greater than one character"
+
+        // Validate date format:
+        if (!dateRegex.test(event.date)) newErrors.date = "Please provide MM/DD/YYYY format"
+
+        // Validate time formats:
+        if (!timeRegex.test(event.startTime)) newErrors.startTime = "Please provide hh:mm format"
+
+        if (!timeRegex.test(event.endTime)) newErrors.endTime = "Please provide hh:mm format"
+
+        // Validate participant LIMIT:
+        if (event.limit > 100) newErrors.limit = "There must be less than 100 participants"
+        if (event.limit < 0) newErrors.limit = "There must be at least 0 participants"
+
+        // Validate the address:
+        //  ! Add more robust validation
+        if (event.address.length < 5) newErrors.address = "Please enter an address greater than 5 characters"
+        if (event.address.length > 200) newErrors.address = "Address must contain less than 200 characters"
+        if (event.zipCode.toString().length < 5) newErrors.zipCode = "Please provide a valid zipcode"
+        // Validate lattitude/longitude
+        if (event.latitude < -90 || event.latitude > 90) newErrors.latitude = "Please provide valid latitude"
+        if (event.longitude < -180 || event.longitude > 180) newErrors.longitude = "Please provide valid longitude"
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors)
+            return
+        }
 
         // Create Payload
         const payload: EventPayload = {
@@ -103,9 +157,8 @@ export default function EventForm() {
                 body: payload
             })
 
-            if (response.ok) {
-                const data = await response.json()
-                console.log("Event successfully created:", data)
+            if (response) {
+                console.log("Event successfully created:", response)
                 setEvent(initialEventForm)
             } else {
                 console.error("Failed to create event")
@@ -145,7 +198,6 @@ export default function EventForm() {
                                 placeholder='Name'
                                 value={event.name}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
                             />
                             {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
                         </div>
@@ -161,7 +213,6 @@ export default function EventForm() {
                                 value={event.description}
                                 onChange={handleChangeSelectOrInputOrText}
                                 maxLength={750}
-                                required
                             />
                             {errors.description && <p className="text-sm text-red-600 mt-1">{errors.description}</p>}
                         </div>
@@ -172,10 +223,9 @@ export default function EventForm() {
                             </label>
                             <input
                                 name='date'
-                                placeholder='Date'
+                                placeholder='MM/DD/YYYY'
                                 value={event.date}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
                             />
                             {errors.date && <p className="text-sm text-red-600 mt-1">{errors.date}</p>}
                         </div>
@@ -189,7 +239,6 @@ export default function EventForm() {
                                 placeholder='Start Time'
                                 value={event.startTime}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
                             />
                             {errors.startTime && <p className="text-sm text-red-600 mt-1">{errors.startTime}</p>}
                         </div>
@@ -203,7 +252,6 @@ export default function EventForm() {
                                 placeholder='End Time'
                                 value={event.endTime}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
                             />
                             {errors.endTime && <p className="text-sm text-red-600 mt-1">{errors.endTime}</p>}
                         </div>
@@ -229,9 +277,8 @@ export default function EventForm() {
                                 placeholder='(e.g. 15)'
                                 value={event.limit}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
                             />
-                            {errors.partiicpants && <p className="text-sm text-red-600 mt-1">{errors.partiicpants}</p>}
+                            {errors.limit && <p className="text-sm text-red-600 mt-1">{errors.limit}</p>}
                         </div>
 
                         <div>
@@ -277,9 +324,8 @@ export default function EventForm() {
                                 placeholder='Address'
                                 value={event.address}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
                             />
-                            {/* {errors.partiicpants && <p className="text-sm text-red-600 mt-1">{errors.partiicpants}</p>} */}
+                            {errors.address && <p className="text-sm text-red-600 mt-1">{errors.address}</p>}
                         </div>
 
                         <div>
@@ -293,6 +339,7 @@ export default function EventForm() {
                                 onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
+                            {errors.zipCode && <p className="text-sm text-red-600 mt-1">{errors.zipCode}</p>}
                         </div>
 
                         <div>
@@ -306,7 +353,7 @@ export default function EventForm() {
                                 onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
-                            {/* {errors.partiicpants && <p className="text-sm text-red-600 mt-1">{errors.partiicpants}</p>} */}
+                            {errors.latitude && <p className="text-sm text-red-600 mt-1">{errors.latitude}</p>}
                         </div>
 
                         <div>
@@ -320,7 +367,7 @@ export default function EventForm() {
                                 onChange={handleChangeSelectOrInputOrText}
                                 required
                             />
-                            {/* {errors.partiicpants && <p className="text-sm text-red-600 mt-1">{errors.partiicpants}</p>} */}
+                            {errors.longitude && <p className="text-sm text-red-600 mt-1">{errors.longitude}</p>}
                         </div>
 
 

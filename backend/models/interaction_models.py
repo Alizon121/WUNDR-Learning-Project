@@ -51,15 +51,15 @@ class EventCreate(BaseModel):
 
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    date: datetime = Field(default_factory=datetime.now(timezone.utc))
-    image: str = Field(min_length=1)
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    image: str = Field(min_length=0)
     participants: int = Field(default=0)
     limit: int = Field(default=10)
 
     city: str = Field(min_length=1)
     state: str = Field(min_length=1)
     address: str = Field(min_length=1)
-    zipCode: int = Field(length=5)
+    zipCode: int = Field(ge=5)
     latitude: float
     longitude: float
     startTime: str = Field(min_length=1)
@@ -68,8 +68,8 @@ class EventCreate(BaseModel):
     userIDs: List[str] = Field(default_factory=list)
     childIDs: List[str] = Field(default_factory=list)
 
-    createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
-    updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class EventUpdate(BaseModel):
     activityId: Optional[str] = Field(default=None)

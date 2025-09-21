@@ -42,14 +42,9 @@ export default function EventCard({ event, isAdmin }: Props) {
 
         {isAdmin && (
           <div className="flex flex-col justify-between mt-2 gap-x-2">
-            <button className="mt-2 bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-900 transition-colors">
-              <Link href={`/events/${event.id}`}>
-                <strong>EDIT</strong>
-              </Link>
-            </button>
             <button className="mt-2 bg-wonderorange text-white px-4 py-2 rounded text-sm font-medium hover:bg-gradient-to-l from-wonderorange to-wonderleaf transition-colors">
               <Link href={`/events/${event.id}`}>
-                <strong>UPDATE</strong>
+                <strong>EDIT</strong>
               </Link>
             </button>
             <button className="mt-2 bg-wonderorange text-white px-4 py-2 rounded text-sm font-medium hover:bg-gradient-to-r from-wonderorange to-wonderleaf transition-colors">

@@ -198,6 +198,12 @@ export interface EventPayload {
   childIDs: string[]
 }
 
+// * Notification ===================================================
+export interface NotificationPayload {
+  subject: string
+  content: string
+  time: string
+}
 
 // UserRole =================================================
 export function getUserRole():

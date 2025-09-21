@@ -8,6 +8,7 @@ import { Event } from '@/types/event';
 import { Activity } from '@/types/activity';
 import { EventPayload } from '../../../utils/auth';
 import e from 'express';
+import { convertStringToIsoFormat } from '../../../utils/formatDate';
 
 type EventsResponse = { events: Event[] }
 type ActivitiesResponse = { activities: Activity[] }
@@ -77,11 +78,6 @@ export default function EventForm() {
 
     const handleDiscard = async () => {
         setEvent(initialEventForm)
-    }
-
-    const convertStringToIsoFormat = (date: string) => {
-        let newDate: Date = new Date(date)
-        return newDate.toISOString()
     }
 
     const handleSubmit = async (e: React.FormEvent) => {

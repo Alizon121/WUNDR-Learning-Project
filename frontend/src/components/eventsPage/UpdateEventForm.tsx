@@ -8,14 +8,23 @@ import { CITIES_CO } from '@/data/citiesCO';
 import { US_States } from '@/data/states';
 import { Activity } from '@/types/activity';
 import { makeApiRequest } from "../../../utils/api"
+import { convertStringToIsoFormat } from "../../../utils/formatDate"
+import { EventPayload } from '../../../utils/auth';
 
 type ActivitiesResponse = { activities: Activity[] }
+type EventsResponse = { events: Event[] }
+type FormErrors = Partial<Record<"activity" | "name" | "description" | "date" | "startTime" | "endTime" | "limit" | "address" | "longitude" | "latitude" | "zipCode", string>>
 
 export default function UpdateEventForm() {
     const { eventId } = useParams()
     const { event, loading, error, refetch } = useEvent(eventId)
     const [formEvent, setFormEvent] = useState<Event | null>(null)
     const [activities, setActivities] = useState<Activity[]>()
+    const [errors, setErrors] = useState<FormErrors>({})
+    const [fetchedEvents, setFetchedEvents] = useState<Event[]>([])
+    const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
 
     useEffect(() => {
         if (event) {
@@ -36,11 +45,107 @@ export default function UpdateEventForm() {
         getActivities()
     }, [])
 
-    console.log("LALAL", event)
+    useEffect(() => {
+        const getEvents = async () => {
+            try {
+                let fetchEvents: EventsResponse = await makeApiRequest("http://localhost:8000/event")
+                if (fetchEvents) setFetchedEvents(fetchEvents.events)
+            } catch (err) {
+                throw Error(`Unable to fetch events:", ${err}`)
+            }
+        }
+        getEvents()
+    }, [])
 
     if (loading) return <p>Loading...</p>
     if (error) return <p>Failed to load event.</p>
-    if (!formEvent) return null
+    if (!formEvent) return <p>Preparing form...</p>
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrors({})
+        const newErrors: FormErrors = {}
+
+        // * Add validations here
+        // Ensure the name does not already exist
+        const matchingNames = fetchedEvents.find((e) => e.name === formEvent.name)
+        if (matchingNames) {
+            newErrors.name = "Name Already Exists"
+        }
+
+        // Validate name's length:
+        if (formEvent.name.length < 1) newErrors.name = "Name must be greater than one character"
+
+        // Validate description length:
+        if (formEvent.description.length < 1) newErrors.description = "Description must be greater than one character"
+
+        // Validate date format:
+        if (!dateRegex.test(formEvent.date)) newErrors.date = "Please provide MM/DD/YYYY format"
+
+        // Validate time formats:
+        if (!timeRegex.test(formEvent.startTime)) newErrors.startTime = "Please provide hh:mm format"
+
+        if (!timeRegex.test(formEvent.endTime)) newErrors.endTime = "Please provide hh:mm format"
+
+        // Validate participant LIMIT:
+        if (formEvent.limit > 100) newErrors.limit = "There must be less than 100 participants"
+        if (formEvent.limit < 0) newErrors.limit = "There must be at least 0 participants"
+
+        // Validate the address:
+        //  ! Add more robust validation
+        if (formEvent.address.length < 5) newErrors.address = "Please enter an address greater than 5 characters"
+        if (formEvent.address.length > 200) newErrors.address = "Address must contain less than 200 characters"
+        if (formEvent.zipCode.toString().length < 5) newErrors.zipCode = "Please provide a valid zipcode"
+        // Validate lattitude/longitude
+        if (formEvent.latitude < -90 || formEvent.latitude > 90) newErrors.latitude = "Please provide valid latitude"
+        if (formEvent.longitude < -180 || formEvent.longitude > 180) newErrors.longitude = "Please provide valid longitude"
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors)
+            return
+        }
+
+        // Create Payload
+        const payload: EventPayload = {
+            activityId: formEvent.activityId,
+            name: formEvent.name,
+            description: formEvent.description,
+            date: convertStringToIsoFormat(formEvent.date),
+            startTime: formEvent.startTime,
+            endTime: formEvent.endTime,
+            image: formEvent.image,
+            participants: formEvent.participants,
+            limit: Number(formEvent.limit),
+            city: formEvent.city,
+            state: formEvent.state,
+            address: formEvent.address,
+            zipCode: parseInt(formEvent.zipCode.toString(), 10),
+            latitude: parseFloat(formEvent.latitude.toString()),
+            longitude: parseFloat(formEvent.longitude.toString()),
+            userId: [],
+            childIDs: []
+        }
+
+        // Try to add an event
+        try {
+            const response: any = await makeApiRequest(`http://localhost:8000/event/${eventId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: payload
+            })
+
+            if (response) {
+                console.log("Event successfully created:", response)
+                setFormEvent(formEvent)
+            } else {
+                console.error("Failed to create event")
+            }
+        } catch (e) {
+            throw new Error(`Unable to add event: ${e}`)
+        }
+    }
+
+    console.log("LALAL", formEvent)
 
     const handleChangeSelectOrInputOrText = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -57,7 +162,7 @@ export default function UpdateEventForm() {
     }
 
     return (
-        <form>
+        <form onSubmit={handleSubmit}>
             <fieldset>
                 <div>
                     <div>
@@ -72,7 +177,7 @@ export default function UpdateEventForm() {
                                 </option>
                             ))}
                         </select>
-                        {/* {errors.activity && <p className="text-sm text-red-600 mt-1">{errors.activity}</p>} */}
+                        {errors.activity && <p className="text-sm text-red-600 mt-1">{errors.activity}</p>}
                     </div>
 
                     <div>
@@ -85,7 +190,7 @@ export default function UpdateEventForm() {
                             value={formEvent.name}
                             onChange={handleChangeSelectOrInputOrText}
                         />
-                        {/* {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>} */}
+                        {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
                     </div>
                     <div>
                         <label>
@@ -98,7 +203,7 @@ export default function UpdateEventForm() {
                             onChange={handleChangeSelectOrInputOrText}
                             maxLength={750}
                         />
-                        {/* {errors.description && <p className="text-sm text-red-600 mt-1">{errors.description}</p>} */}
+                        {errors.description && <p className="text-sm text-red-600 mt-1">{errors.description}</p>}
                     </div>
                     <div>
                         <label>
@@ -110,7 +215,7 @@ export default function UpdateEventForm() {
                             value={formEvent.date}
                             onChange={handleChangeSelectOrInputOrText}
                         />
-                        {/* {errors.date && <p className="text-sm text-red-600 mt-1">{errors.date}</p>} */}
+                        {errors.date && <p className="text-sm text-red-600 mt-1">{errors.date}</p>}
                     </div>
                     <div>
                         <label>
@@ -122,7 +227,7 @@ export default function UpdateEventForm() {
                             value={formEvent.startTime}
                             onChange={handleChangeSelectOrInputOrText}
                         />
-                        {/* {errors.startTime && <p className="text-sm text-red-600 mt-1">{errors.startTime}</p>} */}
+                        {errors.startTime && <p className="text-sm text-red-600 mt-1">{errors.startTime}</p>}
                     </div>
                     <div>
                         <label>
@@ -134,7 +239,7 @@ export default function UpdateEventForm() {
                             value={formEvent.endTime}
                             onChange={handleChangeSelectOrInputOrText}
                         />
-                        {/* {errors.endTime && <p className="text-sm text-red-600 mt-1">{errors.endTime}</p>} */}
+                        {errors.endTime && <p className="text-sm text-red-600 mt-1">{errors.endTime}</p>}
                     </div>
                     <div>
                         <label>
@@ -146,7 +251,7 @@ export default function UpdateEventForm() {
                             value={formEvent.image}
                             onChange={handleChangeSelectOrInputOrText}
                         />
-                        {/* {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>} */}
+                        {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
                     </div>
                     <div>
                         <label>
@@ -158,7 +263,7 @@ export default function UpdateEventForm() {
                             value={formEvent.limit}
                             onChange={handleChangeSelectOrInputOrText}
                         />
-                        {/* {errors.limit && <p className="text-sm text-red-600 mt-1">{errors.limit}</p>} */}
+                        {errors.limit && <p className="text-sm text-red-600 mt-1">{errors.limit}</p>}
                     </div>
                     <div>
                         <label className="mb-1 block text-sm font-medium">
@@ -202,7 +307,7 @@ export default function UpdateEventForm() {
                             value={formEvent.address}
                             onChange={handleChangeSelectOrInputOrText}
                         />
-                        {/* {errors.address && <p className="text-sm text-red-600 mt-1">{errors.address}</p>} */}
+                        {errors.address && <p className="text-sm text-red-600 mt-1">{errors.address}</p>}
                     </div>
                     <div>
                         <label>
@@ -215,7 +320,7 @@ export default function UpdateEventForm() {
                             onChange={handleChangeSelectOrInputOrText}
                             required
                         />
-                        {/* {errors.zipCode && <p className="text-sm text-red-600 mt-1">{errors.zipCode}</p>} */}
+                        {errors.zipCode && <p className="text-sm text-red-600 mt-1">{errors.zipCode}</p>}
                     </div>
                     <div>
                         <label>
@@ -228,7 +333,7 @@ export default function UpdateEventForm() {
                             onChange={handleChangeSelectOrInputOrText}
                             required
                         />
-                        {/* {errors.latitude && <p className="text-sm text-red-600 mt-1">{errors.latitude}</p>} */}
+                        {errors.latitude && <p className="text-sm text-red-600 mt-1">{errors.latitude}</p>}
                     </div>
                     <div>
                         <label>
@@ -241,7 +346,7 @@ export default function UpdateEventForm() {
                             onChange={handleChangeSelectOrInputOrText}
                             required
                         />
-                        {/* {errors.longitude && <p className="text-sm text-red-600 mt-1">{errors.longitude}</p>} */}
+                        {errors.longitude && <p className="text-sm text-red-600 mt-1">{errors.longitude}</p>}
                     </div>
                 </div>
             </fieldset>

@@ -61,11 +61,11 @@ export default function EventsPage() {
         </p>
         {isAdmin && (
           // Make this redirect to the add form page
-          <button className="mt-2 bg-green-700 text-white px-10 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-            <Link href={"/events/addEvent"}>
+          <Link href={"/events/addEvent"}>
+            <button className="mt-2 bg-green-700 text-white px-10 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
               <strong>ADD EVENT</strong>
-            </Link>
-          </button>
+            </button>
+          </Link>
         )}
       </div>
 

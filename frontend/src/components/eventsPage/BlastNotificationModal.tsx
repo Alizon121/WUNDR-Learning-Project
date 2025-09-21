@@ -2,6 +2,7 @@ import { useModal } from "@/app/context/modal";
 import React, { useState } from "react";
 import { makeApiRequest } from "../../../utils/api";
 import { NotificationPayload } from "../../../utils/auth";
+import { convertStringToIsoFormat } from "../../../utils/formatDate";
 
 type ModalErrors = Partial<Record<
     "subject" |
@@ -43,7 +44,7 @@ export function BlastNotificationModal() {
         const payload: NotificationPayload = {
             subject,
             content,
-            time
+            time: convertStringToIsoFormat(time)
         }
 
         try {
@@ -61,53 +62,71 @@ export function BlastNotificationModal() {
     }
 
     return (
-        <div className="rounded-lg p-6 w-fit">
+        <div className="rounded-lg p-6 w-full max-w-md mx-auto bg-white shadow-md">
             <h1 className="text-xl font-bold text-center">Send a Notification to All Users</h1>
-            <p className="sm:text-sm text-center">All registered users will receive an email notification</p>
-            <div className="flex flex-row mt-3 justify-around">
-                <label>
-                    Title
-                </label>
+            <p className="text-sm text-center text-gray-600">
+                All registered users will receive an email notification
+            </p>
+
+            {/* Title */}
+            <div className="mt-4">
+                <label className="block text-sm font-medium mb-1">Title</label>
                 <input
                     name="subject"
                     placeholder="Rock Climbing"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="border border-black-900 rounded w-fit"
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-wondergreen"
                 />
+                {errors.subject && (
+                    <p className="text-sm text-red-600 mt-1">{errors.subject}</p>
+                )}
             </div>
-            {errors.subject && <p className="text-sm text-red-600 mt-1 text-center">{errors.subject}</p>}
 
-            <div className="flex flex-row mt-3 justify-around">
-                <label className="mr-2">
-                    Content
-                </label>
+            {/* Content */}
+            <div className="mt-4">
+                <label className="block text-sm font-medium mb-1">Content</label>
                 <textarea
                     name="content"
                     placeholder="Write message"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    className="h-fit w-fit"
+                    className="w-full border border-gray-300 rounded px-3 py-2 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-wondergreen"
                 ></textarea>
+                {errors.content && (
+                    <p className="text-sm text-red-600 mt-1">{errors.content}</p>
+                )}
             </div>
-            {errors.content && <p className="text-sm text-red-600 mt-1 text-center">{errors.content}</p>}
 
-            <div className="flex flex-row mt-3 justify-around">
-                <label>
-                    Time
-                </label>
+            {/* Time */}
+            <div className="mt-4">
+                <label className="block text-sm font-medium mb-1">Time</label>
                 <input
                     name="time"
                     placeholder="HH:MM"
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-wondergreen"
                 />
+                {errors.time && (
+                    <p className="text-sm text-red-600 mt-1">{errors.time}</p>
+                )}
             </div>
-            {errors.time && <p className="text-sm text-red-600 mt-1 text-center">{errors.time}</p>}
 
-            <div className="flex flex-row justify-evenly mt-4">
-                <button onClick={handleNotification} className="border border-black-800 bg-wondergreen hover:bg-wonderleaf rounded w-[90px] text-white py-1 px-2">Send</button>
-                <button onClick={closeModal} className="border border-black-800 bg-red-600 hover:bg-red-800 rounded w-[90px] text-white py-1 px-2">Cancel</button>
+            {/* Actions */}
+            <div className="flex justify-between mt-6">
+                <button
+                    onClick={handleNotification}
+                    className="border border-black bg-wondergreen hover:bg-wonderleaf rounded w-[100px] text-white py-2 font-medium transition-colors"
+                >
+                    Send
+                </button>
+                <button
+                    onClick={closeModal}
+                    className="border border-black bg-red-600 hover:bg-red-800 rounded w-[100px] text-white py-2 font-medium transition-colors"
+                >
+                    Cancel
+                </button>
             </div>
         </div>
     )

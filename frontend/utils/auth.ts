@@ -174,6 +174,7 @@ export function isLoggedIn(): boolean {
   return !!getToken();
 }
 
+
 // ! Verify Token Helper (for use in layout.tsx)
 export function isTokenExpired(token: string): boolean {
   try {
@@ -183,3 +184,50 @@ export function isTokenExpired(token: string): boolean {
     return true;
   }
 }
+// * Event ===================================================
+export interface EventPayload {
+
+  id?: string
+  activityId: string
+  name: string
+  description: string
+  date: string
+  startTime: string
+  endTime: string
+  image: string
+  participants?: number
+  limit: number
+
+  city: string
+  state: string
+  address: string
+  zipCode: number
+  latitude: number
+  longitude: number
+
+  userId: string[]
+  childIDs: string[]
+}
+
+// * Notification ===================================================
+export interface NotificationPayload {
+  title: string
+  description: string
+  time: string
+}
+
+// UserRole =================================================
+export function getUserRole():
+  | 'admin' | 'parent' | 'instructor' | 'volunteer' | null {
+  try {
+    const str = localStorage.getItem('user');
+    if (str) return JSON.parse(str)?.role ?? null;
+    const raw = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (!raw) return null;
+    const payload = JSON.parse(atob(raw.split('.')[1] || ''));
+    return (payload.role || payload.user?.role) ?? null;
+  } catch { return null; }
+}
+
+
+

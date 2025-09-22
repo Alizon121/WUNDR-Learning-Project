@@ -141,6 +141,10 @@ class Volunteer(BaseModel):
   bio: Optional[str] = Field(min_length=5, max_length=500)
   photoConsent: bool = Field(default=False)
   backgroundCheckConsent: bool = Field(default=False)
+  status: AppStatus = AppStatus.NEW
+
+  volunteerOpportunityIDs: Optional[List[str]] = None
+  generalAppliedAt: Optional[datetime] = None
 
   createdAt: datetime
   updatedAt: Optional[datetime]

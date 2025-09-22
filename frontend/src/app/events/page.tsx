@@ -5,6 +5,9 @@ import ActivityBlock from "@/components/eventsPage/ActivityBlock";
 import { makeApiRequest } from "../../../utils/api";
 import { Activity } from "@/types/activity";
 import { Event } from "@/types/event";
+import Link from "next/link"
+import OpenModalButton from "../context/openModalButton";
+import { BlastNotificationModal } from "@/components/eventsPage/BlastNotificationModal";
 
 interface GroupedEvents {
   activity: string;
@@ -59,9 +62,18 @@ export default function EventsPage() {
           experiences, outdoor adventures, and educational opportunities.
         </p>
         {isAdmin && (
-          <button className="mt-2 bg-green-700 text-white px-10 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
-            <strong>ADD EVENT</strong>
-          </button>
+          <div className="flex flex-col items-center justify-center mt-6">
+            <Link href={"/events/addEvent"}>
+              <button className="mt-2 bg-green-700 text-white px-10 py-2 rounded text-sm font-medium hover:bg-green-800 transition-colors">
+                <strong>ADD EVENT</strong>
+              </button>
+            </Link>
+            <OpenModalButton
+              className="mt-2 bg-wonderorange text-white px-6 py-2 rounded text-sm font-medium hover:bg-gradient-to-r from-wonderorange to-wonderleaf transition-colors"
+              buttonText="BLAST MESSAGE"
+              modalComponent={<BlastNotificationModal />}
+            />
+          </div>
         )}
       </div>
 

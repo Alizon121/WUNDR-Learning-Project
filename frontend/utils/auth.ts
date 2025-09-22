@@ -2,6 +2,7 @@ import { Role } from "@/types/user";
 import { makeApiRequest } from "./api";
 import { useRouter } from "next/navigation";
 import { EmergencyContact } from "@/types/emergencyContact";
+import { jwtDecode } from "jwt-decode";
 
 // * Signup ===================================================
 
@@ -173,6 +174,16 @@ export function isLoggedIn(): boolean {
   return !!getToken();
 }
 
+
+// ! Verify Token Helper (for use in layout.tsx)
+export function isTokenExpired(token: string): boolean {
+  try {
+    const decoded: { exp: number } = jwtDecode(token);
+    return decoded.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
 // * Event ===================================================
 export interface EventPayload {
 

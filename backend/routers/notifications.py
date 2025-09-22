@@ -9,7 +9,7 @@ import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.mongodb import MongoDBJobStore
-from backend.models.interaction_models import NotificationUpdate
+from backend.models.interaction_models import NotificationUpdate, NotificationCreate
 import os
 import yagmail
 from pymongo import MongoClient
@@ -175,10 +175,10 @@ def start_scheduler():
 # =======================================================
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def blast_notification(
-    subject: str,
-    contents: str,
-    time: str,
-    # icon: str,
+    notification: NotificationCreate,
+    # subject: str,
+    # contents: str,
+    # time: str,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):
@@ -199,11 +199,11 @@ async def blast_notification(
 
     notification_data = [
     {
-        "title": subject,
-        "description": contents,
+        "title": notification.title,
+        "description": notification.description,
         "userId": user.id,
         "isRead": False,
-        "time": time,
+        "time": notification.time,
         # "icon": icon
     }
     for user in users
@@ -215,8 +215,8 @@ async def blast_notification(
     background_tasks.add_task(
         send_email_multiple_users,
         user_emails,
-        subject,
-        contents
+        notification.title,
+        notification.description
     )
 
     return {"notification": new_notification}

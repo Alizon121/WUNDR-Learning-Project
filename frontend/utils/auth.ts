@@ -200,8 +200,8 @@ export interface EventPayload {
 
 // * Notification ===================================================
 export interface NotificationPayload {
-  subject: string
-  content: string
+  title: string
+  description: string
   time: string
 }
 

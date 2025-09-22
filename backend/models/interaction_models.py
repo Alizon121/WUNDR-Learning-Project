@@ -135,11 +135,29 @@ class Notification(BaseModel):
         max_length = 500,
     )
     title: str = Field(
-        min_length = 2,
+        min_length = 1,
         max_length=80,
     )
     isRead: bool = Field(default=False)
+    time: datetime = Field(default_factory=datetime.now(timezone.utc))
     userId: str = Field(..., description="User id associated with the notification")
+
+    class Config:
+        form_attributes = True
+
+class NotificationCreate(BaseModel):
+    # id: str = Field(..., min_length=1, description="Notification identifier")
+    description: str = Field(
+        min_length = 1,
+        max_length = 500,
+    )
+    title: str = Field(
+        min_length = 1,
+        max_length=80,
+    )
+    isRead: bool = Field(default=False)
+    time: datetime = Field(default_factory=datetime.now(timezone.utc))
+    userId: str | None = None
 
     class Config:
         form_attributes = True

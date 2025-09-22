@@ -3,7 +3,6 @@ import Link from "next/link";
 import { formatDate } from "../../../utils/formatDate";
 import { Event } from "@/types/event";
 import DeleteEventModal from "./DeleteEventModal";
-import { BlastNotificationModal } from "./BlastNotificationModal";
 
 interface Props {
   event: Event;
@@ -48,11 +47,6 @@ export default function EventCard({ event, isAdmin }: Props) {
                 <strong>EDIT</strong>
               </button>
             </Link>
-            <OpenModalButton
-              className="mt-2 bg-wonderorange text-white px-4 py-2 rounded text-sm text-center font-medium hover:bg-gradient-to-r from-wonderorange to-wonderleaf transition-colors"
-              buttonText="BLAST"
-              modalComponent={<BlastNotificationModal />}
-            />
             <OpenModalButton
               className="mt-2 bg-red-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-900 transition-colors"
               buttonText="DELETE"

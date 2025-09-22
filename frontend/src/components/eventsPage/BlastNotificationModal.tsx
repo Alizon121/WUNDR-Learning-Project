@@ -2,22 +2,21 @@ import { useModal } from "@/app/context/modal";
 import React, { useState } from "react";
 import { makeApiRequest } from "../../../utils/api";
 import { NotificationPayload } from "../../../utils/auth";
-import { convertStringToIsoFormat } from "../../../utils/formatDate";
 
 type ModalErrors = Partial<Record<
-    "subject" |
+    "title" |
     "time" |
-    "content", string
+    "description", string
 >>
 
 export function BlastNotificationModal() {
     const { closeModal } = useModal();
     const [isNotifying, setIsNotifying] = useState(false);
-    const [subject, setSubject] = useState<string>("")
-    const [content, setContent] = useState<string>("")
-    const [time, setTime] = useState<string>("")
+    const [title, setTitle] = useState<string>("")
+    const [description, setDescription] = useState<string>("")
+    const [time, setTime] = useState<Date>(new Date())
     const [errors, setErrors] = useState<ModalErrors>({})
-    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    // const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
     const handleNotification = async () => {
         setIsNotifying(true)
@@ -27,24 +26,21 @@ export function BlastNotificationModal() {
 
         // * Add Validations Here
         // Validate Subject
-        if (subject.length < 2) newErrors.subject = "Must be greater than 2 characters"
+        if (title.length < 2) newErrors.title = "Must be greater than 2 characters"
 
         // Validate Content
-        if (content.length < 2) newErrors.content = "Must be greater than 2 characters"
+        if (description.length < 2) newErrors.description = "Must be greater than 2 characters"
 
-        if (content.length > 500) newErrors.content = "Must be less than 500 characters"
-
-        // Validate Time
-        if (!timeRegex.test(time)) newErrors.time = "Invalid date format"
+        if (description.length > 500) newErrors.description = "Must be less than 500 characters"
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors)
         }
 
         const payload: NotificationPayload = {
-            subject,
-            content,
-            time: convertStringToIsoFormat(time)
+            "title": title,
+            "description": description,
+            "time": time.toISOString()
         }
 
         try {
@@ -72,14 +68,14 @@ export function BlastNotificationModal() {
             <div className="mt-4">
                 <label className="block text-sm font-medium mb-1">Title</label>
                 <input
-                    name="subject"
+                    name="title"
                     placeholder="Rock Climbing"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                     className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-wondergreen"
                 />
-                {errors.subject && (
-                    <p className="text-sm text-red-600 mt-1">{errors.subject}</p>
+                {errors.title && (
+                    <p className="text-sm text-red-600 mt-1">{errors.title}</p>
                 )}
             </div>
 
@@ -87,32 +83,16 @@ export function BlastNotificationModal() {
             <div className="mt-4">
                 <label className="block text-sm font-medium mb-1">Content</label>
                 <textarea
-                    name="content"
+                    name="description"
                     placeholder="Write message"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     className="w-full border border-gray-300 rounded px-3 py-2 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-wondergreen"
                 ></textarea>
-                {errors.content && (
-                    <p className="text-sm text-red-600 mt-1">{errors.content}</p>
+                {errors.description && (
+                    <p className="text-sm text-red-600 mt-1">{errors.description}</p>
                 )}
             </div>
-
-            {/* Time */}
-            <div className="mt-4">
-                <label className="block text-sm font-medium mb-1">Time</label>
-                <input
-                    name="time"
-                    placeholder="HH:MM"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-wondergreen"
-                />
-                {errors.time && (
-                    <p className="text-sm text-red-600 mt-1">{errors.time}</p>
-                )}
-            </div>
-
             {/* Actions */}
             <div className="flex justify-between mt-6">
                 <button

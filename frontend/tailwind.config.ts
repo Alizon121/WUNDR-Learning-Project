@@ -11,7 +11,7 @@ const config: Config = {
         wonderleaf: '#90b35c',
         wonderorange: '#f5a940',
         wondersun: '#fbd78d',
-        wonderbg: '#fdf6e9', 
+        wonderbg: '#fdf6e9',
         // wonderbg: '#FAF7ED', 
       },
       fontFamily: {

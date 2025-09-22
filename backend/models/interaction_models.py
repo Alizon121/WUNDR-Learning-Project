@@ -43,36 +43,33 @@ class Event(BaseModel):
     zipCode: int = Field(length=5)
     latitude: float
     longitude: float
-
-    # users: List["User"] = Field(default_factory=list)
-    # children: List["Child"] = Field(default_factory=list)
-    # reviews: List["Review"] = Field(default_factory=list)
-
-    # createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
-    # updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    startTime: str = Field(min_length=1)
+    endTime: str = Field(min_length=1)
 
 class EventCreate(BaseModel):
     activityId: str = Field(min_length=1)
 
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    date: datetime = Field(default_factory=datetime.now(timezone.utc))
-    image: str = Field(min_length=1)
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    image: str = Field(min_length=0)
     participants: int = Field(default=0)
     limit: int = Field(default=10)
 
     city: str = Field(min_length=1)
     state: str = Field(min_length=1)
     address: str = Field(min_length=1)
-    zipCode: int = Field(length=5)
+    zipCode: int = Field(ge=5)
     latitude: float
     longitude: float
+    startTime: str = Field(min_length=1)
+    endTime: str = Field(min_length=1)
 
     userIDs: List[str] = Field(default_factory=list)
     childIDs: List[str] = Field(default_factory=list)
 
-    createdAt: datetime = Field(default_factory=datetime.now(timezone.utc))
-    updatedAt: datetime = Field(default_factory=datetime.now(timezone.utc))
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class EventUpdate(BaseModel):
     activityId: Optional[str] = Field(default=None)
@@ -87,6 +84,8 @@ class EventUpdate(BaseModel):
     zipCode: Optional[int] = Field(default=None)
     latitude: Optional[float] = Field(default=None)
     longitude: Optional[float] = Field(default=None)
+    startTime: Optional[str] = Field(default=None)
+    endTime: Optional[str] = Field(default=None)
 
     image: Optional[str] = Field(default=None)
     participants: Optional[int] = Field(default=None)
@@ -136,11 +135,29 @@ class Notification(BaseModel):
         max_length = 500,
     )
     title: str = Field(
-        min_length = 2,
+        min_length = 1,
         max_length=80,
     )
     isRead: bool = Field(default=False)
+    time: datetime = Field(default_factory=datetime.now(timezone.utc))
     userId: str = Field(..., description="User id associated with the notification")
+
+    class Config:
+        form_attributes = True
+
+class NotificationCreate(BaseModel):
+    # id: str = Field(..., min_length=1, description="Notification identifier")
+    description: str = Field(
+        min_length = 1,
+        max_length = 500,
+    )
+    title: str = Field(
+        min_length = 1,
+        max_length=80,
+    )
+    isRead: bool = Field(default=False)
+    time: datetime = Field(default_factory=datetime.now(timezone.utc))
+    userId: str | None = None
 
     class Config:
         form_attributes = True
@@ -201,14 +218,14 @@ class VolunteerOpportunityCreate(BaseModel):
   time: str = Field(None, description="Time/schedule information")
   requirements: List[str] = Field(default_factory=list, description="Requirements")
   tags: List[str] = Field(default_factory=list, description="Tags for volunteer opportunity")
-  minAge: int = Field(le=16, description="Age requirement")
+  minAge: int = Field(ge=16, description="Age requirement")
   bgCheckRequired: bool = Field(default=True, description="Background check requirement")
-  volunteerIDs: List[str] = Field(default=None, description="Enrolled Volunteers")
+  volunteerIDs: List[str] = Field(default_factory=list, description="Enrolled Volunteers")
 
   @field_validator("duties", "skills", "requirements", "tags", mode="before")
   def clean_string_lists(cls, v):
-     if v is None or v == []:
-         return None
+     if v is None:
+         return []
      return [item.strip() for item in v if item and item.strip()]
 
 class VolunteerOpportunityResponse(BaseModel):

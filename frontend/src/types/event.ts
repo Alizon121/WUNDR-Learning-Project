@@ -1,19 +1,19 @@
 export type Event = {
-    id: string
+    id?: string
     activityId: string
     name: string
     description: string
     date: string
-    // startTime: string
-    // endTime: string
+    startTime: string
+    endTime: string
     image: string
-    participants: number
+    participants?: number
     limit: number
 
     city: string
     state: string
     address: string
-    zipCode: string
+    zipCode: number
     latitude: number
     longitude: number
 

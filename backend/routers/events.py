@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
 from backend.db.prisma_client import db
 from typing import Annotated
 from backend.models.user_models import User
-from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate, EnrollChildren
+from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate, EnrollChildren, NotificationCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
@@ -77,6 +77,8 @@ async def create_event(
                 "zipCode": event_data.zipCode,
                 "latitude": event_data.latitude,
                 "longitude": event_data.longitude,
+                "startTime": event_data.startTime,
+                "endTime": event_data.endTime,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIDs,
                 "childIDs": event_data.childIDs,
@@ -208,7 +210,7 @@ async def update_event(
         )
 
     # Validate user, child, and activity IDs
-    if event_data.userIds:
+    if event_data.userIDs:
         users = await db.users.find_many(where={"id": {"in": event_data.userIDs}})
         if len(users) != len(event_data.userIDs):
             raise HTTPException(
@@ -270,6 +272,12 @@ async def update_event(
 
     if event_data.longitude is not None:
         update_payload["longitude"] = event_data.longitude
+
+    if event_data.startTime is not None:
+        update_payload["startTime"] = event_data.startTime
+
+    if event_data.endTime is not None:
+        update_payload["endTime"] = event_data.endTime
 
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId
@@ -838,8 +846,9 @@ async def create_review(
 async def send_message_to_users_of_enrolled_child(
     current_user: Annotated[User, Depends(get_current_user)],
     event_id:str,
-    subject: str,
-    content: str,
+    notification: NotificationCreate,
+    # title: str,
+    # description: str,
     # icon: str,
     background_tasks: BackgroundTasks
 ):
@@ -889,8 +898,8 @@ async def send_message_to_users_of_enrolled_child(
     # Creat the notifications for the UI
     notification_data = [
         {
-        "title": subject,
-        "description": content,
+        "title": notification.title,
+        "description": notification.description,
         "userId": id,
         "isRead": False,
         "time": event.date,
@@ -907,8 +916,8 @@ async def send_message_to_users_of_enrolled_child(
     background_tasks.add_task(
         send_email_multiple_users,
         parent_emails,
-        subject,
-        content
+        notification.title,
+        notification.description
     )
 
 

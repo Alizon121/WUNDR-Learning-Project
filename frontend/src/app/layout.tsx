@@ -7,6 +7,8 @@ import Footer from "@/components/footer/Footer";
 import { Modal, ModalProvider } from "./context/modal";
 import { AuthProvider } from "@/app/context/auth";
 import ResetPasswordWrapper from "@/components/login/ResetPasswordWrapper";
+import AuthGuard from "@/components/auth/AuthGuard";
+
 
 
 const geistSans = Geist({
@@ -27,13 +29,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
 
-
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <AuthProvider>
           <ModalProvider>
+            <AuthGuard />
             <Navbar />
               {children}
               <ResetPasswordWrapper />

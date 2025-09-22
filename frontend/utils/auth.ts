@@ -2,6 +2,7 @@ import { Role } from "@/types/user";
 import { makeApiRequest } from "./api";
 import { useRouter } from "next/navigation";
 import { EmergencyContact } from "@/types/emergencyContact";
+import { jwtDecode } from "jwt-decode";
 
 // * Signup ===================================================
 
@@ -172,5 +173,61 @@ export function getToken(): string | null {
 export function isLoggedIn(): boolean {
   return !!getToken();
 }
+
+
+// ! Verify Token Helper (for use in layout.tsx)
+export function isTokenExpired(token: string): boolean {
+  try {
+    const decoded: { exp: number } = jwtDecode(token);
+    return decoded.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+// * Event ===================================================
+export interface EventPayload {
+
+  id?: string
+  activityId: string
+  name: string
+  description: string
+  date: string
+  startTime: string
+  endTime: string
+  image: string
+  participants?: number
+  limit: number
+
+  city: string
+  state: string
+  address: string
+  zipCode: number
+  latitude: number
+  longitude: number
+
+  userId: string[]
+  childIDs: string[]
+}
+
+// * Notification ===================================================
+export interface NotificationPayload {
+  title: string
+  description: string
+  time: string
+}
+
+// UserRole =================================================
+export function getUserRole():
+  | 'admin' | 'parent' | 'instructor' | 'volunteer' | null {
+  try {
+    const str = localStorage.getItem('user');
+    if (str) return JSON.parse(str)?.role ?? null;
+    const raw = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (!raw) return null;
+    const payload = JSON.parse(atob(raw.split('.')[1] || ''));
+    return (payload.role || payload.user?.role) ?? null;
+  } catch { return null; }
+}
+
 
 

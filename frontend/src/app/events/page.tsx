@@ -68,11 +68,11 @@ export default function EventsPage() {
                 <strong>ADD EVENT</strong>
               </button>
             </Link>
-            <OpenModalButton
+            {/* <OpenModalButton
               className="mt-2 bg-wonderorange text-white px-6 py-2 rounded text-sm font-medium hover:bg-gradient-to-r from-wonderorange to-wonderleaf transition-colors"
               buttonText="BLAST MESSAGE"
               modalComponent={<BlastNotificationModal />}
-            />
+            /> */}
           </div>
         )}
       </div>

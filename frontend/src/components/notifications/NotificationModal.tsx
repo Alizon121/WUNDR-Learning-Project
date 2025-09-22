@@ -9,7 +9,13 @@ type ModalErrors = Partial<Record<
     "description", string
 >>
 
-export function BlastNotificationModal() {
+type NotificationModalProps = {
+    url: string
+}
+
+export function NotificationModal(
+    { url }: NotificationModalProps
+) {
     const { closeModal } = useModal();
     const [isNotifying, setIsNotifying] = useState(false);
     const [title, setTitle] = useState<string>("")
@@ -44,7 +50,7 @@ export function BlastNotificationModal() {
         }
 
         try {
-            await makeApiRequest("http://localhost:8000/notifications", {
+            await makeApiRequest(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: payload

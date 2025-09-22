@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
 from backend.db.prisma_client import db
 from typing import Annotated
 from backend.models.user_models import User
-from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate, EnrollChildren
+from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate, EnrollChildren, NotificationCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
 from datetime import datetime
@@ -846,8 +846,9 @@ async def create_review(
 async def send_message_to_users_of_enrolled_child(
     current_user: Annotated[User, Depends(get_current_user)],
     event_id:str,
-    subject: str,
-    content: str,
+    notification: NotificationCreate,
+    # title: str,
+    # description: str,
     # icon: str,
     background_tasks: BackgroundTasks
 ):
@@ -897,8 +898,8 @@ async def send_message_to_users_of_enrolled_child(
     # Creat the notifications for the UI
     notification_data = [
         {
-        "title": subject,
-        "description": content,
+        "title": notification.title,
+        "description": notification.description,
         "userId": id,
         "isRead": False,
         "time": event.date,
@@ -915,8 +916,8 @@ async def send_message_to_users_of_enrolled_child(
     background_tasks.add_task(
         send_email_multiple_users,
         parent_emails,
-        subject,
-        content
+        notification.title,
+        notification.description
     )
 
 

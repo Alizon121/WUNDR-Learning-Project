@@ -7,7 +7,7 @@ import { Activity } from "@/types/activity";
 import { Event } from "@/types/event";
 import Link from "next/link"
 import OpenModalButton from "../context/openModalButton";
-import { BlastNotificationModal } from "@/components/eventsPage/BlastNotificationModal";
+import { NotificationModal } from "@/components/notifications/NotificationModal";
 
 interface GroupedEvents {
   activity: string;

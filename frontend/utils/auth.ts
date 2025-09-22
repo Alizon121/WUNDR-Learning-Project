@@ -177,7 +177,7 @@ export function isLoggedIn(): boolean {
 export interface EventPayload {
 
   id?: string
-  activityId: string[]
+  activityId: string
   name: string
   description: string
   date: string
@@ -190,7 +190,7 @@ export interface EventPayload {
   city: string
   state: string
   address: string
-  zipCode: string
+  zipCode: number
   latitude: number
   longitude: number
 
@@ -198,6 +198,12 @@ export interface EventPayload {
   childIDs: string[]
 }
 
+// * Notification ===================================================
+export interface NotificationPayload {
+  title: string
+  description: string
+  time: string
+}
 
 // UserRole =================================================
 export function getUserRole():

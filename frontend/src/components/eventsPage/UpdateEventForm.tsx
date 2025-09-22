@@ -1,57 +1,36 @@
-'use client'
+"use client"
 
-import { useEffect, useRef, useState } from 'react';
-import { makeApiRequest } from '../../../utils/api';
+import { useParams } from "next/navigation"
+import { useEvent } from "../../../hooks/useEvent"
+import { Event } from "@/types/event"
+import { useEffect, useState } from "react"
 import { CITIES_CO } from '@/data/citiesCO';
 import { US_States } from '@/data/states';
-import { Event } from '@/types/event';
 import { Activity } from '@/types/activity';
+import { makeApiRequest } from "../../../utils/api"
+import { convertStringToIsoFormat } from "../../../utils/formatDate"
 import { EventPayload } from '../../../utils/auth';
-import e from 'express';
-import { convertStringToIsoFormat } from '../../../utils/formatDate';
 
-type EventsResponse = { events: Event[] }
 type ActivitiesResponse = { activities: Activity[] }
+type EventsResponse = { events: Event[] }
 type FormErrors = Partial<Record<"activity" | "name" | "description" | "date" | "startTime" | "endTime" | "limit" | "address" | "longitude" | "latitude" | "zipCode", string>>
-const initialEventForm: Event = {
-    activityId: "",
-    name: "",
-    description: "",
-    date: "",
-    startTime: "",
-    endTime: "",
-    image: "",
-    participants: 0,
-    limit: 0,
-    city: "",
-    state: "",
-    address: "",
-    zipCode: 12345,
-    latitude: 0,
-    longitude: 0,
-    userId: [],
-    childIDs: []
-}
-export default function EventForm() {
-    const [event, setEvent] = useState<Event>(initialEventForm)
+
+export default function UpdateEventForm() {
+    const { eventId } = useParams()
+    const { event, loading, error, refetch } = useEvent(eventId)
+    const [formEvent, setFormEvent] = useState<Event | null>(null)
+    const [activities, setActivities] = useState<Activity[]>()
     const [errors, setErrors] = useState<FormErrors>({})
-    const [activities, setActivities] = useState<Activity[]>([])
     const [fetchedEvents, setFetchedEvents] = useState<Event[]>([])
     const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
-    // useEffect hooks for fetching Events and Activities
+
     useEffect(() => {
-        const getEvents = async () => {
-            try {
-                let fetchEvents: EventsResponse = await makeApiRequest("http://localhost:8000/event")
-                if (fetchEvents) setFetchedEvents(fetchEvents.events)
-            } catch (err) {
-                throw Error(`Unable to fetch events:", ${err}`)
-            }
+        if (event) {
+            setFormEvent(event)
         }
-        getEvents()
-    }, [])
+    }, [event])
 
     useEffect(() => {
         // create async helper function to get activities
@@ -66,19 +45,21 @@ export default function EventForm() {
         getActivities()
     }, [])
 
-    const handleChangeSelectOrInputOrText = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-    ) => {
-        const { name, value } = e.target
-        setEvent(prev => ({
-            ...prev,
-            [name]: value
-        }))
-    }
+    useEffect(() => {
+        const getEvents = async () => {
+            try {
+                let fetchEvents: EventsResponse = await makeApiRequest("http://localhost:8000/event")
+                if (fetchEvents) setFetchedEvents(fetchEvents.events)
+            } catch (err) {
+                throw Error(`Unable to fetch events:", ${err}`)
+            }
+        }
+        getEvents()
+    }, [])
 
-    const handleDiscard = async () => {
-        setEvent(initialEventForm)
-    }
+    if (loading) return <p>Loading...</p>
+    if (error) return <p>Failed to load event.</p>
+    if (!formEvent) return <p>Preparing form...</p>
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -87,37 +68,37 @@ export default function EventForm() {
 
         // * Add validations here
         // Ensure the name does not already exist
-        const matchingNames = fetchedEvents.find((e) => e.name === event.name)
+        const matchingNames = fetchedEvents.find((e) => e.name === formEvent.name)
         if (matchingNames) {
             newErrors.name = "Name Already Exists"
         }
 
         // Validate name's length:
-        if (event.name.length < 1) newErrors.name = "Name must be greater than one character"
+        if (formEvent.name.length < 1) newErrors.name = "Name must be greater than one character"
 
         // Validate description length:
-        if (event.description.length < 1) newErrors.description = "Description must be greater than one character"
+        if (formEvent.description.length < 1) newErrors.description = "Description must be greater than one character"
 
         // Validate date format:
-        if (!dateRegex.test(event.date)) newErrors.date = "Please provide MM/DD/YYYY format"
+        if (!dateRegex.test(formEvent.date)) newErrors.date = "Please provide MM/DD/YYYY format"
 
         // Validate time formats:
-        if (!timeRegex.test(event.startTime)) newErrors.startTime = "Please provide hh:mm format"
+        if (!timeRegex.test(formEvent.startTime)) newErrors.startTime = "Please provide hh:mm format"
 
-        if (!timeRegex.test(event.endTime)) newErrors.endTime = "Please provide hh:mm format"
+        if (!timeRegex.test(formEvent.endTime)) newErrors.endTime = "Please provide hh:mm format"
 
         // Validate participant LIMIT:
-        if (event.limit > 100) newErrors.limit = "There must be less than 100 participants"
-        if (event.limit < 0) newErrors.limit = "There must be at least 0 participants"
+        if (formEvent.limit > 100) newErrors.limit = "There must be less than 100 participants"
+        if (formEvent.limit < 0) newErrors.limit = "There must be at least 0 participants"
 
         // Validate the address:
         //  ! Add more robust validation
-        if (event.address.length < 5) newErrors.address = "Please enter an address greater than 5 characters"
-        if (event.address.length > 200) newErrors.address = "Address must contain less than 200 characters"
-        if (event.zipCode.toString().length < 5) newErrors.zipCode = "Please provide a valid zipcode"
+        if (formEvent.address.length < 5) newErrors.address = "Please enter an address greater than 5 characters"
+        if (formEvent.address.length > 200) newErrors.address = "Address must contain less than 200 characters"
+        if (formEvent.zipCode.toString().length < 5) newErrors.zipCode = "Please provide a valid zipcode"
         // Validate lattitude/longitude
-        if (event.latitude < -90 || event.latitude > 90) newErrors.latitude = "Please provide valid latitude"
-        if (event.longitude < -180 || event.longitude > 180) newErrors.longitude = "Please provide valid longitude"
+        if (formEvent.latitude < -90 || formEvent.latitude > 90) newErrors.latitude = "Please provide valid latitude"
+        if (formEvent.longitude < -180 || formEvent.longitude > 180) newErrors.longitude = "Please provide valid longitude"
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors)
@@ -126,36 +107,36 @@ export default function EventForm() {
 
         // Create Payload
         const payload: EventPayload = {
-            activityId: event.activityId,
-            name: event.name,
-            description: event.description,
-            date: convertStringToIsoFormat(event.date),
-            startTime: event.startTime,
-            endTime: event.endTime,
-            image: event.image,
-            participants: event.participants,
-            limit: Number(event.limit),
-            city: event.city,
-            state: event.state,
-            address: event.address,
-            zipCode: parseInt(event.zipCode.toString(), 10),
-            latitude: parseFloat(event.latitude.toString()),
-            longitude: parseFloat(event.longitude.toString()),
+            activityId: formEvent.activityId,
+            name: formEvent.name,
+            description: formEvent.description,
+            date: convertStringToIsoFormat(formEvent.date),
+            startTime: formEvent.startTime,
+            endTime: formEvent.endTime,
+            image: formEvent.image,
+            participants: formEvent.participants,
+            limit: Number(formEvent.limit),
+            city: formEvent.city,
+            state: formEvent.state,
+            address: formEvent.address,
+            zipCode: parseInt(formEvent.zipCode.toString(), 10),
+            latitude: parseFloat(formEvent.latitude.toString()),
+            longitude: parseFloat(formEvent.longitude.toString()),
             userId: [],
             childIDs: []
         }
 
         // Try to add an event
         try {
-            const response: any = await makeApiRequest("http://localhost:8000/event", {
-                method: "POST",
+            const response: any = await makeApiRequest(`http://localhost:8000/event/${eventId}`, {
+                method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: payload
             })
 
             if (response) {
                 console.log("Event successfully created:", response)
-                setEvent(initialEventForm)
+                setFormEvent(formEvent)
             } else {
                 console.error("Failed to create event")
             }
@@ -164,9 +145,23 @@ export default function EventForm() {
         }
     }
 
+    const handleChangeSelectOrInputOrText = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    ) => {
+        const { name, value } = e.target
+        setFormEvent(prev => {
+            if (!prev) return prev
+            return { ...prev, [name]: value }
+        })
+    }
+
+    const handleDiscard = async () => {
+        setFormEvent(event)
+    }
+
     return (
         <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-            <h1 className="text-2xl font-bold text-center mb-4">Add an Event Below</h1>
+            <h1 className="text-2xl font-bold text-center mb-4">Update Event</h1>
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <fieldset className="space-y-4">
@@ -177,12 +172,12 @@ export default function EventForm() {
                         </label>
                         <select
                             name="activityId"
-                            value={event.activityId}
+                            value={formEvent.activityId}
                             onChange={handleChangeSelectOrInputOrText}
                             className="w-full border rounded px-3 py-2"
                         >
                             <option>Select an Activity</option>
-                            {activities.map((activity) => (
+                            {activities?.map((activity) => (
                                 <option key={activity.id} value={activity.id}>
                                     {activity.name}
                                 </option>
@@ -199,7 +194,7 @@ export default function EventForm() {
                         <input
                             name="name"
                             placeholder="Name"
-                            value={event.name}
+                            value={formEvent.name}
                             onChange={handleChangeSelectOrInputOrText}
                             className="w-full border rounded px-3 py-2"
                         />
@@ -214,7 +209,7 @@ export default function EventForm() {
                         <textarea
                             name="description"
                             placeholder="Description"
-                            value={event.description}
+                            value={formEvent.description}
                             onChange={handleChangeSelectOrInputOrText}
                             maxLength={750}
                             className="w-full border rounded px-3 py-2"
@@ -230,7 +225,7 @@ export default function EventForm() {
                         <input
                             name="date"
                             placeholder="MM/DD/YYYY"
-                            value={event.date}
+                            value={formEvent.date}
                             onChange={handleChangeSelectOrInputOrText}
                             className="w-full border rounded px-3 py-2"
                         />
@@ -246,7 +241,7 @@ export default function EventForm() {
                             <input
                                 name="startTime"
                                 placeholder="Start Time"
-                                value={event.startTime}
+                                value={formEvent.startTime}
                                 onChange={handleChangeSelectOrInputOrText}
                                 className="w-full border rounded px-3 py-2"
                             />
@@ -259,7 +254,7 @@ export default function EventForm() {
                             <input
                                 name="endTime"
                                 placeholder="End Time"
-                                value={event.endTime}
+                                value={formEvent.endTime}
                                 onChange={handleChangeSelectOrInputOrText}
                                 className="w-full border rounded px-3 py-2"
                             />
@@ -275,10 +270,11 @@ export default function EventForm() {
                         <input
                             name="image"
                             placeholder="Image (optional)"
-                            value={event.image}
+                            value={formEvent.image}
                             onChange={handleChangeSelectOrInputOrText}
                             className="w-full border rounded px-3 py-2"
                         />
+                        {/* {errors.image && <p className="text-sm text-red-600">{errors.image}</p>} */}
                     </div>
 
                     {/* Limit */}
@@ -289,7 +285,7 @@ export default function EventForm() {
                         <input
                             name="limit"
                             placeholder="(e.g. 15)"
-                            value={event.limit}
+                            value={formEvent.limit}
                             onChange={handleChangeSelectOrInputOrText}
                             className="w-full border rounded px-3 py-2"
                         />
@@ -304,7 +300,8 @@ export default function EventForm() {
                         <select
                             id="City"
                             name="City"
-                            onChange={(e) => setEvent({ ...event, city: e.target.value })}
+                            value={formEvent.city}
+                            onChange={(e) => setFormEvent({ ...formEvent, city: e.target.value })}
                             className="w-full border rounded px-3 py-2"
                         >
                             {CITIES_CO.map((city) => (
@@ -323,7 +320,8 @@ export default function EventForm() {
                         <select
                             id="State"
                             name="State"
-                            onChange={(e) => setEvent({ ...event, state: e.target.value })}
+                            value={formEvent.state}
+                            onChange={(e) => setFormEvent({ ...formEvent, state: e.target.value })}
                             className="w-full border rounded px-3 py-2"
                         >
                             {US_States.map((state) => (
@@ -342,7 +340,7 @@ export default function EventForm() {
                         <input
                             name="address"
                             placeholder="Address"
-                            value={event.address}
+                            value={formEvent.address}
                             onChange={handleChangeSelectOrInputOrText}
                             className="w-full border rounded px-3 py-2"
                         />
@@ -357,7 +355,7 @@ export default function EventForm() {
                         <input
                             name="zipCode"
                             placeholder="Zipcode"
-                            value={event.zipCode}
+                            value={formEvent.zipCode}
                             onChange={handleChangeSelectOrInputOrText}
                             required
                             className="w-full border rounded px-3 py-2"
@@ -374,7 +372,7 @@ export default function EventForm() {
                             <input
                                 name="latitude"
                                 placeholder="Latitude"
-                                value={event.latitude}
+                                value={formEvent.latitude}
                                 onChange={handleChangeSelectOrInputOrText}
                                 required
                                 className="w-full border rounded px-3 py-2"
@@ -388,7 +386,7 @@ export default function EventForm() {
                             <input
                                 name="longitude"
                                 placeholder="Longitude"
-                                value={event.longitude}
+                                value={formEvent.longitude}
                                 onChange={handleChangeSelectOrInputOrText}
                                 required
                                 className="w-full border rounded px-3 py-2"
@@ -404,17 +402,17 @@ export default function EventForm() {
                         type="submit"
                         className="bg-wondergreen hover:bg-wonderleaf text-white px-4 py-2 rounded-md"
                     >
-                        Add Event
+                        Edit Event
                     </button>
                     <button
                         type="reset"
-                        onClick={handleDiscard}
                         className="bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded-md"
+                        onClick={handleDiscard}
                     >
                         Cancel
                     </button>
                 </div>
             </form>
         </div>
-    );
+    )
 }

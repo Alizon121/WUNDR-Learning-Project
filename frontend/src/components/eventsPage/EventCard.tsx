@@ -33,30 +33,20 @@ export default function EventCard({ event, isAdmin }: Props) {
         </span>
 
         <div className="flex justify-between gap-x-2 mt-2">
-          <button className="flex-1 bg-wondergreen text-white px-4 py-2 rounded text-sm font-medium hover:bg-wonderleaf transition-colors">
-            <Link href={`/events/${event.id}`}>
+          <Link href={`/events/${event.id}`} className="flex-1 bg-wondergreen text-white px-4 py-2 rounded text-sm text-center font-medium hover:bg-wonderleaf transition-colors">
+            <button>
               <strong>VIEW DETAILS</strong>
-            </Link>
-          </button>
+            </button>
+          </Link>
         </div>
 
         {isAdmin && (
           <div className="flex flex-col justify-between mt-2 gap-x-2">
-            <button className="mt-2 bg-green-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-900 transition-colors">
-              <Link href={`/events/${event.id}`}>
+            <Link href={`/events/${event.id}/updateEvent`} className="mt-2 bg-wonderorange text-white px-4 py-2 rounded text-sm text-center font-medium hover:bg-gradient-to-l from-wonderorange to-wonderleaf transition-colors">
+              <button >
                 <strong>EDIT</strong>
-              </Link>
-            </button>
-            <button className="mt-2 bg-wonderorange text-white px-4 py-2 rounded text-sm font-medium hover:bg-gradient-to-l from-wonderorange to-wonderleaf transition-colors">
-              <Link href={`/events/${event.id}`}>
-                <strong>UPDATE</strong>
-              </Link>
-            </button>
-            <button className="mt-2 bg-wonderorange text-white px-4 py-2 rounded text-sm font-medium hover:bg-gradient-to-r from-wonderorange to-wonderleaf transition-colors">
-              <Link href={`/events/${event.id}`}>
-                <strong>BLAST</strong>
-              </Link>
-            </button>
+              </button>
+            </Link>
             <OpenModalButton
               className="mt-2 bg-red-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-900 transition-colors"
               buttonText="DELETE"

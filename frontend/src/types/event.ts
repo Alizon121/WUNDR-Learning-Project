@@ -1,6 +1,6 @@
 export type Event = {
     id?: string
-    activityId: string[]
+    activityId: string
     name: string
     description: string
     date: string
@@ -13,7 +13,7 @@ export type Event = {
     city: string
     state: string
     address: string
-    zipCode: string
+    zipCode: number
     latitude: number
     longitude: number
 

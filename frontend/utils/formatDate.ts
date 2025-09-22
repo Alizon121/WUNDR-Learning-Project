@@ -55,3 +55,8 @@ export const combineLocal = (isoOrDateOnly: string, timeStr = "09:00") => {
 
     return new Date(y, mm - 1, d, hh, min, 0, 0)
 }
+
+export const convertStringToIsoFormat = (date: string) => {
+    let newDate: Date = new Date(date)
+    return newDate.toISOString()
+}

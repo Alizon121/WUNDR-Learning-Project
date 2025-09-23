@@ -43,7 +43,6 @@ export default function RootLayout({ children }: Readonly<{children: React.React
             <Modal />
           </ModalProvider>
           </AuthProvider>
-
       </body>
     </html>
   );

@@ -15,14 +15,16 @@ const YourEvents = () => {
     const [currEventIdx, setCurrEventIdx] = useState(0)
     const cardsRef = useRef<HTMLDivElement>(null)
 
+    console.log('events', events)
+
     const usersEvents = useMemo(() => (events ?? []).map((event) => ({
         id: event.id,
         name: event.name,
         description: event.description,
         city: event.city,
         date: event.date,
-        // startTime: event.startTime,
-        // endTime: event.endTime,
+        startTime: event.startTime,
+        endTime: event.endTime,
         childIds: (user?.children ?? []).filter(child => (event.childIDs ?? []).includes(child.id))
     })), [events, user])
 
@@ -30,6 +32,8 @@ const YourEvents = () => {
         const idx = (((currEventIdx + i) % usersEvents.length) + usersEvents.length) % usersEvents.length
         return usersEvents[idx]
     })
+
+    console.log('erika', visibleEvents)
 
     const handleNext = () => {
         if (usersEvents.length > 0) setCurrEventIdx((prevIdx) => (((prevIdx + 2) % usersEvents.length) + usersEvents.length) % usersEvents.length)
@@ -66,8 +70,10 @@ const YourEvents = () => {
                 )}
 
                 {visibleEvents.map((event) => {
-                    const children = event.childIds?.map((child: { firstName?: string; lastName?: string }) =>
+                    const children = event?.childIds?.map((child: { firstName?: string; lastName?: string }) =>
                         [child.firstName, child.lastName].filter(Boolean).join(" ")) ?? []
+
+                    console.log(children)
 
                     return (
                         <div key={event.id} className="basis-1/2 max-w-3xl w-full mx-auto">
@@ -89,7 +95,7 @@ const YourEvents = () => {
 
                                     <div className="flex flex-col justify-center mt-auto">
                                         <p className="text-xs text-gray-500 mb-2">Your Children Enrolled:</p>
-                                        {children.length && (
+                                        {children?.length && (
                                             <ul className="list-disc pl-5 text-xs text-gray-700 space-y-0.5">
                                                 {children.map((name, i) => (
                                                     <li key={`${event.id}-${i}`}>{name}</li>

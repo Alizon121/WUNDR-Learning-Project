@@ -2,15 +2,15 @@
 
 import React, { useMemo, useRef, useState } from "react"
 import { Views, Calendar, dateFnsLocalizer, type View } from "react-big-calendar"
-import { format, getDay, parse, startOfWeek, addHours, addMinutes } from "date-fns"
+import { format, getDay, parse, startOfWeek } from "date-fns"
 import {enUS} from 'date-fns/locale';
 import { Event } from "@/types/event"
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { combineLocal } from "../../../../utils/formatDate";
 
 //placeholders while erika waits for startTime and endTime
-const DEFAULT_START = "09:00"
-const DEFAULT_DURATION = 60
+// const DEFAULT_START = "09:00"
+// const DEFAULT_DURATION = 60
 
 const localizer = dateFnsLocalizer({
     format,
@@ -19,13 +19,6 @@ const localizer = dateFnsLocalizer({
     getDay,
     locales: { "en-US": enUS }
 })
-
-// const combineLocal = (dateStr: string, timeStr: string) => {
-//     const [y, m, d] = dateStr.split("-").map(Number)
-//     const [hh, mm] = timeStr.split(":").map(Number)
-
-//     return new Date(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0, 0, 0)
-// }
 
 type Props = {
     events: Partial<Event>[]
@@ -40,8 +33,8 @@ const EventCalendar: React.FC<Props> = ({ events, onPick }) => {
         return (events ?? []).flatMap((e) => {
             if (!e?.id || !e?.name || !e?.date) return []
 
-            const start = combineLocal(e.date, DEFAULT_START)
-            const end = addMinutes(start, DEFAULT_DURATION)
+            const start = combineLocal(e.date, e.startTime)
+            const end = combineLocal(e.date, e.endTime)
             return [{ id: e.id, title: e.name, start, end, resource: e }]
         })
     }, [events])

@@ -109,8 +109,8 @@ model Volunteers{
   backgroundCheckConsent Boolean
   status                 AppStatus @default(New)
 
-  eventIDs String @db.ObjectId
-  events Events @relation(fields: [eventIDs], references: [id])
+  eventIDs String? @db.ObjectId
+  events Events? @relation(fields: [eventIDs], references: [id])
 
   // One-to-one relationship
   user Users @relation(fields: [userId], references: [id])

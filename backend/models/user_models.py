@@ -121,7 +121,6 @@ class VolunteerCreate(BaseModel):
   photoConsent: bool = Field(..., description="Must consent to photo usage")
   backgroundCheckConsent: bool = Field(..., description="Must consent to background check")
   status: AppStatus = Field(None, description="Application's status")
-  eventIDs: List[str] = Field(default_factory=list)
 
   @field_validator("cities", "timesAvail", "skills", mode="before")
   def clean_lists(cls, v):

@@ -64,6 +64,7 @@ class EventCreate(BaseModel):
     longitude: float
     startTime: str = Field(min_length=1)
     endTime: str = Field(min_length=1)
+    volunteerLimit: int = Field(default=3)
 
     userIDs: List[str] = Field(default_factory=list)
     childIDs: List[str] = Field(default_factory=list)
@@ -86,6 +87,7 @@ class EventUpdate(BaseModel):
     longitude: Optional[float] = Field(default=None)
     startTime: Optional[str] = Field(default=None)
     endTime: Optional[str] = Field(default=None)
+    volunteerLimit: Optional[int] = Field(default=None)
 
     image: Optional[str] = Field(default=None)
     participants: Optional[int] = Field(default=None)

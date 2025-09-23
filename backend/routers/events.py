@@ -79,6 +79,7 @@ async def create_event(
                 "longitude": event_data.longitude,
                 "startTime": event_data.startTime,
                 "endTime": event_data.endTime,
+                "volunteerLimit": event_data.volunteerLimit,
                 "activityId": event_data.activityId,
                 "userIDs": event_data.userIDs,
                 "childIDs": event_data.childIDs,
@@ -278,6 +279,9 @@ async def update_event(
 
     if event_data.endTime is not None:
         update_payload["endTime"] = event_data.endTime
+
+    if event_data.volunteerLimit is not None:
+        update_payload["volunteerLimit"] = event_data.volunteerLimit
 
     if event_data.activityId is not None:
         update_payload["activityId"] = event_data.activityId
@@ -834,12 +838,6 @@ async def create_review(
                detail=f'Failed to create review: {e}'
           )
 
-# * =============================================
-# Add the Jobs routes here
-# Add a message on UI noting to look for correspondences from us in their spam folder
-# Should I make a one-to-many rellationship between Jobs and Users
-# Jobs and Children? If a User or child is removed from an event, then the User should not get the reminder
-
 ########### * Notification endpoint(s) ###############
 # Have admin send a message to the users of children of an event
 @router.post("/{event_id}/notification/enrolled_users_child", status_code=status.HTTP_200_OK)
@@ -987,3 +985,41 @@ async def send_enrolled_user_notification(
         "Message": "Notification successfully made",
         "Notification": notification
         }
+
+########### * Volunteer endpoint(s) ###############
+# for specific event, when volunteer enrolls --> volunteer is added to event and volunteerLimit counter decrements
+@router.patch("/{event_id}/volunteer_signup")
+async def volunteer_signup_for_event(
+    current_user: Annotated[User, Depends(get_current_user)],
+    event_id: str,
+    # notification: NotificationCreate
+):
+    """
+    For specific event, volunteer is added to event when enrolled and volunteerLimit counter decrements
+        return event
+    """
+
+    # validate current user
+    enforce_authentication(current_user)
+
+    # validate existing event
+    event = await db.events.find_unique(where={"id": event_id })
+    if not event:
+        raise HTTPException(status_code=401, detail="Unable to locate event")
+
+    volunteer = await db.volunteers.find_unique(where={"id": current_user.id})
+    if not volunteer:
+        raise HTTPException(status_code=401, detail="Unable to locate volunteer")
+    try:
+        volunteer_signup = await db.events.update(
+            where={"id": event_id },
+            data={
+                "volunteers": {"connect": {"id": volunteer.id}},
+                "volunteerLimit": {"decrement": 1}
+            }
+        )
+
+        print("water water water",volunteer_signup)
+        return volunteer_signup
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unable to enroll volunteer:{e}")

@@ -3,8 +3,8 @@
 import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6"
 import useGetAllEvents from "../../../../hooks/useGetAllEvents"
 import { useUser } from "../../../../hooks/useUser"
-import { formatDate } from "../../../../utils/formatDate"
-import { useMemo, useRef, useState } from "react"
+import { combineLocal, formatDate } from "../../../../utils/formatDate"
+import { useEffect, useMemo, useRef, useState } from "react"
 import EventCalendar from "./calendar"
 import Link from "next/link"
 import { Child } from "@/types/child"
@@ -35,28 +35,45 @@ const YourEvents = () => {
             }))
     }, [events, user?.children])
 
-    const visibleEvents = Array.from({ length: Math.min(2, usersEvents.length) }, (_, i) => {
-        const idx = (((currEventIdx + i) % usersEvents.length) + usersEvents.length) % usersEvents.length
-        return usersEvents[idx]
-    })
+    const visiblePool = useMemo(() => {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        return usersEvents.filter(e => {
+            // normalize date to local midnight YYYY-MM-DD
+            const m = String(e.date).match(/^\d{4}-\d{2}-\d{2}/)
+            const eventDay = m ? combineLocal(m[0], "00:00") : new Date(e.date)
+            if (Number.isNaN(eventDay.getTime())) return false
+            return eventDay >= today
+        })
+    }, [usersEvents])
+
+    useEffect(() => {
+        if (visiblePool.length && currEventIdx >= visiblePool.length) setCurrEventIdx(0)
+    }, [visiblePool.length, currEventIdx])
+
+    const visibleEvents = useMemo(() => {
+        if (visiblePool.length === 0) return []
+
+        return Array.from({ length: Math.min(2, visiblePool.length) }, (_, i) => {
+            const idx = (((currEventIdx + i) % visiblePool.length) + visiblePool.length) % visiblePool.length
+            return visiblePool[idx]
+        })
+    }, [visiblePool, currEventIdx])
 
     const handleNext = () => {
-        if (usersEvents.length > 0) setCurrEventIdx((prevIdx) => (((prevIdx + 2) % usersEvents.length) + usersEvents.length) % usersEvents.length)
+        if (visiblePool.length > 0) setCurrEventIdx((prevIdx) => (((prevIdx + 2) % visiblePool.length) + visiblePool.length) % visiblePool.length)
     }
     const handlePrev = () => {
-        if (usersEvents.length > 0) setCurrEventIdx((prevIdx) => (((prevIdx - 2) % usersEvents.length) + usersEvents.length) % usersEvents.length)
+        if (visiblePool.length > 0) setCurrEventIdx((prevIdx) => (((prevIdx - 2) % visiblePool.length) + visiblePool.length) % visiblePool.length)
     }
 
     const handlePickFromCalendar = (eventId: string) => {
-        const idx = usersEvents.findIndex(e => e.id === eventId)
+        const idx = visiblePool.findIndex(e => e.id === eventId)
         if (idx < 0) return
 
         setCurrEventIdx(idx)
-
-        cardsRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        })
+        cardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     }
 
     const childById = useMemo(() => {
@@ -74,7 +91,7 @@ const YourEvents = () => {
         <div>
             <div className="text-center mb-[40px]">
                 <h1 className="text-4xl font-bold text-wondergreen mb-4">Your Events</h1>
-                {usersEvents.length < 1 ? (
+                {visiblePool.length < 1 ? (
                     <div className="max-w-2xl mx-auto text-md text-wondergreen">You have not enrolled in any events yet.</div>
                 ) : (
                     <h2 className="max-w-2xl mx-auto text-lg text-wondergreen">Manage all the events you and children are enrolled in</h2>
@@ -83,7 +100,7 @@ const YourEvents = () => {
 
             <div ref={cardsRef} className="scroll-mt-24 aria-hidden" />
             <div className="flex flex-row gap-6 my-10">
-                {usersEvents.length > 2 && (
+                {visiblePool.length > 2 && (
                     <FaCircleChevronLeft className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handlePrev}/>
                 )}
 
@@ -128,7 +145,7 @@ const YourEvents = () => {
                     )
                 })}
 
-                {usersEvents.length > 2 && (
+                {visiblePool.length > 2 && (
                     <FaCircleChevronRight className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handleNext}/>
                 )}
             </div>

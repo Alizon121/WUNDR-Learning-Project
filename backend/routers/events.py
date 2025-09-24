@@ -114,8 +114,8 @@ async def create_event(
 
 @router.get("", status_code=status.HTTP_200_OK)
 async def get_all_events(
-    skip: int = 0,
-    limit: int = 10,
+    # skip: int = 0,
+    # limit: int = 10,
 ):
 
     """
@@ -127,8 +127,8 @@ async def get_all_events(
 
     try:
         events = await db.events.find_many(
-            skip=skip,
-            take=limit,
+            # skip=skip,
+            # take=limit,
             order={"createdAt": "desc"}
         )
         return {"events": events}

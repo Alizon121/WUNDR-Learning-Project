@@ -7,6 +7,7 @@ import { formatDate } from "../../../../utils/formatDate"
 import { useMemo, useRef, useState } from "react"
 import EventCalendar from "./calendar"
 import Link from "next/link"
+import { Child } from "@/types/child"
 
 
 const YourEvents = () => {
@@ -15,25 +16,29 @@ const YourEvents = () => {
     const [currEventIdx, setCurrEventIdx] = useState(0)
     const cardsRef = useRef<HTMLDivElement>(null)
 
-    console.log('events', events)
+    const usersEvents = useMemo(() => {
+        const childIDSet = new Set((user?.children ?? []).map(c => c.id))
 
-    const usersEvents = useMemo(() => (events ?? []).map((event) => ({
-        id: event.id,
-        name: event.name,
-        description: event.description,
-        city: event.city,
-        date: event.date,
-        startTime: event.startTime,
-        endTime: event.endTime,
-        childIds: (user?.children ?? []).filter(child => (event.childIDs ?? []).includes(child.id))
-    })), [events, user])
+        return (events ?? [])
+            //keeps only events that include at least one of the user's child ID
+            .filter(e => (e.childIDs ?? []).some(id => childIDSet.has(id)))
+            //map to our UI shape
+            .map(e => ({
+                id: e.id,
+                name: e.name,
+                description: e.description,
+                city: e.city,
+                date: e.date,
+                startTime: e.startTime,
+                endTime: e.endTime,
+                childIds: (e.childIDs ?? []).filter(id => childIDSet.has(id)) //string[]
+            }))
+    }, [events, user?.children])
 
     const visibleEvents = Array.from({ length: Math.min(2, usersEvents.length) }, (_, i) => {
         const idx = (((currEventIdx + i) % usersEvents.length) + usersEvents.length) % usersEvents.length
         return usersEvents[idx]
     })
-
-    console.log('erika', visibleEvents)
 
     const handleNext = () => {
         if (usersEvents.length > 0) setCurrEventIdx((prevIdx) => (((prevIdx + 2) % usersEvents.length) + usersEvents.length) % usersEvents.length)
@@ -54,13 +59,26 @@ const YourEvents = () => {
         })
     }
 
+    const childById = useMemo(() => {
+        const map = new Map<string, Child>()
+        for (const child of (user?.children ?? [])) map.set(child.id, child)
+        return map
+    }, [user?.children])
+
+    const displayName = (c: Child) =>
+        `${(c.preferredName ?? c.firstName).trim()} ${c.lastName}`.trim()
+
     if (loading) return <div className="flex justify-center items-center min-h-[200px]">Loading...</div>
 
     return (
         <div>
             <div className="text-center mb-[40px]">
                 <h1 className="text-4xl font-bold text-wondergreen mb-4">Your Events</h1>
-                <h2 className="max-w-2xl mx-auto text-lg text-wondergreen">Manage all the events you and children are enrolled in</h2>
+                {usersEvents.length < 1 ? (
+                    <div className="max-w-2xl mx-auto text-md text-wondergreen">You have not enrolled in any events yet.</div>
+                ) : (
+                    <h2 className="max-w-2xl mx-auto text-lg text-wondergreen">Manage all the events you and children are enrolled in</h2>
+                )}
             </div>
 
             <div ref={cardsRef} className="scroll-mt-24 aria-hidden" />
@@ -69,11 +87,12 @@ const YourEvents = () => {
                     <FaCircleChevronLeft className="w-[50px] h-[50px] cursor-pointer my-auto" onClick={handlePrev}/>
                 )}
 
-                {visibleEvents.map((event) => {
-                    const children = event?.childIds?.map((child: { firstName?: string; lastName?: string }) =>
-                        [child.firstName, child.lastName].filter(Boolean).join(" ")) ?? []
-
-                    console.log(children)
+                {visibleEvents && visibleEvents.map((event) => {
+                    const childNames = (event?.childIds ?? []).map((id) => {
+                        const c = childById.get(id)
+                        return c ? displayName(c) : null
+                    })
+                    .filter(Boolean) as string[]
 
                     return (
                         <div key={event.id} className="basis-1/2 max-w-3xl w-full mx-auto">
@@ -95,9 +114,9 @@ const YourEvents = () => {
 
                                     <div className="flex flex-col justify-center mt-auto">
                                         <p className="text-xs text-gray-500 mb-2">Your Children Enrolled:</p>
-                                        {children?.length && (
+                                        {childNames.length > 0 && (
                                             <ul className="list-disc pl-5 text-xs text-gray-700 space-y-0.5">
-                                                {children.map((name, i) => (
+                                                {childNames.map((name, i) => (
                                                     <li key={`${event.id}-${i}`}>{name}</li>
                                                 ))}
                                             </ul>
@@ -114,7 +133,9 @@ const YourEvents = () => {
                 )}
             </div>
 
-            <EventCalendar events={usersEvents} onPick={handlePickFromCalendar}/>
+            {usersEvents.length > 1 && (
+                <EventCalendar events={usersEvents} onPick={handlePickFromCalendar}/>
+            )}
         </div>
     )
 }

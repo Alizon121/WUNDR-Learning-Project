@@ -1,16 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { makeApiRequest } from '../../../utils/api';
 import { CITIES_CO } from '@/data/citiesCO';
 import { US_States } from '@/data/states';
 import { Event } from '@/types/event';
 import { Activity } from '@/types/activity';
-import { EventPayload } from '../../../utils/auth';
-import e from 'express';
-import { convertStringToIsoFormat } from '../../../utils/formatDate';
+import { convertStringToIsoFormat, toYMDLocal } from '../../../utils/formatDate';
+import { useRouter } from 'next/navigation';
 
-type EventsResponse = { events: Event[] }
+// type EventsResponse = { events: Event[] }
 type ActivitiesResponse = { activities: Activity[] }
 type FormErrors = Partial<Record<"activity" | "name" | "description" | "date" | "startTime" | "endTime" | "limit" | "address" | "longitude" | "latitude" | "zipCode", string>>
 const initialEventForm: Event = {
@@ -26,33 +25,49 @@ const initialEventForm: Event = {
     city: "",
     state: "",
     address: "",
-    zipCode: 12345,
-    latitude: 0,
-    longitude: 0,
+    zipCode: "12345",
+    latitude: null,
+    longitude: null,
     userId: [],
     childIDs: []
 }
+
+const parseFloatOrNull = (v: string): number | null => {
+    if (v === "" || v == null) return null
+    const n = parseFloat(v)
+    return Number.isFinite(n) ? n : null
+}
+
+const parseIntOrZero = (v: string): number => {
+  const n = parseInt(v, 10)
+  return Number.isFinite(n) ? n : 0
+}
+
+
 export default function EventForm() {
     const [event, setEvent] = useState<Event>(initialEventForm)
     const [errors, setErrors] = useState<FormErrors>({})
     const [activities, setActivities] = useState<Activity[]>([])
     const [fetchedEvents, setFetchedEvents] = useState<Event[]>([])
-    const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+    const dateYMD = /^\d{4}-\d{2}-\d{2}$/
+    // const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    const router = useRouter()
 
     // useEffect hooks for fetching Events and Activities
-    useEffect(() => {
-        const getEvents = async () => {
-            try {
-                let fetchEvents: EventsResponse = await makeApiRequest("http://localhost:8000/event")
-                if (fetchEvents) setFetchedEvents(fetchEvents.events)
-            } catch (err) {
-                throw Error(`Unable to fetch events:", ${err}`)
-            }
-        }
-        getEvents()
-    }, [])
+    // useEffect(() => {
+    //     const getEvents = async () => {
+    //         try {
+    //             let fetchEvents: EventsResponse = await makeApiRequest("http://localhost:8000/event")
+    //             if (fetchEvents) setFetchedEvents(fetchEvents.events)
+    //         } catch (err) {
+    //             throw Error(`Unable to fetch events:", ${err}`)
+    //         }
+    //     }
+    //     getEvents()
+    // }, [])
 
+    const todayYMD = useMemo<string>(() => toYMDLocal(), [])
     useEffect(() => {
         // create async helper function to get activities
         const getActivities = async () => {
@@ -66,19 +81,23 @@ export default function EventForm() {
         getActivities()
     }, [])
 
-    const handleChangeSelectOrInputOrText = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-    ) => {
+    const handleChangeSelectOrInputOrText = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
-        setEvent(prev => ({
-            ...prev,
-            [name]: value
-        }))
+
+        if (name === "latitude" || name === "longitude") {
+            setEvent(prev => ({ ...prev, [name]: parseFloatOrNull(value)}))
+            return
+        }
+
+        if (name === "limit" || name === "participants") {
+            setEvent(prev => ({ ...prev, [name]: parseIntOrZero(value) }))
+            return
+        }
+
+        setEvent(prev => ({ ...prev, [name]: value}))
     }
 
-    const handleDiscard = async () => {
-        setEvent(initialEventForm)
-    }
+    const handleDiscard = async () => setEvent(initialEventForm)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -88,9 +107,7 @@ export default function EventForm() {
         // * Add validations here
         // Ensure the name does not already exist
         const matchingNames = fetchedEvents.find((e) => e.name === event.name)
-        if (matchingNames) {
-            newErrors.name = "Name Already Exists"
-        }
+        if (matchingNames) newErrors.name = "Name Already Exists"
 
         // Validate name's length:
         if (event.name.length < 1) newErrors.name = "Name must be greater than one character"
@@ -99,12 +116,11 @@ export default function EventForm() {
         if (event.description.length < 1) newErrors.description = "Description must be greater than one character"
 
         // Validate date format:
-        if (!dateRegex.test(event.date)) newErrors.date = "Please provide MM/DD/YYYY format"
+        if (!dateYMD.test(event.date)) newErrors.date = "Please pick a valid date"
 
         // Validate time formats:
-        if (!timeRegex.test(event.startTime)) newErrors.startTime = "Please provide hh:mm format"
-
-        if (!timeRegex.test(event.endTime)) newErrors.endTime = "Please provide hh:mm format"
+        if (!timeRegex.test(event.startTime)) newErrors.startTime = "Please provide HH:mm"
+        if (!timeRegex.test(event.endTime)) newErrors.endTime = "Please provide HH:mm"
 
         // Validate participant LIMIT:
         if (event.limit > 100) newErrors.limit = "There must be less than 100 participants"
@@ -114,10 +130,10 @@ export default function EventForm() {
         //  ! Add more robust validation
         if (event.address.length < 5) newErrors.address = "Please enter an address greater than 5 characters"
         if (event.address.length > 200) newErrors.address = "Address must contain less than 200 characters"
-        if (event.zipCode.toString().length < 5) newErrors.zipCode = "Please provide a valid zipcode"
+        if (!/^\d{5}(-\d{4})?$/.test(event.zipCode)) newErrors.zipCode = "Please provide a valid 5-digit ZIP"
         // Validate lattitude/longitude
-        if (event.latitude < -90 || event.latitude > 90) newErrors.latitude = "Please provide valid latitude"
-        if (event.longitude < -180 || event.longitude > 180) newErrors.longitude = "Please provide valid longitude"
+        if (event.latitude !== null && (event.latitude < -90 || event.latitude > 90)) newErrors.latitude = "Latitude must be between -90 and 90"
+        if (event.longitude !== null && (event.longitude < -180 || event.longitude > 180)) newErrors.longitude = "Longitude must between -180 and 180"
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors)
@@ -125,7 +141,7 @@ export default function EventForm() {
         }
 
         // Create Payload
-        const payload: EventPayload = {
+        const payload: Event = {
             activityId: event.activityId,
             name: event.name,
             description: event.description,
@@ -138,12 +154,13 @@ export default function EventForm() {
             city: event.city,
             state: event.state,
             address: event.address,
-            zipCode: parseInt(event.zipCode.toString(), 10),
-            latitude: parseFloat(event.latitude.toString()),
-            longitude: parseFloat(event.longitude.toString()),
+            zipCode: event.zipCode,
+            latitude: event.latitude,
+            longitude: event.longitude,
             userId: [],
             childIDs: []
         }
+        console.log('payload', payload)
 
         // Try to add an event
         try {
@@ -156,13 +173,14 @@ export default function EventForm() {
             if (response) {
                 console.log("Event successfully created:", response)
                 setEvent(initialEventForm)
-            } else {
-                console.error("Failed to create event")
+                router.replace("/events")
             }
         } catch (e) {
-            throw new Error(`Unable to add event: ${e}`)
+            console.error("Failed to create event", e)
+            // throw new Error(`Unable to add event: ${e}`)
         }
     }
+
 
     return (
         <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -170,11 +188,8 @@ export default function EventForm() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <fieldset className="space-y-4">
-                    {/* Activity */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            Activity <span className="text-rose-600">*</span>
-                        </label>
+                        <label className="block mb-1 font-medium">Activity <span className="text-rose-600">*</span></label>
                         <select
                             name="activityId"
                             value={event.activityId}
@@ -191,11 +206,8 @@ export default function EventForm() {
                         {errors.activity && <p className="text-sm text-red-600">{errors.activity}</p>}
                     </div>
 
-                    {/* Name */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            Name <span className="text-rose-600">*</span>
-                        </label>
+                        <label className="block mb-1 font-medium">Name <span className="text-rose-600">*</span></label>
                         <input
                             name="name"
                             placeholder="Name"
@@ -206,11 +218,8 @@ export default function EventForm() {
                         {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
                     </div>
 
-                    {/* Description */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            Description <span className="text-rose-600">*</span>
-                        </label>
+                        <label className="block mb-1 font-medium">Description <span className="text-rose-600">*</span></label>
                         <textarea
                             name="description"
                             placeholder="Description"
@@ -222,14 +231,13 @@ export default function EventForm() {
                         {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
                     </div>
 
-                    {/* Date */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            Date <span className="text-rose-600">*</span>
-                        </label>
+                        <label className="block mb-1 font-medium">Date <span className="text-rose-600">*</span></label>
                         <input
+                            type='date'
                             name="date"
-                            placeholder="MM/DD/YYYY"
+                            min={todayYMD}
+                            // placeholder="MM/DD/YYYY"
                             value={event.date}
                             onChange={handleChangeSelectOrInputOrText}
                             className="w-full border rounded px-3 py-2"
@@ -237,13 +245,11 @@ export default function EventForm() {
                         {errors.date && <p className="text-sm text-red-600">{errors.date}</p>}
                     </div>
 
-                    {/* Start & End Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block mb-1 font-medium">
-                                Start Time <span className="text-rose-600">*</span>
-                            </label>
+                            <label className="block mb-1 font-medium">Start Time <span className="text-rose-600">*</span></label>
                             <input
+                                type='time'
                                 name="startTime"
                                 placeholder="Start Time"
                                 value={event.startTime}
@@ -253,10 +259,9 @@ export default function EventForm() {
                             {errors.startTime && <p className="text-sm text-red-600">{errors.startTime}</p>}
                         </div>
                         <div>
-                            <label className="block mb-1 font-medium">
-                                End Time <span className="text-rose-600">*</span>
-                            </label>
+                            <label className="block mb-1 font-medium">End Time <span className="text-rose-600">*</span></label>
                             <input
+                                type='time'
                                 name="endTime"
                                 placeholder="End Time"
                                 value={event.endTime}
@@ -267,10 +272,10 @@ export default function EventForm() {
                         </div>
                     </div>
 
-                    {/* Image */}
                     <div>
                         <label className="block mb-1 font-medium">
-                            Image <span className="text-rose-600">*</span>
+                            Image
+                            {/* <span className="text-rose-600">*</span> */}
                         </label>
                         <input
                             name="image"
@@ -281,11 +286,8 @@ export default function EventForm() {
                         />
                     </div>
 
-                    {/* Limit */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            Participants Limit <span className="text-rose-600">*</span>
-                        </label>
+                        <label className="block mb-1 font-medium">Participants Limit <span className="text-rose-600">*</span></label>
                         <input
                             name="limit"
                             placeholder="(e.g. 15)"
@@ -296,14 +298,11 @@ export default function EventForm() {
                         {errors.limit && <p className="text-sm text-red-600">{errors.limit}</p>}
                     </div>
 
-                    {/* City */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            City <span className="text-rose-600">*</span>
-                        </label>
+                        <label className="block mb-1 font-medium">City <span className="text-rose-600">*</span></label>
                         <select
                             id="City"
-                            name="City"
+                            name="city"
                             onChange={(e) => setEvent({ ...event, city: e.target.value })}
                             className="w-full border rounded px-3 py-2"
                         >
@@ -315,14 +314,11 @@ export default function EventForm() {
                         </select>
                     </div>
 
-                    {/* State */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            State <span className="ml-1 text-xs text-gray-500">(Select One)</span>
-                        </label>
+                        <label className="block mb-1 font-medium">State <span className="ml-1 text-xs text-gray-500">(Select One)</span></label>
                         <select
                             id="State"
-                            name="State"
+                            name="state"
                             onChange={(e) => setEvent({ ...event, state: e.target.value })}
                             className="w-full border rounded px-3 py-2"
                         >
@@ -334,11 +330,8 @@ export default function EventForm() {
                         </select>
                     </div>
 
-                    {/* Address */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            Address <span className="text-rose-600">*</span>
-                        </label>
+                        <label className="block mb-1 font-medium">Address <span className="text-rose-600">*</span></label>
                         <input
                             name="address"
                             placeholder="Address"
@@ -349,14 +342,14 @@ export default function EventForm() {
                         {errors.address && <p className="text-sm text-red-600">{errors.address}</p>}
                     </div>
 
-                    {/* Zipcode */}
                     <div>
-                        <label className="block mb-1 font-medium">
-                            Zipcode <span className="text-rose-600">*</span>
-                        </label>
+                        <label className="block mb-1 font-medium">Zipcode <span className="text-rose-600">*</span></label>
                         <input
+                            type='text'
                             name="zipCode"
-                            placeholder="Zipcode"
+                            inputMode='numeric'
+                            pattern='[0-9]{5}'
+                            // placeholder="Zipcode"
                             value={event.zipCode}
                             onChange={handleChangeSelectOrInputOrText}
                             required
@@ -365,32 +358,39 @@ export default function EventForm() {
                         {errors.zipCode && <p className="text-sm text-red-600">{errors.zipCode}</p>}
                     </div>
 
-                    {/* Latitude & Longitude */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block mb-1 font-medium">
-                                Latitude <span className="text-rose-600">*</span>
+                            <label className="block mb-1 font-medium">Latitude
+                                {/* <span className="text-rose-600">*</span> */}
                             </label>
                             <input
+                                type='number'
+                                step="any"
                                 name="latitude"
-                                placeholder="Latitude"
-                                value={event.latitude}
+                                min={-90}
+                                max={90}
+                                placeholder="Latitude (optional)"
+                                value={event.latitude ?? ""}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
+                                // required
                                 className="w-full border rounded px-3 py-2"
                             />
                             {errors.latitude && <p className="text-sm text-red-600">{errors.latitude}</p>}
                         </div>
                         <div>
-                            <label className="block mb-1 font-medium">
-                                Longitude <span className="text-rose-600">*</span>
+                            <label className="block mb-1 font-medium">Longitude
+                                {/* <span className="text-rose-600">*</span> */}
                             </label>
                             <input
+                                type='number'
+                                step="any"
                                 name="longitude"
-                                placeholder="Longitude"
-                                value={event.longitude}
+                                min={-180}
+                                max={180}
+                                placeholder="Longitude (optional)"
+                                value={event.longitude ?? ""}
                                 onChange={handleChangeSelectOrInputOrText}
-                                required
+                                // required
                                 className="w-full border rounded px-3 py-2"
                             />
                             {errors.longitude && <p className="text-sm text-red-600">{errors.longitude}</p>}
@@ -398,7 +398,6 @@ export default function EventForm() {
                     </div>
                 </fieldset>
 
-                {/* Buttons */}
                 <div className="flex justify-end gap-4">
                     <button
                         type="submit"

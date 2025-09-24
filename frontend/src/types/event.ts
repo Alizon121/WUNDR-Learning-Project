@@ -13,9 +13,9 @@ export type Event = {
     city: string
     state: string
     address: string
-    zipCode: number
-    latitude: number
-    longitude: number
+    zipCode: string
+    latitude: number | null
+    longitude: number | null
 
     userId: string[]
     childIDs: string[]

@@ -60,3 +60,5 @@ export const convertStringToIsoFormat = (date: string) => {
     let newDate: Date = new Date(date)
     return newDate.toISOString()
 }
+
+export const toYMDLocal = (d: Date = new Date()) : string => d.toLocaleDateString("en-CA")

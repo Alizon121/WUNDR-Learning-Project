@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useRef, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Views, Calendar, dateFnsLocalizer, type View } from "react-big-calendar"
 import { format, getDay, parse, startOfWeek } from "date-fns"
 import {enUS} from 'date-fns/locale';
@@ -8,9 +8,6 @@ import { Event } from "@/types/event"
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { combineLocal } from "../../../../utils/formatDate";
 
-//placeholders while erika waits for startTime and endTime
-// const DEFAULT_START = "09:00"
-// const DEFAULT_DURATION = 60
 
 const localizer = dateFnsLocalizer({
     format,

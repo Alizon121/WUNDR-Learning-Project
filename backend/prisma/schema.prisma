@@ -197,9 +197,9 @@ model Events {
     city          String
     state         String
     address       String
-    zipCode       Int
-    latitude      Float
-    longitude     Float
+    zipCode       String
+    latitude      Float?
+    longitude     Float?
     startTime     String
     endTime       String
 

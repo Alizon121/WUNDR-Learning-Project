@@ -43,7 +43,7 @@ export const formatDate = (dateString: string) => {
     })
 }
 
-export const combineLocal = (isoOrDateOnly: string, timeStr = "09:00") => {
+export const combineLocal = (isoOrDateOnly: string, timeStr = "00:00") => {
     if (!isoOrDateOnly) return new Date(NaN);
 
     // Extract just the date part
@@ -60,3 +60,5 @@ export const convertStringToIsoFormat = (date: string) => {
     let newDate: Date = new Date(date)
     return newDate.toISOString()
 }
+
+export const toYMDLocal = (d: Date = new Date()) : string => d.toLocaleDateString("en-CA")

@@ -32,7 +32,7 @@ class Event(BaseModel):
 
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    date: datetime = Field(default_factory=datetime.now(timezone.utc))
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     image: str = Field(min_length=1)
     participants: int = Field(default=0)
     limit: int = Field(default=10)
@@ -40,9 +40,9 @@ class Event(BaseModel):
     city: str = Field(min_length=1)
     state: str = Field(min_length=1)
     address: str = Field(min_length=1)
-    zipCode: int = Field(length=5)
-    latitude: float
-    longitude: float
+    zipCode: str = Field(pattern=r'^\d{5}(-\d{4})?$')
+    latitude: Optional[float] = Field(default=None)
+    longitude: Optional[float] = Field(default=None)
     startTime: str = Field(min_length=1)
     endTime: str = Field(min_length=1)
 
@@ -59,9 +59,9 @@ class EventCreate(BaseModel):
     city: str = Field(min_length=1)
     state: str = Field(min_length=1)
     address: str = Field(min_length=1)
-    zipCode: int = Field(ge=5)
-    latitude: float
-    longitude: float
+    zipCode: str = Field(pattern=r'^\d{5}(-\d{4})?$')
+    latitude: Optional[float] = Field(default=None)
+    longitude: Optional[float] = Field(default=None)
     startTime: str = Field(min_length=1)
     endTime: str = Field(min_length=1)
     volunteerLimit: int = Field(default=3)
@@ -82,7 +82,7 @@ class EventUpdate(BaseModel):
     city: Optional[str] = Field(default=None)
     state: Optional[str] = Field(default=None)
     address: Optional[str] = Field(default=None)
-    zipCode: Optional[int] = Field(default=None)
+    zipCode: str = Field(default= None, pattern=r'^\d{5}(-\d{4})?$')
     latitude: Optional[float] = Field(default=None)
     longitude: Optional[float] = Field(default=None)
     startTime: Optional[str] = Field(default=None)

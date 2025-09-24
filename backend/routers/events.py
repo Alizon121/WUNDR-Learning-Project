@@ -632,7 +632,8 @@ async def remove_user_from_event(
 @router.patch("/{event_id}/unenroll", status_code=status.HTTP_200_OK)
 async def remove_child_from_event(
     event_id: str,
-    child_id: str,
+    # child_id: str,
+    payload: EnrollChildren,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):
@@ -653,35 +654,55 @@ async def remove_child_from_event(
 
     # Fetch the event
     event = await db.events.find_unique(where={"id": event_id})
-
     if not event:
         raise HTTPException(
             status_code=404,
             detail="Event not found")
 
-    # Fetch child and verify parenthood
-    child = await db.children.find_unique(
-        where={"id": child_id}
+    selected_ids = set(payload.childIDs or [])
+    if not selected_ids:
+        return {
+            "event": event,
+            "message": "No children selected to unenroll"
+        }
+
+    existing_ids = set(event.childIDs or [])
+
+    to_remove = list(selected_ids - existing_ids)
+    if not to_remove:
+        return {
+            "event": event,
+            "message": "Selected children are not enrolled"
+        }
+
+    # validate existing children
+    children = await db.children.find_many(
+        where={"id": {"in": to_remove}}
     )
+    found_ids = {c.id for c in children}
+    missing = set(to_remove) - found_ids
+    if missing:
+        raise HTTPException(status_code=404, detail=f"Child not found: {', '.join(missing)}")
 
-    if not child:
-        raise HTTPException(
-            status_code=404,
-            detail="Child not found"
-        )
+    # validate parenthood
+    for c in children:
+        if current_user.id not in (c.parentIDs or []):
+            raise HTTPException(
+                status_code=403,
+                detail="You are not the parent of this child."
+            )
 
-    if current_user.id not in child.parentIDs:
-        raise HTTPException(
-            status_code=403,
-            detail="You are not the parent of this child."
-        )
+    # Remove child from event
+    updated_child_list = [cid for cid in (event.childIDs or []) if cid not in to_remove]
 
-    # Check if child is enrolled
-    if child.id not in event.childIDs:
-        raise HTTPException(
-            status_code=400,
-            detail="Child is not enrolled"
-        )
+    updated_event = await db.events.update(
+        where={"id": event_id},
+         data={
+            "children": {"disconnect": [{"id": cid} for cid in to_remove]},
+            "childIDs": updated_child_list,
+            "participants": {"decrement": len(to_remove)}
+            }
+    )
 
     # Notification to user for unenrolling child
     subject = f'Unenrollment Confirmation: {event.name}'
@@ -696,18 +717,8 @@ async def remove_child_from_event(
 
     # ! Add logic to delete notification?
 
-    # Remove child from event
-    updated_child_list = [id for id in event.childIDs if id != child.id]
 
-    updated_event = await db.events.update(
-        where={"id": event_id},
-         data={
-            "childIDs": updated_child_list,
-            "participants": {"decrement": 1}
-            }
-    )
-
-    return {"event": updated_event, "message": "Child removed from event"}
+    return {"event": updated_event, "message": f"Removed {len(to_remove)} child(ren) from event"}
 
 
 ########### * Review endpoint(s) ###############

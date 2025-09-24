@@ -4,16 +4,18 @@ import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6"
 import useGetAllEvents from "../../../../hooks/useGetAllEvents"
 import { useUser } from "../../../../hooks/useUser"
 import { combineLocal, formatDate } from "../../../../utils/formatDate"
-import { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import EventCalendar from "./calendar"
 import Link from "next/link"
 import { Child } from "@/types/child"
+import { FaPen } from "react-icons/fa"
 
 
 const YourEvents = () => {
     const { events, loading, error, refetch } = useGetAllEvents()
     const { user } = useUser()
     const [currEventIdx, setCurrEventIdx] = useState(0)
+    const [editingId, setEditingId] = useState<string | null>(null)
     const cardsRef = useRef<HTMLDivElement>(null)
 
     const usersEvents = useMemo(() => {
@@ -22,7 +24,6 @@ const YourEvents = () => {
         return (events ?? [])
             //keeps only events that include at least one of the user's child ID
             .filter(e => (e.childIDs ?? []).some(id => childIDSet.has(id)))
-            //map to our UI shape
             .map(e => ({
                 id: e.id,
                 name: e.name,
@@ -91,7 +92,7 @@ const YourEvents = () => {
         <div>
             <div className="text-center mb-[40px]">
                 <h1 className="text-4xl font-bold text-wondergreen mb-4">Your Events</h1>
-                {visiblePool.length < 1 ? (
+                {visiblePool.length < 1 && !loading ? (
                     <div className="max-w-2xl mx-auto text-md text-wondergreen">You have not enrolled in any events yet.</div>
                 ) : (
                     <h2 className="max-w-2xl mx-auto text-lg text-wondergreen">Manage all the events you and children are enrolled in</h2>
@@ -105,6 +106,8 @@ const YourEvents = () => {
                 )}
 
                 {visibleEvents && visibleEvents.map((event) => {
+                    const isEditing = editingId === event.id
+
                     const childNames = (event?.childIds ?? []).map((id) => {
                         const c = childById.get(id)
                         return c ? displayName(c) : null
@@ -116,13 +119,23 @@ const YourEvents = () => {
                             <Link href={`/events/${event.id}`}>
                                 <div className="bg-white rounded-lg p-6 min-h-[350px]">
                                     <div className="mb-6">
-                                        <div className="inline-block bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
-                                            {formatDate(event.date)}
+                                        <div className="flex flex-row justify-between">
+                                            <div className="inline-block bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
+                                                {formatDate(event.date)}
+                                            </div>
+
+                                            <button type="button" aria-pressed={isEditing}
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    e.stopPropagation()
+                                                    setEditingId(isEditing ? null : (event.id ?? null))
+                                                }}
+                                            >
+                                                <FaPen />
+                                            </button>
                                         </div>
 
-                                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                                            {event.name} in {event.city}
-                                        </h3>
+                                        <h3 className="text-lg font-semibold text-gray-800 mb-2">{event.name} in {event.city}</h3>
 
                                         <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[3.5rem]">
                                             {event.description}
@@ -130,15 +143,33 @@ const YourEvents = () => {
                                     </div>
 
                                     <div className="flex flex-col justify-center mt-auto">
-                                        <p className="text-xs text-gray-500 mb-2">Your Children Enrolled:</p>
+                                        <p className="text-xs text-gray-500 mb-2">
+                                            Your Children Enrolled: {isEditing && (<span> (Click x to remove)</span>)}
+                                        </p>
                                         {childNames.length > 0 && (
-                                            <ul className="list-disc pl-5 text-xs text-gray-700 space-y-0.5">
-                                                {childNames.map((name, i) => (
-                                                    <li key={`${event.id}-${i}`}>{name}</li>
-                                                ))}
-                                            </ul>
+                                            isEditing ? (
+                                                <div>
+                                                    {childNames.map(( name, i) => (
+                                                        <div
+                                                            key={`${event.id}-${i}`}
+                                                            className="flex items-center justify-between p-2 rounded-md transition-colors bg-red-50 border border-red-200"
+                                                        >
+                                                            <span className="text-xs text-gray-700">
+                                                                • {name}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <ul className="list-disc pl-5 text-xs text-gray-700 space-y-0.5">
+                                                    {childNames.map((name, i) => (
+                                                        <li key={`${event.id}-${i}`}>{name}</li>
+                                                    ))}
+                                                </ul>
+                                            )
                                         )}
                                     </div>
+
                                 </div>
                             </Link>
                         </div>

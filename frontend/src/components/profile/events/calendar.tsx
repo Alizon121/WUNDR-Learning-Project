@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useRef, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Views, Calendar, dateFnsLocalizer, type View } from "react-big-calendar"
 import { format, getDay, parse, startOfWeek } from "date-fns"
 import {enUS} from 'date-fns/locale';

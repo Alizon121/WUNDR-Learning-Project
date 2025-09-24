@@ -4,10 +4,9 @@ from typing import Annotated
 from backend.models.user_models import User
 from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate, EnrollChildren, NotificationCreate
 from .auth.login import get_current_user
-from .auth.utils import enforce_admin, enforce_authentication
+from .auth.utils import enforce_admin, enforce_authentication, convert_iso_date_to_string
 from datetime import datetime, timezone
 from .notifications import send_email_one_user, schedule_reminder, send_email_multiple_users
-
 router = APIRouter()
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -318,10 +317,10 @@ async def update_event(
         contents = f'Hello,\n\nThe {event.name} has been rescheduled to {update_payload["date"]}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
     elif update_payload.get("name") and not update_payload.get("date"):
         subject = f'Wonderhood: {update_payload["name"]} Update'
-        contents = f'Hello,\n\nThe {update_payload["name"]} has been rescheduled to {event.date}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
+        contents = f'Hello,\n\nThe {update_payload["name"]} has been rescheduled to {convert_iso_date_to_string(event.date)}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
     else:
         subject = f'Wonderhood: {event.name} Update'
-        contents = f'Hello,\n\nThe {event.name} has been rescheduled to {event.date}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
+        contents = f'Hello,\n\nThe {event.name} has been rescheduled to {convert_iso_date_to_string(event.date)}. We hope to see you there!\n\n Best,\n\n Wonderhood Team'
 
     background_tasks.add_task(
         send_email_multiple_users,
@@ -372,7 +371,7 @@ async def delete_event_by_id(
 
     # Send the email notification to users
     subject = f'Wonderhood: {event.name} Cancellation'
-    contents = f'Hello,\n\nWe regret to inform you that the {event.name} event on {event.date} has been cancelled. Please take a look at our website for upcoming events.\n\n Best,\n\n Wonderhood Team'
+    contents = f'Hello,\n\nWe regret to inform you that the {event.name} event on {convert_iso_date_to_string(event.date)} has been cancelled. Please take a look at our website for upcoming events.\n\n Best,\n\n Wonderhood Team'
 
     background_tasks.add_task(
         send_email_multiple_users,
@@ -434,7 +433,7 @@ async def add_user_to_event(
     # Create notification
     subject = f"Enrollment Confirmation: {event.name}"
     # ? ADD link to make changes still
-    contents = f'This email confirms that you are enrolled for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
+    contents = f'This email confirms that you are enrolled for the {event.name} event on {convert_iso_date_to_string(event.date)}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
 
     background_tasks.add_task(
         send_email_one_user,
@@ -530,7 +529,7 @@ async def add_children_to_event(
 
     # Create notification
     subject = f'Enrollment Confirmation: {event.name}'
-    content = f'Hello,\n\nThis email confirms that your child has been enrolled for the {event.name} event at Wonderhood for {event.date}.\n\nWe look forward to see you there!\n\nBest,\n\nWonderhood Team'
+    content = f'Hello,\n\nThis email confirms that your child has been enrolled for the {event.name} event at Wonderhood for {convert_iso_date_to_string(event.date)}.\n\nWe look forward to see you there!\n\nBest,\n\nWonderhood Team'
 
     background_tasks.add_task(
         send_email_one_user,
@@ -603,7 +602,7 @@ async def remove_user_from_event(
 
     # Send notification to User that they have been removed from event
     subject = f'Unenrollment Confirmation: {event.name}'
-    content = f'Hello,\n\nThis email confirms that you have been unenrolled from the {event.name} event at Wonderhood on {event.date}. Please find more events at our website.\n\nBest,\n\nWonderhood Team'
+    content = f'Hello,\n\nThis email confirms that you have been unenrolled from the {event.name} event at Wonderhood on {convert_iso_date_to_string(event.date)}. Please find more events at our website.\n\nBest,\n\nWonderhood Team'
 
     background_tasks.add_task(
         send_email_one_user,
@@ -704,7 +703,7 @@ async def remove_child_from_event(
 
     # Notification to user for unenrolling child
     subject = f'Unenrollment Confirmation: {event.name}'
-    content = f'Hello,\n\nThis email confirms that your child has been unenrolled from the {event.name} on {event.date}. Please find more events on our website.\n\nBest,\n\nWonderhood Team'
+    content = f'Hello,\n\nThis email confirms that your child has been unenrolled from the {event.name} on {convert_iso_date_to_string(event.date)}. Please find more events on our website.\n\nBest,\n\nWonderhood Team'
 
     background_tasks.add_task(
         send_email_one_user,
@@ -997,7 +996,7 @@ async def send_enrolled_user_notification(
 
 ########### * Volunteer endpoint(s) ###############
 # for specific event, when volunteer enrolls --> volunteer is added to event and volunteerLimit counter decrements
-@router.patch("/{event_id}/volunteer_signup")
+@router.patch("/{event_id}/volunteer_signup", status_code=status.HTTP_200_OK)
 async def volunteer_signup_for_event(
     current_user: Annotated[User, Depends(get_current_user)],
     event_id: str,
@@ -1016,6 +1015,7 @@ async def volunteer_signup_for_event(
     if not event:
         raise HTTPException(status_code=401, detail="Unable to locate event")
 
+    # Validate volunteer exists and is approved
     volunteer = await db.volunteers.find_unique(where={"userId": current_user.id})
     if not volunteer:
         raise HTTPException(status_code=401, detail="Unable to locate volunteer")
@@ -1023,10 +1023,22 @@ async def volunteer_signup_for_event(
     if volunteer.status != "Approved":
         raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
     
+    # Validate whether volunteer is already enrolled
+    if volunteer.id in event.volunteerIDs:
+        raise HTTPException(status_code=400, detail="Volunteer is already enrolled to the event")
+
     try:
+        volunteer_signup_event = await db.events.update(
+                where={"id": event_id },
+                data={
+                    "volunteers": {"connect": {"id": volunteer.id}},
+                    "volunteerLimit": {"decrement": 1}
+                }
+            )
+        
         title = f"Volunteer Enrollment Confirmation: {event.name}"
         # ? ADD link to make changes still
-        description = f'This email confirms that you are enrolled as a volunteer for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
+        description = f'This email confirms that you are enrolled as a volunteer for the {event.name} event on {convert_iso_date_to_string(event.date)}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
 
 
         notification_data =  {
@@ -1048,18 +1060,90 @@ async def volunteer_signup_for_event(
                 description
             )
 
-        volunteer_signup = await db.events.update(
-                where={"id": event_id },
-                data={
-                    "volunteers": {"connect": {"id": volunteer.id}},
-                    "volunteerLimit": {"decrement": 1}
-                }
-            )
 
         return {
-                "Volunteer": volunteer_signup, 
+                "Event": volunteer_signup_event, 
                 "Notification": new_notification, 
                 "Message": "Volunteer added to event"
                 }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unable to enroll volunteer:{e}")
+
+
+@router.patch("/{event_id}/unenroll_volunteer", status_code=status.HTTP_200_OK)
+async def unenroll_volunteer_from_event(
+    current_user: Annotated[User, Depends(get_current_user)],
+    event_id: str,
+    background_tasks: BackgroundTasks
+):
+    """
+        Authenticate the user
+        Validate the event and the volunteer
+        Unenroll the volunteer from the event and increment Event volunteerLimit attribute
+        Notify the volunteer they have been unenrolled
+        return updated event
+    """
+
+    # Authenticate the user
+    enforce_authentication(current_user)
+
+    # Validate the event:
+    event = await db.events.find_unique(where={"id": event_id })
+    if not event:
+        raise HTTPException(status_code=401, detail="Unable to locate event")
+
+    # Validate the Volunteer
+    volunteer = await db.volunteers.find_unique(where={"userId": current_user.id})
+    if not volunteer:
+        raise HTTPException(status_code=401, detail="Unable to locate volunteer")
+
+    if volunteer.status != "Approved":
+        raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
+
+    # Validate that the volunteer is signed up to the event
+    if volunteer.id not in event.volunteerIDs:
+        raise HTTPException(status_code=400, detail="Volunteer is not enrolled to the event")
+    
+    try:
+        volunteer_unenroll_event = await db.events.update(
+                where={"id": event_id },
+                data={
+                    "volunteers": {"disconnect": {"id": volunteer.id}},
+                    "volunteerLimit": {"increment": 1}
+                }
+            )
+        
+        title = f"Volunteer Unenrollment Confirmation: {event.name}"
+        # ? ADD link to make changes still
+        description = f'This email confirms that you are unenrolled as a volunteer for the {event.name} event on {convert_iso_date_to_string(event.date)}.\n\nBest,\n\nWondherhood Team'
+
+
+        notification_data =  {
+                "title": title,
+                "description": description,
+                "userId": current_user.id,
+                "isRead": False,
+                "time": datetime.now(timezone.utc)
+            }
+        
+        new_notification = await db.notifications.create(
+                data=notification_data
+            )
+
+        background_tasks.add_task(
+                send_email_one_user,
+                volunteer.email,
+                title,
+                description
+            )
+        
+        return {
+            "Event": volunteer_unenroll_event,
+            "Notification": new_notification
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to remove volunteer from event: {e}"
+        )

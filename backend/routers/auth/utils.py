@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 from backend.models.user_models import User
 from fastapi import HTTPException, status
-
+from datetime import datetime
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -25,3 +25,13 @@ def enforce_authentication(current_user: User, action: str = "perform this actio
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Unauthorized. You must be authenticated to {action}."
         )
+
+def convert_iso_date_to_string(date):
+    """
+        Callback to convert iso string into mm/dd/yyyy
+    """
+
+    dt = datetime.fromisoformat(str(date))
+
+    formatted = dt.strftime("%m/%d/%Y")
+    return formatted

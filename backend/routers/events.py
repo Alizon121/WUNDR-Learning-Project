@@ -1016,6 +1016,7 @@ async def volunteer_signup_for_event(
     if not event:
         raise HTTPException(status_code=401, detail="Unable to locate event")
 
+    # Validate volunteer exists and is approved
     volunteer = await db.volunteers.find_unique(where={"userId": current_user.id})
     if not volunteer:
         raise HTTPException(status_code=401, detail="Unable to locate volunteer")
@@ -1023,7 +1024,19 @@ async def volunteer_signup_for_event(
     if volunteer.status != "Approved":
         raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
     
+    # Validate whether volunteer is already enrolled
+    if volunteer.id in event.volunteerIDs:
+        raise HTTPException(status_code=400, detail="Volunteer is already enrolled to the event")
+
     try:
+        volunteer_signup = await db.events.update(
+                where={"id": event_id },
+                data={
+                    "volunteers": {"connect": {"id": volunteer.id}},
+                    "volunteerLimit": {"decrement": 1}
+                }
+            )
+        
         title = f"Volunteer Enrollment Confirmation: {event.name}"
         # ? ADD link to make changes still
         description = f'This email confirms that you are enrolled as a volunteer for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
@@ -1048,16 +1061,9 @@ async def volunteer_signup_for_event(
                 description
             )
 
-        volunteer_signup = await db.events.update(
-                where={"id": event_id },
-                data={
-                    "volunteers": {"connect": {"id": volunteer.id}},
-                    "volunteerLimit": {"decrement": 1}
-                }
-            )
 
         return {
-                "Volunteer": volunteer_signup, 
+                "Event": volunteer_signup, 
                 "Notification": new_notification, 
                 "Message": "Volunteer added to event"
                 }

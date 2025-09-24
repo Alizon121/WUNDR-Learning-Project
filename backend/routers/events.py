@@ -996,7 +996,7 @@ async def send_enrolled_user_notification(
 
 ########### * Volunteer endpoint(s) ###############
 # for specific event, when volunteer enrolls --> volunteer is added to event and volunteerLimit counter decrements
-@router.patch("/{event_id}/volunteer_signup")
+@router.patch("/{event_id}/volunteer_signup", status_code=status.HTTP_200_OK)
 async def volunteer_signup_for_event(
     current_user: Annotated[User, Depends(get_current_user)],
     event_id: str,
@@ -1028,13 +1028,13 @@ async def volunteer_signup_for_event(
         raise HTTPException(status_code=400, detail="Volunteer is already enrolled to the event")
 
     try:
-        # volunteer_signup = await db.events.update(
-        #         where={"id": event_id },
-        #         data={
-        #             "volunteers": {"connect": {"id": volunteer.id}},
-        #             "volunteerLimit": {"decrement": 1}
-        #         }
-        #     )
+        volunteer_signup_event = await db.events.update(
+                where={"id": event_id },
+                data={
+                    "volunteers": {"connect": {"id": volunteer.id}},
+                    "volunteerLimit": {"decrement": 1}
+                }
+            )
         
         title = f"Volunteer Enrollment Confirmation: {event.name}"
         # ? ADD link to make changes still
@@ -1062,9 +1062,65 @@ async def volunteer_signup_for_event(
 
 
         return {
-                # "Event": volunteer_signup, 
+                "Event": volunteer_signup_event, 
                 "Notification": new_notification, 
                 "Message": "Volunteer added to event"
                 }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unable to enroll volunteer:{e}")
+
+
+@router.patch("/{event_id}/unenroll_volunteer", status_code=status.HTTP_200_OK)
+async def unenroll_volunteer_from_event(
+    current_user: Annotated[User, Depends(get_current_user)],
+    event_id: str,
+    background_tasks: BackgroundTasks
+):
+    """
+        Authenticate the user
+        Validate the event and the volunteer
+        Unenroll the volunteer from the event and increment Event volunteerLimit attribute
+        Notify the volunteer they have been unenrolled
+        return updated event
+    """
+
+    # Authenticate the user
+    enforce_authentication(current_user)
+
+    # Validate the event:
+    event = await db.events.find_unique(where={"id": event_id })
+    if not event:
+        raise HTTPException(status_code=401, detail="Unable to locate event")
+
+    # Validate the Volunteer
+    volunteer = await db.volunteers.find_unique(where={"userId": current_user.id})
+    if not volunteer:
+        raise HTTPException(status_code=401, detail="Unable to locate volunteer")
+
+    if volunteer.status != "Approved":
+        raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
+
+    # Validate that the volunteer is signed up to the event
+    if volunteer.id not in event.volunteerIDs:
+        raise HTTPException(status_code=400, detail="Volunteer is not enrolled to the event")
+    
+    try:
+
+
+        volunteer_unenroll_event = await db.events.update(
+                where={"id": event_id },
+                data={
+                    "volunteers": {"disconnect": {"id": volunteer.id}},
+                    "volunteerLimit": {"increment": 1}
+                }
+            )
+        
+        return {
+            "Event": volunteer_unenroll_event
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to remove volunteer from event: {e}"
+        )

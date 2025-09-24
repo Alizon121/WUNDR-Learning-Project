@@ -5,7 +5,7 @@ from backend.models.user_models import User
 from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate, EnrollChildren, NotificationCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication
-from datetime import datetime
+from datetime import datetime, timezone
 from .notifications import send_email_one_user, schedule_reminder, send_email_multiple_users
 
 router = APIRouter()
@@ -390,7 +390,6 @@ async def delete_event_by_id(
 async def add_user_to_event(
     event_id: str,
     current_user: Annotated[User, Depends(get_current_user)],
-    # icon: str,
     background_tasks: BackgroundTasks
 ):
 
@@ -451,7 +450,6 @@ async def add_user_to_event(
             "userId": current_user.id,
             "isRead": False,
             "time": event.date,
-            # "icon": icon
         }
     )
 
@@ -1003,7 +1001,7 @@ async def send_enrolled_user_notification(
 async def volunteer_signup_for_event(
     current_user: Annotated[User, Depends(get_current_user)],
     event_id: str,
-    # notification: NotificationCreate
+    background_tasks: BackgroundTasks
 ):
     """
     For specific event, volunteer is added to event when enrolled and volunteerLimit counter decrements
@@ -1018,19 +1016,50 @@ async def volunteer_signup_for_event(
     if not event:
         raise HTTPException(status_code=401, detail="Unable to locate event")
 
-    volunteer = await db.volunteers.find_unique(where={"id": current_user.id})
+    volunteer = await db.volunteers.find_unique(where={"userId": current_user.id})
     if not volunteer:
         raise HTTPException(status_code=401, detail="Unable to locate volunteer")
-    try:
-        volunteer_signup = await db.events.update(
-            where={"id": event_id },
-            data={
-                "volunteers": {"connect": {"id": volunteer.id}},
-                "volunteerLimit": {"decrement": 1}
-            }
-        )
 
-        print("water water water",volunteer_signup)
-        return volunteer_signup
+    if volunteer.status != "Approved":
+        raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
+    
+    try:
+        title = f"Volunteer Enrollment Confirmation: {event.name}"
+        # ? ADD link to make changes still
+        description = f'This email confirms that you are enrolled as a volunteer for the {event.name} event on {event.date}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
+
+
+        notification_data =  {
+                "title": title,
+                "description": description,
+                "userId": current_user.id,
+                "isRead": False,
+                "time": datetime.now(timezone.utc)
+            }
+        
+        new_notification = await db.notifications.create(
+                data=notification_data
+            )
+
+        background_tasks.add_task(
+                send_email_one_user,
+                volunteer.email,
+                title,
+                description
+            )
+
+        volunteer_signup = await db.events.update(
+                where={"id": event_id },
+                data={
+                    "volunteers": {"connect": {"id": volunteer.id}},
+                    "volunteerLimit": {"decrement": 1}
+                }
+            )
+
+        return {
+                "Volunteer": volunteer_signup, 
+                "Notification": new_notification, 
+                "Message": "Volunteer added to event"
+                }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unable to enroll volunteer:{e}")

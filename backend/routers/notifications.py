@@ -176,9 +176,6 @@ def start_scheduler():
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def blast_notification(
     notification: NotificationCreate,
-    # subject: str,
-    # contents: str,
-    # time: str,
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks
 ):

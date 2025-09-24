@@ -1105,8 +1105,6 @@ async def unenroll_volunteer_from_event(
         raise HTTPException(status_code=400, detail="Volunteer is not enrolled to the event")
     
     try:
-
-
         volunteer_unenroll_event = await db.events.update(
                 where={"id": event_id },
                 data={
@@ -1115,8 +1113,33 @@ async def unenroll_volunteer_from_event(
                 }
             )
         
+        title = f"Volunteer Unenrollment Confirmation: {event.name}"
+        # ? ADD link to make changes still
+        description = f'This email confirms that you are unenrolled as a volunteer for the {event.name} event on {convert_iso_date_to_string(event.date)}.\n\nBest,\n\nWondherhood Team'
+
+
+        notification_data =  {
+                "title": title,
+                "description": description,
+                "userId": current_user.id,
+                "isRead": False,
+                "time": datetime.now(timezone.utc)
+            }
+        
+        new_notification = await db.notifications.create(
+                data=notification_data
+            )
+
+        background_tasks.add_task(
+                send_email_one_user,
+                volunteer.email,
+                title,
+                description
+            )
+        
         return {
-            "Event": volunteer_unenroll_event
+            "Event": volunteer_unenroll_event,
+            "Notification": new_notification
         }
         
     except Exception as e:

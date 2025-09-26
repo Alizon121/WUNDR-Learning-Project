@@ -1048,7 +1048,7 @@ async def volunteer_signup_for_event(
                 "isRead": False,
                 "time": datetime.now(timezone.utc)
             }
-
+        
         new_notification = await db.notifications.create(
                 data=notification_data
             )
@@ -1062,8 +1062,8 @@ async def volunteer_signup_for_event(
 
 
         return {
-                "Event": volunteer_signup_event,
-                "Notification": new_notification,
+                "Event": volunteer_signup_event, 
+                "Notification": new_notification, 
                 "Message": "Volunteer added to event"
                 }
     except Exception as e:

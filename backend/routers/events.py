@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
 from backend.db.prisma_client import db
 from typing import Annotated
-from backend.models.user_models import User
+from backend.models.user_models import User, VolunteerCreate, VolunteerUpdate
 from backend.models.interaction_models import EventCreate, EventUpdate, ReviewCreate, EnrollChildren, NotificationCreate
 from .auth.login import get_current_user
 from .auth.utils import enforce_admin, enforce_authentication, convert_iso_date_to_string
@@ -665,7 +665,7 @@ async def remove_child_from_event(
 
     existing_ids = set(event.childIDs or [])
 
-    to_remove = list(selected_ids - existing_ids)
+    to_remove = list(selected_ids & existing_ids)
     if not to_remove:
         return {
             "event": event,
@@ -1022,7 +1022,7 @@ async def volunteer_signup_for_event(
 
     if volunteer.status != "Approved":
         raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
-    
+
     # Validate whether volunteer is already enrolled
     if volunteer.id in event.volunteerIDs:
         raise HTTPException(status_code=400, detail="Volunteer is already enrolled to the event")
@@ -1035,7 +1035,7 @@ async def volunteer_signup_for_event(
                     "volunteerLimit": {"decrement": 1}
                 }
             )
-        
+
         title = f"Volunteer Enrollment Confirmation: {event.name}"
         # ? ADD link to make changes still
         description = f'This email confirms that you are enrolled as a volunteer for the {event.name} event on {convert_iso_date_to_string(event.date)}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
@@ -1103,7 +1103,7 @@ async def unenroll_volunteer_from_event(
     # Validate that the volunteer is signed up to the event
     if volunteer.id not in event.volunteerIDs:
         raise HTTPException(status_code=400, detail="Volunteer is not enrolled to the event")
-    
+
     try:
         volunteer_unenroll_event = await db.events.update(
                 where={"id": event_id },
@@ -1112,7 +1112,7 @@ async def unenroll_volunteer_from_event(
                     "volunteerLimit": {"increment": 1}
                 }
             )
-        
+
         title = f"Volunteer Unenrollment Confirmation: {event.name}"
         # ? ADD link to make changes still
         description = f'This email confirms that you are unenrolled as a volunteer for the {event.name} event on {convert_iso_date_to_string(event.date)}.\n\nBest,\n\nWondherhood Team'
@@ -1125,7 +1125,7 @@ async def unenroll_volunteer_from_event(
                 "isRead": False,
                 "time": datetime.now(timezone.utc)
             }
-        
+
         new_notification = await db.notifications.create(
                 data=notification_data
             )
@@ -1136,12 +1136,12 @@ async def unenroll_volunteer_from_event(
                 title,
                 description
             )
-        
+
         return {
             "Event": volunteer_unenroll_event,
             "Notification": new_notification
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=500,

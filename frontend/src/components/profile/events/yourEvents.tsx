@@ -9,6 +9,7 @@ import EventCalendar from "./calendar"
 import Link from "next/link"
 import { Child } from "@/types/child"
 import { FaPen } from "react-icons/fa"
+import UnenrollEvent from "./unenrollEvent"
 
 
 const YourEvents = () => {
@@ -86,6 +87,11 @@ const YourEvents = () => {
     const displayName = (c: Child) =>
         `${(c.preferredName ?? c.firstName).trim()} ${c.lastName}`.trim()
 
+    const handleAfterUnenroll = async () => {
+        await refetch()
+        setEditingId(null)
+    }
+
     if (loading) return <div className="flex justify-center items-center min-h-[200px]">Loading...</div>
 
     return (
@@ -108,15 +114,13 @@ const YourEvents = () => {
                 {visibleEvents && visibleEvents.map((event) => {
                     const isEditing = editingId === event.id
 
-                    const childNames = (event?.childIds ?? []).map((id) => {
-                        const c = childById.get(id)
-                        return c ? displayName(c) : null
-                    })
-                    .filter(Boolean) as string[]
+                    const children = (event?.childIds ?? [])
+                        .map((id) => childById.get(id))
+                        .filter((c): c is Child => !!c) //this is typescript type predicate syntax (if truthy, the variable is Child type)
 
                     return (
                         <div key={event.id} className="basis-1/2 max-w-3xl w-full mx-auto">
-                            <Link href={`/events/${event.id}`}>
+                            {/* <Link href={`/events/${event.id}`}> */}
                                 <div className="bg-white rounded-lg p-6 min-h-[350px]">
                                     <div className="mb-6">
                                         <div className="flex flex-row justify-between">
@@ -136,7 +140,6 @@ const YourEvents = () => {
                                         </div>
 
                                         <h3 className="text-lg font-semibold text-gray-800 mb-2">{event.name} in {event.city}</h3>
-
                                         <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[3.5rem]">
                                             {event.description}
                                         </p>
@@ -144,34 +147,23 @@ const YourEvents = () => {
 
                                     <div className="flex flex-col justify-center mt-auto">
                                         <p className="text-xs text-gray-500 mb-2">
-                                            Your Children Enrolled: {isEditing && (<span> (Click x to remove)</span>)}
+                                            Your Children Enrolled: {isEditing && (<span> (Click to remove)</span>)}
                                         </p>
-                                        {childNames.length > 0 && (
+
+                                        {children.length > 0 && (
                                             isEditing ? (
-                                                <div>
-                                                    {childNames.map(( name, i) => (
-                                                        <div
-                                                            key={`${event.id}-${i}`}
-                                                            className="flex items-center justify-between p-2 rounded-md transition-colors bg-red-50 border border-red-200"
-                                                        >
-                                                            <span className="text-xs text-gray-700">
-                                                                • {name}
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                <UnenrollEvent children={children} eventID={event.id} onAfterUnenroll={handleAfterUnenroll}/>
                                             ) : (
                                                 <ul className="list-disc pl-5 text-xs text-gray-700 space-y-0.5">
-                                                    {childNames.map((name, i) => (
-                                                        <li key={`${event.id}-${i}`}>{name}</li>
+                                                    {children.map((child) => (
+                                                        <li key={`${event.id}-${child.id}`}>{displayName(child)}</li>
                                                     ))}
                                                 </ul>
                                             )
                                         )}
                                     </div>
-
                                 </div>
-                            </Link>
+                            {/* </Link> */}
                         </div>
                     )
                 })}

@@ -666,7 +666,7 @@ async def remove_child_from_event(
 
     existing_ids = set(event.childIDs or [])
 
-    to_remove = list(selected_ids - existing_ids)
+    to_remove = list(selected_ids & existing_ids)
     if not to_remove:
         return {
             "event": event,
@@ -1022,7 +1022,7 @@ async def volunteer_signup_for_event(
 
     if volunteer.status != "Approved":
         raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
-    
+
     try:
         title = f"Volunteer Enrollment Confirmation: {event.name}"
         # ? ADD link to make changes still
@@ -1036,7 +1036,7 @@ async def volunteer_signup_for_event(
                 "isRead": False,
                 "time": datetime.now(timezone.utc)
             }
-        
+
         new_notification = await db.notifications.create(
                 data=notification_data
             )
@@ -1057,8 +1057,8 @@ async def volunteer_signup_for_event(
             )
 
         return {
-                "Volunteer": volunteer_signup, 
-                "Notification": new_notification, 
+                "Volunteer": volunteer_signup,
+                "Notification": new_notification,
                 "Message": "Volunteer added to event"
                 }
     except Exception as e:

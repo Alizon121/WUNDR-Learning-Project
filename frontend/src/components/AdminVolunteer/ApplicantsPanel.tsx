@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { makeApiRequest } from '../../../utils/api';
 import type { VolunteerApp } from '@/types/volunteer';
+import { useModal } from '@/app/context/modal';
+import DeleteAppModal from './DeleteAppModal'; 
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
@@ -18,6 +20,7 @@ export default function ApplicantsPanel(props: Props) {
     const [items, setItems] = useState<VolunteerApp[]>([]);
     const [q, setQ] = useState('');
     const [kind, setKind] = useState<'all' | 'general'>('all'); // only for "all" mode
+    const { setModalContent } = useModal();
 
     // id -> title map (for "all" mode to show opportunity titles for each application)
     const [oppMap, setOppMap] = useState<Record<string, string>>({});
@@ -60,7 +63,7 @@ export default function ApplicantsPanel(props: Props) {
         })();
     }, [mode]);
 
-    // поиск
+    // search
     const filtered = useMemo(() => {
         const s = q.trim().toLowerCase();
         if (!s) return items;
@@ -98,6 +101,37 @@ export default function ApplicantsPanel(props: Props) {
         return titles.length ? titles.join(', ') : 'Multiple opportunities';
         }
         return 'Application';
+
+
+        const mailtoFor = (v: VolunteerApp) => {
+        // Кому пишем
+        const to = v.email ?? '';
+        // Тема письма
+        const subject = `WonderHood Volunteer Application — ${appTitleFor(v)}`;
+        // Тело письма (шаблон)
+        const body = [
+            `Hi ${v.firstName || ''},`,
+            '',
+            `Thanks for your application to WonderHood Project (${appTitleFor(v)}).`,
+            `We’ll review your information and follow up with next steps.`,
+            '',
+            'Best,',
+            'WonderHood Project Team',
+        ].join('\n');
+
+        // (опционально) можно добавить cc/bcc:
+        // const cc = 'team@wonderhood.org';
+        // const bcc = 'admin@wonderhood.org';
+
+        const params = new URLSearchParams({
+            subject,
+            body,
+            // cc,
+            // bcc,
+        });
+
+        return `mailto:${encodeURIComponent(to)}?${params.toString()}`;
+        };
     };
 
     return (
@@ -238,7 +272,25 @@ export default function ApplicantsPanel(props: Props) {
                         </div>
                     </div>
 
-                    <div className="shrink-0 flex items-center gap-2">{/* actions later */}</div>
+                    <div className="shrink-0 flex items-center gap-2">
+                        
+                        <button
+                            onClick={() =>
+                            setModalContent(
+                                <DeleteAppModal
+                                applicationId={v.id}
+                                appTitle={appTitleFor(v)}
+                                onDeleted={() => {
+                                    setItems(prev => prev.filter(x => x.id !== v.id));
+                                }}
+                                />
+                            )
+                            }
+                            className="text-sm rounded-md border px-3 py-1.5 text-rose-600 hover:bg-rose-50 border-rose-200 mt-40"
+                        >
+                            Delete
+                        </button>
+                    </div>
                     </li>
                 );
                 })}

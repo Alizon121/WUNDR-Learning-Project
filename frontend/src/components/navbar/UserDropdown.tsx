@@ -42,6 +42,16 @@ export default function UserDropdown({ onLogout, onClose, }: {
         </Link>
       )}
 
+      {user?.role === 'admin' && (
+        <Link
+          href="/admin/administration"
+          onClick={onClose}
+          className="block px-4 py-2 hover:bg-wonderleaf/10 text-wondergreen"
+        >
+          Administration
+        </Link>
+      )}
+
       <button
         type="button"
         className="block w-full text-left px-4 py-2 hover:bg-wonderorange/10 text-wonderorange font-semibold rounded-b-xl"

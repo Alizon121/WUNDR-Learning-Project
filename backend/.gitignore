@@ -50,7 +50,6 @@ prisma/generated/
 
 # Local environment variables (if you're using dotenv)
 .env
-.env.*
 
 # __init__.py backup files
 *~

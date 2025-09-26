@@ -10,95 +10,280 @@ datasource db {
 
 // ! Users       =============================================================================
 
-model User {
+model Users {
   id                String         @id @default(auto()) @map("_id") @db.ObjectId
 
   firstName         String
   lastName          String
-  email             String
-  role              Role
-  avatar            String
+  email             String          @unique
+  phoneNumber       String
+  role              Roles
+  avatar            String?
+  password          String
 
+  address           String
   city              String
   state             String
-  zipCode           Int
-
-  createdAt         DateTime
-  updatedAt         DateTime
-  reviews           Review[]
-
-  // One-to-m
-  notifications     Notification[]
+  zipCode           String
 
   // m-to-n
   childIDs String[]   @db.ObjectId
-  children  Child[]   @relation(fields: [childIDs], references: [id])
+  children  Children[]   @relation(fields: [childIDs], references: [id])
+
+  eventIDs String[] @db.ObjectId
+  events Events[] @relation(fields: [eventIDs], references: [id])
+
+  createdAt         DateTime
+  updatedAt         DateTime
+
+  // One-to-m
+  notifications     Notifications[]
+  reviews           Reviews[]
+
+  // One-to-one
+  volunteer Volunteers?
 }
 
-enum Role {
+enum Roles {
   parent
-  moderator
+  admin
+  instructor
+  volunteer
 }
 
-model Notification{
-  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
-  description           String
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @db.ObjectId
-}
+// ! Children     =============================================================================
 
-
-model Child {
+model Children {
   id                    String  @id @default(auto()) @map("_id") @db.ObjectId
   firstName             String
   lastName              String
+  preferredName         String?
   homeschool            Boolean
-  age                   Int
+  // homeschoolProgram     String?
+  grade                 Int?
+  birthday              DateTime
+  allergiesMedical      String?
+  notes                 String?
+  photoConsent          Boolean
+  waiver                Boolean
 
-  parentIDs String[] @db.ObjectId
-  parents   User[]   @relation(fields: [parentIDs], references: [id])
+  parentIDs             String[]  @db.ObjectId
+  parents               Users[]   @relation(fields: [parentIDs], references: [id])
 
-  activityIDs String[]   @db.ObjectId
-  activities  Activity[] @relation(fields: [activityIDs], references: [id])
+  eventIDs              String[] @db.ObjectId
+  events                Events[] @relation(fields: [eventIDs], references: [id])
+
+  emergencyContactIDs   String[] @db.ObjectId
+  emergencyContacts     EmergencyContact[] @relation(fields: [emergencyContactIDs], references: [id])
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime? @updatedAt
+}
+
+//  ! Volunteer             =============================================================================
+
+enum Days {
+  Weekdays
+  Weekends
+}
+
+enum AppStatus {
+  New
+  In_review
+  Approved
+  Rejected
+}
+
+model Volunteers{
+  id                     String  @id @default(auto()) @map("_id") @db.ObjectId
+  firstName              String
+  lastName               String
+  email                  String?
+  phoneNumber            String?
+  cities                 String[]
+  daysAvail              Days[]
+  timesAvail             String[]
+  skills                 String[]
+  bio                    String?
+  photoConsent           Boolean
+  backgroundCheckConsent Boolean
+  status                 AppStatus @default(New)
+
+  eventIDs String[] @db.ObjectId
+  events Events[] @relation(fields: [eventIDs], references: [id])
+
+  // One-to-one relationship
+  user Users @relation(fields: [userId], references: [id])
+  userId String @unique @db.ObjectId
+
+  // Many-to-many relationship
+  volunteerOpportunityIDs String[] @db.ObjectId
+  volunteerOpportunities  VolunteerOpportunities[] @relation(fields: [volunteerOpportunityIDs], references: [id])
+
+  generalAppliedAt      DateTime?
+
+  oppAppliedAt            Json?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime? @updatedAt
+}
+
+//  ! Volunteer Opportunity =============================================================================
+
+enum Venue {
+  Indoors
+  Outdoors
+  Online
+}
+
+model VolunteerOpportunities{
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  venue           Venue[]
+  duties          String[]
+  skills          String[] // Optional
+  time            String
+  requirements    String[]
+  tags            String[]
+  // guide           Boolean DO WE NEED THIS?
+  minAge          Int
+  bgCheckRequired Boolean
+
+  // Many-to-many relationship
+  volunteerIDs String[]     @db.ObjectId
+  volunteers   Volunteers[] @relation(fields: [volunteerIDs], references: [id])
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime? @updatedAt
+}
+
+//  ! Emergency Contact     =============================================================================
+
+model EmergencyContact{
+  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
+  firstName             String
+  lastName              String
+  phoneNumber           String
+  relationship          String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime? @updatedAt
+
+  childIDs              String[] @db.ObjectId
+  child                 Children[] @relation(fields: [childIDs], references: [id])
 }
 
 // ! Activities     =============================================================================
 
-model Activity {
+model Activities {
   id            String      @id @default(auto()) @map("_id") @db.ObjectId
-  name          String
+  name          String      @unique
   description   String
 
-  events        Event[]
-  reviews       Review[]
-
-  childIDs String[] @db.ObjectId
-  child   Child[]   @relation(fields: [childIDs], references: [id])
+  events        Events[]
 }
 
 // ! Events         =============================================================================
 
-model Event {
-    id          String      @id @default(auto()) @map("_id") @db.ObjectId
+model Events {
+    id            String      @id @default(auto()) @map("_id") @db.ObjectId
 
-    activity    Activity    @relation(fields: [activityId], references: [id])
+    name          String      @unique
+    description   String
+    date          DateTime
+    image         String
+    participants  Int @default(0)
+    limit         Int @default(10)
+
+    city          String
+    state         String
+    address       String
+    zipCode       String
+    latitude      Float?
+    longitude     Float?
+    startTime     String
+    endTime       String
+    volunteerLimit     Int @default(3)
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime? @default(now())
+
+    // m-to-n relationship
+    volunteerIDs  String[] @db.ObjectId
+    volunteers Volunteers[] @relation(fields: [volunteerIDs], references: [id])
+
+    childIDs  String[] @db.ObjectId
+    children  Children[] @relation(fields: [childIDs], references: [id])
+
+    userIDs   String[] @db.ObjectId
+    users     Users[] @relation(fields: [userIDs], references: [id])
+
+    // One-to-m relationship
+    activity    Activities   @relation(fields: [activityId], references: [id])
     activityId  String      @db.ObjectId
 
-    reviews     Review[]
+    reviews     Reviews[]
+
+    jobs        Jobs[]
 }
 
 // ! reviews        =============================================================================
 
-model Review {
+model Reviews {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
     rating      Int
+    description String
 
-    event       Event       @relation(fields: [eventId], references: [id])
+    event       Events       @relation(fields: eventId, references: [id])
     eventId     String      @db.ObjectId
 
-    activity    Activity    @relation(fields: [activityId], references: [id])
-    activityId  String      @db.ObjectId
-
-    parent      User        @relation(fields: [parentId], references: [id])
+    parent      Users        @relation(fields: [parentId], references: [id])
     parentId    String      @db.ObjectId
+
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime? @updatedAt
+}
+
+// ! Notifications   =============================================================================
+
+model Notifications {
+  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
+  title                 String
+  description           String
+  isRead                Boolean @default(false)
+  time                  DateTime
+  createdAt             DateTime @default(now())
+
+  user   Users   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+}
+
+// ! jobs           =============================================================================
+
+// ? Jobs table allows us to work with scheduling logic for notifications
+enum ReminderTypes {
+  email
+  sms
+}
+
+enum ReminderStatus {
+  pending
+  sent
+  undeliverable
+}
+
+enum JobTypes {
+  reminder
+  cancellation
+}
+
+model Jobs{
+   id                String      @id @default(auto()) @map("_id") @db.ObjectId
+   runAt             DateTime
+   reminderType      ReminderTypes
+   status            ReminderStatus
+   jobType           JobTypes
+   sentAt            DateTime?
+   errorMessage      String?          // Log issues if notification is undeliverable
+
+   event             Events? @relation(fields:[eventId], references: [id], onDelete: Cascade)
+   eventId           String @db.ObjectId
 }

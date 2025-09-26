@@ -996,290 +996,154 @@ async def send_enrolled_user_notification(
 
 ########### * Volunteer endpoint(s) ###############
 # for specific event, when volunteer enrolls --> volunteer is added to event and volunteerLimit counter decrements
-@router.get("/my-opportunities", status_code=200)
-async def my_opportunities(current_user: Annotated[User, Depends(get_current_user)]):
-    """
-    Return the list of opportunity IDs the current user has applied to,
-    and a boolean flag indicating whether they submitted the *general* application.
-    """
-    enforce_authentication(current_user)
-
-    vol = await db.volunteers.find_unique(where={"userId": current_user.id})
-    ids = vol.volunteerOpportunityIDs if vol and vol.volunteerOpportunityIDs else []
-    # `hasGeneral` is true only if a volunteer record exists AND it has the general timestamp
-    has_general = bool(vol and getattr(vol, "generalAppliedAt", None))
-
-    return {"opportunityIds": ids, "hasGeneral": has_general}
-
-
-@router.get("/applications", status_code=200)
-async def list_all_applications(
+@router.patch("/{event_id}/volunteer_signup", status_code=status.HTTP_200_OK)
+async def volunteer_signup_for_event(
     current_user: Annotated[User, Depends(get_current_user)],
-    kind: str = "all",  # "all" | "general"
+    event_id: str,
+    background_tasks: BackgroundTasks
 ):
     """
-    Admin-only listing of volunteer applications.
-    - kind="all": return every volunteer record
-    - kind="general": return only *general* apps (those with `generalAppliedAt`
-      and without any connected opportunity IDs)
-    Results are sorted newest-first by createdAt (tz-aware fallback applied).
+    For specific event, volunteer is added to event when enrolled and volunteerLimit counter decrements
+        return event
     """
-    enforce_authentication(current_user)
-    enforce_admin(current_user)
 
-    vols = await db.volunteers.find_many()
-
-    if kind.lower() == "general":
-        vols = [v for v in vols if getattr(v, "generalAppliedAt", None) is not None]
-
-    # Sort newest-first; use a tz-aware epoch as a safe fallback
-    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
-    vols.sort(key=lambda v: getattr(v, "createdAt", None) or epoch, reverse=True)
-
-    return {"volunteers": vols}
-
-
-@router.post("/", status_code=status.HTTP_201_CREATED)
-async def volunteer_sign_up_general(
-    current_user: Annotated[User, Depends(get_current_user)],
-    volunteer_data: VolunteerCreate
-):
-    """
-    Create a *general* volunteer application for the current user.
-    - Allowed only once per user (returns 400 if already registered as volunteer)
-    - Stamps `generalAppliedAt` with a timezone-aware datetime
-    """
+    # validate current user
     enforce_authentication(current_user)
 
-    existing = await db.volunteers.find_unique(where={"userId": current_user.id})
-    if existing:
-        raise HTTPException(status_code=400, detail="User is already registered as a volunteer")
+    # validate existing event
+    event = await db.events.find_unique(where={"id": event_id })
+    if not event:
+        raise HTTPException(status_code=401, detail="Unable to locate event")
+
+    # Validate volunteer exists and is approved
+    volunteer = await db.volunteers.find_unique(where={"userId": current_user.id})
+    if not volunteer:
+        raise HTTPException(status_code=401, detail="Unable to locate volunteer")
+
+    if volunteer.status != "Approved":
+        raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
+
+    # Validate whether volunteer is already enrolled
+    if volunteer.id in event.volunteerIDs:
+        raise HTTPException(status_code=400, detail="Volunteer is already enrolled to the event")
 
     try:
-        data = volunteer_data.model_dump()
-
-        volunteer = await db.volunteers.create(
-            data={
-                **data,
-                "status": "New",
-                "generalAppliedAt": datetime.now(timezone.utc),
-                # Link to the user via relation (don’t set userId directly)
-                "user": {"connect": {"id": current_user.id}},
-            }
-        )
-        return {"volunteer": volunteer}
-
-    except Exception as e:
-        # Surface as 500 to the client; also logs to server stdout
-        print("VOL_CREATE_ERR:", e)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-
-
-# @router.post("/{opportunity_id}", status_code=status.HTTP_201_CREATED)
-# async def volunteer_sign_up(
-#     opportunity_id: str,
-#     current_user: Annotated[User, Depends(get_current_user)],
-#     volunteer_data: VolunteerCreate
-# ):
-#     """
-#         Authenticated user
-#         Sign up as a volunteer
-#         Information for volunteer application
-#         return Json of user's application
-#     """
-
-#     # Validate User
-#     enforce_authentication(current_user)
-
-#     existing_volunteer = await db.volunteers.find_unique(
-#             where={"userId": current_user.id}
-#         )
-
-#     if existing_volunteer:
-#         raise HTTPException(
-#             status_code=400,
-#             detail="User is already registered as a volunteer"
-#         )
-
-#     # Validate the opportunity exists
-#     opportunity = await db.volunteeropportunities.find_unique(
-#         where={"id": opportunity_id}
-#     )
-
-#     if not opportunity:
-#         raise HTTPException(
-#             status_code=404,
-#             detail="Volunteer opportunity not found"
-#         )
-
-#     try:
-#         data = volunteer_data.model_dump()
-#         data["userId"] = current_user.id
-
-#         volunteer = await db.volunteers.create(
-#             data={
-#                 **data,
-#                 "volunteerOpportunities": {
-#                     "connect": [{"id": opportunity_id}]
-#                 }
-#             }
-#         )
-
-#         return {"volunteer": volunteer}
-
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Unable to enroll volunteer: {e}"
-#         )
-
-@router.post("/{opportunity_id}", status_code=status.HTTP_201_CREATED)
-async def volunteer_sign_up(
-    opportunity_id: str,
-    current_user: Annotated[User, Depends(get_current_user)],
-    volunteer_data: VolunteerCreate
-):
-    """
-    Sign up to a specific opportunity.
-    - If volunteer already exists -> update it and connect the opportunity.
-    - If not -> create volunteer and connect the opportunity.
-    - Prevent duplicate connection to the same opportunity.
-    """
-
-    enforce_authentication(current_user)
-
-    # 1) Validate the opportunity exists
-    opportunity = await db.volunteeropportunities.find_unique(where={"id": opportunity_id})
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="Volunteer opportunity not found")
-
-    # 2) Find existing volunteer (with current connections)
-    volunteer = await db.volunteers.find_unique(
-        where={"userId": current_user.id},
-        include={"volunteerOpportunities": True}
-    )
-
-    try:
-        if volunteer:
-            # 2a) Already applied to this specific opportunity?
-            already = any(o.id == opportunity_id for o in (volunteer.volunteerOpportunities or []))
-            if already:
-                raise HTTPException(status_code=409, detail="Already applied to this opportunity")
-
-            # 2b) Update volunteer fields (if provided) and connect new opportunity
-            data = volunteer_data.model_dump(exclude_unset=True)
-            updated = await db.volunteers.update(
-                where={"userId": current_user.id},
+        volunteer_signup_event = await db.events.update(
+                where={"id": event_id },
                 data={
-                    **data,
-                    "volunteerOpportunities": {"connect": [{"id": opportunity_id}]}
+                    "volunteers": {"connect": {"id": volunteer.id}},
+                    "volunteerLimit": {"decrement": 1}
                 }
             )
-            return {"volunteer": updated}
 
-        # 3) No volunteer yet -> create new with user relation + connect opportunity
-        data = volunteer_data.model_dump()
-        created = await db.volunteers.create(
-            data={
-                **data,
-                "status": "New",
-                "user": {"connect": {"id": current_user.id}},
-                "volunteerOpportunities": {"connect": [{"id": opportunity_id}]}
+        title = f"Volunteer Enrollment Confirmation: {event.name}"
+        # ? ADD link to make changes still
+        description = f'This email confirms that you are enrolled as a volunteer for the {event.name} event on {convert_iso_date_to_string(event.date)}. If you are no longer available to join the event, please make changes here: .\n\nBest,\n\nWondherhood Team'
+
+
+        notification_data =  {
+                "title": title,
+                "description": description,
+                "userId": current_user.id,
+                "isRead": False,
+                "time": datetime.now(timezone.utc)
             }
-        )
-        return {"volunteer": created}
 
-    except HTTPException:
-        raise
+        new_notification = await db.notifications.create(
+                data=notification_data
+            )
+
+        background_tasks.add_task(
+                send_email_one_user,
+                volunteer.email,
+                title,
+                description
+            )
+
+
+        return {
+                "Event": volunteer_signup_event,
+                "Notification": new_notification,
+                "Message": "Volunteer added to event"
+                }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unable to enroll volunteer: {e}")
+        raise HTTPException(status_code=500, detail=f"Unable to enroll volunteer:{e}")
 
 
-
-@router.patch("/", status_code=status.HTTP_200_OK)
-async def update_volunteer(
+@router.patch("/{event_id}/unenroll_volunteer", status_code=status.HTTP_200_OK)
+async def unenroll_volunteer_from_event(
     current_user: Annotated[User, Depends(get_current_user)],
-    volunteer_data: VolunteerUpdate
+    event_id: str,
+    background_tasks: BackgroundTasks
 ):
     """
-        Authenticate user
-        Validate user is the volunteer
-        Update volunteer's credentials
-        Return updated volunteer
+        Authenticate the user
+        Validate the event and the volunteer
+        Unenroll the volunteer from the event and increment Event volunteerLimit attribute
+        Notify the volunteer they have been unenrolled
+        return updated event
     """
 
-    # Validate user
+    # Authenticate the user
     enforce_authentication(current_user)
 
-    # Verify the volunteer exists
-    volunteer = await db.volunteers.find_unique(
-        where={"userId": current_user.id}
-    )
+    # Validate the event:
+    event = await db.events.find_unique(where={"id": event_id })
+    if not event:
+        raise HTTPException(status_code=401, detail="Unable to locate event")
 
+    # Validate the Volunteer
+    volunteer = await db.volunteers.find_unique(where={"userId": current_user.id})
     if not volunteer:
-        raise HTTPException(
-            status_code=400,
-            detail="Unable to located volunteer"
-        )
+        raise HTTPException(status_code=401, detail="Unable to locate volunteer")
 
-    # Handle update
+    if volunteer.status != "Approved":
+        raise HTTPException(status_code=400, detail="Volunteer is not approved to sign up for an event")
+
+    # Validate that the volunteer is signed up to the event
+    if volunteer.id not in event.volunteerIDs:
+        raise HTTPException(status_code=400, detail="Volunteer is not enrolled to the event")
+
     try:
-        data = volunteer_data.model_dump(exclude_unset=True)
+        volunteer_unenroll_event = await db.events.update(
+                where={"id": event_id },
+                data={
+                    "volunteers": {"disconnect": {"id": volunteer.id}},
+                    "volunteerLimit": {"increment": 1}
+                }
+            )
 
-        if not data:
-            return {"Original Volunteer": volunteer}
+        title = f"Volunteer Unenrollment Confirmation: {event.name}"
+        # ? ADD link to make changes still
+        description = f'This email confirms that you are unenrolled as a volunteer for the {event.name} event on {convert_iso_date_to_string(event.date)}.\n\nBest,\n\nWondherhood Team'
 
-        updated_volunteer = await db.volunteers.update(
-            where={"userId": current_user.id},
-            data = data
-        )
 
-        return {"Updated Volunteer": updated_volunteer}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unable to update volunteer: {e}"
-        )
+        notification_data =  {
+                "title": title,
+                "description": description,
+                "userId": current_user.id,
+                "isRead": False,
+                "time": datetime.now(timezone.utc)
+            }
 
-@router.delete("/{volunteer_id}", status_code=status.HTTP_200_OK)
-async def delete_volunteer(
-    volunteer_id: str,
-    current_user: Annotated[User, Depends(get_current_user)]
-):
-    """
-        Authenticate user and enforce admin role
-        Query and delete volunteer
-        return deleted volunteer
-    """
+        new_notification = await db.notifications.create(
+                data=notification_data
+            )
 
-    # Validate user
-    enforce_authentication(current_user)
-    enforce_admin(current_user)
+        background_tasks.add_task(
+                send_email_one_user,
+                volunteer.email,
+                title,
+                description
+            )
 
-    # Query for the volunteer
-
-    volunteer = await db.volunteers.find_unique(
-        where={"id": volunteer_id}
-    )
-
-    if not volunteer:
-        raise HTTPException(
-            status_code=404,
-            detail="Volunteer not found"
-        )
-
-    # Delete the volunteer
-    try:
-        deleted_volunteer = await db.volunteers.delete(
-            where={"id": volunteer_id}
-        )
-
-        return {"Deleted Volunteer": deleted_volunteer}
+        return {
+            "Event": volunteer_unenroll_event,
+            "Notification": new_notification
+        }
 
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Unable to delete the volunteer: {e}"
+            detail=f"Unable to remove volunteer from event: {e}"
         )

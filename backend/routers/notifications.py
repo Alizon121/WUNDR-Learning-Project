@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Depends, HTTPException, BackgroundTasks
 from backend.models.user_models import User
 from .auth.login import get_current_user
-from .auth.utils import enforce_admin, enforce_authentication
+from .auth.utils import enforce_admin, enforce_authentication, convert_iso_date_to_string
 from typing import Annotated
 from backend.db.prisma_client import db
 from datetime import datetime, timedelta, timezone
@@ -150,7 +150,7 @@ async def send_email_and_reschedule(
     event = await db.events.find_unique(where={"id": event_id})
 
     subject = f"Reminder: Your Wonderhood event “{event.name}” is tomorrow"
-    body = f"Hey {user.firstName},\n\nJust a quick reminder that “{event.name}” with Wonderhood happens at {event_date.isoformat()}.\n\nCheers!"
+    body = f"Hey {user.firstName},\n\nJust a quick reminder that “{event.name}” with Wonderhood happens at {convert_iso_date_to_string(event_date)}.\n\nCheers!"
     
     # Send the email with yagmail
     yag.send(to=user.email, subject=subject, contents=body)
